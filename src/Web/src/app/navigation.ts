@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
-import { LayoutDashboard } from 'lucide-react'
+import { FileText, LayoutDashboard } from 'lucide-react'
+import { Permission } from '@/lib/types'
 
 export interface NavItem {
   /** Translation key under `nav`. */
@@ -22,6 +23,14 @@ export interface NavSection {
 export const navigationSections: NavSection[] = [
   {
     labelKey: 'nav.sectionWork',
-    items: [{ labelKey: 'nav.dashboard', to: '/app/dashboard', icon: LayoutDashboard }],
+    items: [
+      { labelKey: 'nav.dashboard', to: '/app/dashboard', icon: LayoutDashboard },
+      {
+        labelKey: 'nav.documents',
+        to: '/app/documents',
+        icon: FileText,
+        permission: Permission.documentsView,
+      },
+    ],
   },
 ]

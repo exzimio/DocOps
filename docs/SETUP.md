@@ -61,11 +61,15 @@ dotnet ef migrations add NomeDaMigracao \
   --output-dir Persistence/Migrations
 ```
 
-Recomeçar do zero (apaga os dados locais):
+Recomeçar do zero (apaga os dados locais, incluindo os ficheiros carregados):
 
 ```bash
 docker compose down -v && docker compose up -d
+rm -rf src/Api/storage
 ```
+
+Os ficheiros dos documentos ficam em `src/Api/storage`, organizados por organização e por documento.
+A pasta é ignorada pelo Git.
 
 ## 5. Executar
 
@@ -141,6 +145,8 @@ npm --prefix src/Web run format:check
 | `Seed__Enabled` | `true` em desenvolvimento | Criar os dados de demonstração |
 | `Seed__DefaultPassword` | `Demo!Pass123` | Palavra-passe atribuída às contas de demonstração |
 | `OpenTelemetry__OtlpEndpoint` | vazio | Exportação OTLP de *traces* e métricas; vazio mantém a telemetria em processo |
+| `FileStorage__RootPath` | `storage` | Raiz do armazenamento de ficheiros (relativa ao *content root* da API) |
+| `FileStorage__MaxFileSizeBytes` | `26214400` | Dimensão máxima aceite num carregamento (25 MB) |
 | `MSSQL_SA_PASSWORD` | `Local_Dev_Passw0rd!` | Palavra-passe do container de desenvolvimento |
 | `MSSQL_HOST_PORT` | `14330` | Porto publicado pelo container |
 | `VITE_API_PROXY_TARGET` | `http://localhost:5180` | Destino do proxy do servidor de desenvolvimento |

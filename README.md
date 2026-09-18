@@ -39,7 +39,7 @@ vem da base de dados através da API.
 | Fase | Âmbito | Estado |
 | --- | --- | --- |
 | 1 | Arquitetura, solução, base de dados, autenticação, multi-tenancy, auditoria base | **Concluída** |
-| 2 | Documentos, versões, permissões, auditoria documental | Planeada |
+| 2 | Documentos, versões, permissões, auditoria documental | **Concluída** |
 | 3 | Tarefas e motor de workflow | Planeada |
 | 4 | Designer visual de workflow | Planeada |
 | 5 | Abstração de IA e inteligência documental | Planeada |
@@ -67,8 +67,38 @@ vem da base de dados através da API.
   `/health/live`, `/health/ready`.
 - Frontend React 19 + TypeScript com design system próprio, tema claro/escuro, pt-PT/en e
   navegação protegida.
-- 45 testes unitários, 16 testes de integração com SQL Server real (Testcontainers), 8 testes de
-  componente (Vitest) e 6 testes end-to-end (Playwright).
+
+### Entregue na Fase 2
+
+- Repositório documental com tipos de documento configuráveis e esquema de metadados por tipo
+  (campos tipados, obrigatórios, listas de valores) — o formulário da interface é gerado a partir do
+  servidor, não codificado no cliente.
+- Versionamento real: cada alteração de conteúdo cria uma nova versão com dimensão, `SHA-256` e
+  autor; versões anteriores nunca são sobrescritas e continuam descarregáveis.
+- Armazenamento de ficheiros atrás de `IFileStorage` (`LocalFileStorage` em disco), com validação de
+  extensão, tipo de conteúdo e dimensão, e chave de armazenamento gerada pelo servidor.
+- Autorização ao nível do documento: propriedade, permissões explícitas (utilizador, departamento,
+  perfil), classificação de sensibilidade e teto imposto pelas permissões do perfil — com um painel
+  de **acesso efetivo** que explica cada decisão.
+- Máquina de estados do documento (rascunho → revisão → aprovação → aprovado/rejeitado → assinatura →
+  arquivo), com arquivo, restauro e eliminação reversível.
+- Políticas de retenção por tipo de documento, com data de expiração calculada no arquivo.
+- Pesquisa e filtros com paginação no servidor, aplicando as regras de acesso dentro da consulta SQL.
+- Concorrência otimista ponta a ponta: o cliente devolve o token recebido e uma gravação baseada numa
+  leitura desatualizada é recusada.
+- Auditoria documental completa: criação, consulta, descarregamento, alteração de metadados, mudança
+  de estado, nova versão, concessão e revogação de permissões, arquivo, restauro e eliminação.
+- Dados de demonstração: 37 documentos consistentes (com versões, etiquetas, metadados, permissões e
+  histórico de auditoria retroativo) em 8 tipos de documento.
+
+### Cobertura de testes acumulada
+
+| Nível | Contagem |
+| --- | --- |
+| Unitários (xUnit) | 107 |
+| Integração com SQL Server real (Testcontainers) | 35 |
+| Componente (Vitest + Testing Library) | 8 |
+| End-to-end (Playwright, desktop e móvel) | 22 |
 
 ## 4. Arquitetura
 
@@ -156,55 +186,118 @@ Detalhe completo: [`docs/SECURITY.md`](docs/SECURITY.md).
 erDiagram
     TENANTS ||--o{ DEPARTMENTS : "contém"
     TENANTS ||--o{ USERS : "emprega"
-    DEPARTMENTS ||--o{ USER_DEPARTMENTS : "tem membros"
+    TENANTS ||--o{ DOCUMENTS : "possui"
     USERS ||--o{ USER_DEPARTMENTS : "pertence a"
+    DEPARTMENTS ||--o{ USER_DEPARTMENTS : "tem membros"
     USERS ||--o{ USER_ROLES : "assume"
     ROLES ||--o{ USER_ROLES : "atribuído a"
     ROLES ||--o{ ROLE_CLAIMS : "concede permissões"
-    TENANTS ||--o{ AUDIT_EVENTS : "regista"
-    USERS ||--o{ AUDIT_EVENTS : "origina"
 
-    TENANTS {
-        uniqueidentifier Id PK
-        nvarchar Slug UK
-        nvarchar Name
-        bit IsActive
-        rowversion RowVersion
-    }
-    DEPARTMENTS {
+    DOCUMENT_TYPES ||--o{ DOCUMENTS : "classifica"
+    DOCUMENT_TYPES ||--o{ METADATA_FIELDS : "define"
+    DOCUMENTS ||--o{ DOCUMENT_VERSIONS : "versiona"
+    DOCUMENTS ||--o{ METADATA_VALUES : "descreve"
+    METADATA_FIELDS ||--o{ METADATA_VALUES : "tipifica"
+    DOCUMENTS ||--o{ DOCUMENT_TAGS : "etiquetado"
+    TAGS ||--o{ DOCUMENT_TAGS : "aplica-se a"
+    DOCUMENTS ||--o{ DOCUMENT_PERMISSIONS : "restringe"
+    RETENTION_POLICIES ||--o{ DOCUMENTS : "rege"
+    DOCUMENTS ||--o{ AUDIT_EVENTS : "origina"
+
+    DOCUMENTS {
         uniqueidentifier Id PK
         uniqueidentifier TenantId FK
-        nvarchar Code "único por tenant"
-        uniqueidentifier ManagerUserId
+        nvarchar Reference UK "único por tenant"
+        int Status "máquina de estados"
+        int Classification "sensibilidade"
+        uniqueidentifier OwnerUserId
+        uniqueidentifier DepartmentId FK
+        int CurrentVersionNumber
+        datetimeoffset RetentionDueAtUtc
         bit IsDeleted "soft delete"
+        rowversion RowVersion "concorrência otimista"
     }
-    USERS {
+    DOCUMENT_VERSIONS {
         uniqueidentifier Id PK
-        uniqueidentifier TenantId FK
-        nvarchar Email UK
-        int UserType "interno/externo"
-        bit IsPlatformAdministrator
+        uniqueidentifier DocumentId FK
+        int VersionNumber "único por documento"
+        nvarchar StorageKey "chave no file store"
+        nvarchar ContentHash "SHA-256"
+        bigint FileSizeBytes
+        bit IsCurrent
     }
-    ROLE_CLAIMS {
-        int Id PK
-        uniqueidentifier RoleId FK
-        nvarchar ClaimType "docops:permission"
-        nvarchar ClaimValue
+    DOCUMENT_PERMISSIONS {
+        uniqueidentifier Id PK
+        uniqueidentifier DocumentId FK
+        int SubjectType "utilizador/departamento/perfil"
+        uniqueidentifier SubjectId
+        int AccessLevel "flags"
+        datetimeoffset ExpiresAtUtc
+    }
+    METADATA_VALUES {
+        uniqueidentifier Id PK
+        uniqueidentifier FieldId FK
+        nvarchar TextValue
+        decimal NumberValue
+        datetimeoffset DateValue
+        decimal AiConfidence "quando veio de sugestão de IA"
     }
     AUDIT_EVENTS {
         uniqueidentifier Id PK
-        datetimeoffset OccurredAtUtc
         nvarchar Action
+        nvarchar EntityType
+        uniqueidentifier EntityId
         nvarchar CorrelationId
         nvarchar BeforeJson
         nvarchar AfterJson
     }
 ```
 
-Decisões de modelação relevantes: identificadores UUIDv7 (inserção sequencial em índice
-clusterizado), `rowversion` como token de concorrência otimista, índices únicos filtrados para
-permitir reutilização de códigos após *soft delete*, e desnormalização do nome do ator na auditoria
-para o trilho continuar legível depois de o utilizador mudar de nome ou ser desativado.
+Decisões de modelação relevantes:
+
+- **Identificadores UUIDv7** (`Guid.CreateVersion7()`): únicos e sequenciais, evitando a fragmentação
+  de índice típica de GUIDs aleatórios. As chaves são geradas pela aplicação e o modelo declara-o
+  (`ValueGeneratedNever`) — sem isso, o EF Core interpreta "a chave já tem valor" como "esta linha já
+  existe" e emite `UPDATE` onde era preciso `INSERT`.
+- **`rowversion` como token de concorrência** nas entidades mutáveis, devolvido ao cliente e exigido
+  na gravação.
+- **Índices únicos filtrados** (referência do documento, código de departamento, etiqueta) que
+  ignoram registos eliminados, permitindo reutilizar um código após eliminação.
+- **Metadados tipados**: o valor é guardado como texto canónico *e* na coluna do seu tipo, para que
+  filtros e ordenações corram em SQL em vez de em memória.
+- **Conteúdo fora da base de dados**: a linha da versão guarda a chave de armazenamento, a dimensão e
+  o `SHA-256`; os bytes vivem no *file store* (ver [ADR-003](docs/adr/ADR-003-document-storage.md)).
+- **Ator desnormalizado na auditoria**, para o trilho continuar legível depois de um utilizador mudar
+  de nome ou ser desativado.
+
+### Autorização documental
+
+```mermaid
+flowchart TB
+    subgraph Concede["Concede (união)"]
+        A["Administração documental<br/>do tenant"]
+        B["Propriedade do documento"]
+        C["Permissão explícita<br/>utilizador · departamento · perfil"]
+        D["Classificação<br/>público/interno · confidencial no departamento"]
+    end
+
+    subgraph Limita["Limita (interseção)"]
+        E["Permissões do perfil<br/>na organização"]
+    end
+
+    A --> U["Níveis concedidos"]
+    B --> U
+    C --> U
+    D --> U
+    U --> I["Acesso efetivo"]
+    E --> I
+    I --> P["Painel de acesso efetivo<br/>com a razão de cada regra"]
+
+    L["Estado do documento<br/>(DocumentLifecycle)"] --> O["O que pode ser feito agora"]
+```
+
+O acesso responde a *quem pode agir*; o ciclo de vida responde a *o que pode ser feito agora*. São
+deliberadamente independentes: misturá-los tornava impossível arquivar um documento aprovado.
 
 ## 8. Fluxo de autenticação
 
@@ -236,26 +329,48 @@ sequenceDiagram
     A-->>B: Perfil, perfis e permissões efetivas
 ```
 
-## 9. Motor de workflow
+## 9. Superfície da API
+
+Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante o desenvolvimento.
+
+| Método e rota | Descrição |
+| --- | --- |
+| `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | Sessão e perfil do chamador |
+| `GET /api/tenants/current` · `GET /api/tenants/current/departments` | Organização do chamador |
+| `GET /api/documents` | Lista paginada e filtrada, limitada ao que o chamador pode ver |
+| `POST /api/documents` | Cria um documento a partir de um ficheiro (multipart) |
+| `GET /api/documents/{id}` | Detalhe, versões, metadados e acesso efetivo |
+| `PUT /api/documents/{id}` | Edita metadados (exige o token de concorrência) |
+| `POST /api/documents/{id}/versions` | Acrescenta uma versão |
+| `GET /api/documents/{id}/content` | Descarrega a versão atual ou uma específica |
+| `POST /api/documents/{id}/status` | Transição de estado validada pela máquina de estados |
+| `POST /api/documents/{id}/archive` · `/restore` · `DELETE /api/documents/{id}` | Arquivo, restauro e eliminação reversível |
+| `GET /api/documents/{id}/audit` | Trilho de auditoria do documento |
+| `GET/POST/DELETE /api/documents/{id}/permissions` | Permissões do documento |
+| `GET /api/documents/{id}/effective-access` | Acesso efetivo, com a razão de cada regra |
+| `GET /api/document-catalogue/types` · `/tags` · `/retention-policies` | Dados de referência dos formulários |
+| `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
+
+## 10. Motor de workflow
 
 O motor executa definições persistidas (nós e ligações) como instâncias com estado, tarefas humanas,
 prazos, escalonamento e cronologia completa. Desenho e justificação:
 [ADR-006](docs/adr/ADR-006-workflow-engine.md). *Implementação prevista para a Fase 3.*
 
-## 10. Arquitetura de IA
+## 11. Arquitetura de IA
 
 A aplicação depende de abstrações (`IAiDocumentService`, `IAiSearchService`, `IAiWorkflowService`) e
 nunca de um fornecedor concreto. O fornecedor de demonstração é determinístico e identificado como
 tal na interface — respostas de demonstração nunca são apresentadas como geradas por um modelo real.
 Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md). *Implementação prevista para a Fase 5.*
 
-## 11. Estratégia de integrações
+## 12. Estratégia de integrações
 
 Cada integração externa (correio eletrónico, ERP, CRM, assinatura, webhooks) é representada por um
 adaptador atrás de uma interface, com registo de sincronizações e erros. O desenvolvimento local
 nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 
-## 12. Observabilidade
+## 13. Observabilidade
 
 - **Logs estruturados** (Serilog) com `CorrelationId`, `UserId` e propriedades de pedido.
 - **Correlação ponta a ponta**: o mesmo identificador aparece no cabeçalho `X-Correlation-Id` da
@@ -265,7 +380,7 @@ nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 - **Health checks**: `/health/live` (processo vivo), `/health/ready` (dependências prontas),
   `/health` (visão completa) — sem revelar detalhe de infraestrutura.
 
-## 13. Estratégia de testes
+## 14. Estratégia de testes
 
 | Nível | Ferramenta | O que garante |
 | --- | --- | --- |
@@ -277,7 +392,7 @@ nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 Os testes de integração correm contra SQL Server em container, com as mesmas migrações da aplicação:
 não há base de dados em memória a mascarar comportamento relacional.
 
-## 14. Estratégia de implantação
+## 15. Estratégia de implantação
 
 `docker compose up` levanta a base de dados; a API aplica migrações e semeia dados de demonstração em
 desenvolvimento. Em produção, as migrações são um passo explícito do pipeline e a semeadura está
@@ -285,7 +400,7 @@ desligada. As abstrações de armazenamento, IA e identidade permitem mover para
 Azure SQL, Azure OpenAI e Microsoft Entra ID sem alterar o código de domínio — e nada disso é
 necessário para correr o projeto localmente.
 
-## 15. Compromissos assumidos
+## 16. Compromissos assumidos
 
 | Decisão | Alternativa ponderada | Porque assim |
 | --- | --- | --- |
@@ -296,8 +411,11 @@ necessário para correr o projeto localmente.
 | Cookies em vez de JWT | *Bearer tokens* no cliente | Sem token acessível a JavaScript; XSS não permite roubo de sessão |
 | Validação de `Origin` | *Tokens* antifalsificação | Protege toda a API sem estado adicional no cliente; `SameSite=Lax` cobre o resto |
 | Sem MediatR/CQRS | Pipeline de comandos e consultas | Custo de indireção não justificado nesta dimensão |
+| Conteúdo fora da base de dados | `varbinary(max)` ou `FILESTREAM` | Base pequena e rápida; mesmo código em disco local e em armazenamento de objetos |
+| Acesso separado do ciclo de vida | Um único cálculo de "pode editar" | Misturá-los tornava impossível arquivar um documento aprovado |
+| Metadados em EAV com colunas tipadas | Coluna por campo, ou só JSON | Esquema configurável pelo cliente sem perder filtros e ordenações em SQL |
 
-## 16. Melhorias futuras
+## 17. Melhorias futuras
 
 - Extração de módulo de IA para processo próprio caso o volume o justifique.
 - Pesquisa por texto integral com índices de SQL Server e ranking por relevância.

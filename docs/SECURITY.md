@@ -37,8 +37,14 @@ aplicação deve estar atrás de HSTS.
   o arranque da aplicação.
 - O frontend esconde o que o utilizador não pode usar, mas essa decisão **não é** um controlo de
   segurança: a mesma regra é aplicada no servidor em todos os casos.
-- Fase 2 acrescenta autorização por recurso (documento, departamento, utilizador) com um painel de
-  *acesso efetivo* que explica a origem de cada acesso concedido.
+- A autorização por recurso (documento) combina propriedade, permissões explícitas a utilizador,
+  departamento ou perfil, e a classificação de sensibilidade. O resultado é intersetado com as
+  permissões do perfil na organização: partilhar um documento com um colaborador nunca o transforma
+  em aprovador. O painel de *acesso efetivo* mostra a razão de cada regra aplicada.
+- Utilizadores externos (fornecedores, parceiros) nunca obtêm acesso por classificação: só por
+  permissão explícita.
+- A lista de documentos aplica as regras de acesso **dentro da consulta SQL**, para que a contagem
+  total e a paginação não revelem a existência de documentos que o utilizador não pode ver.
 
 ## 4. Isolamento entre organizações
 
@@ -96,8 +102,10 @@ para 100; produção usa as predefinições.
 - Erros devolvem `400` em `ProblemDetails` com `code: validation_failed` e os erros por campo.
 - O comprimento da palavra-passe é limitado antes do cálculo de *hash*, o que evita trabalho
   criptográfico desnecessário com cargas grandes.
-- Fase 2 acrescenta validação de carregamento de ficheiros: tipo permitido, tamanho máximo,
-  verificação da assinatura do ficheiro e nome de ficheiro higienizado.
+- Carregamento de ficheiros: lista branca de extensões e de tipos de conteúdo, dimensão máxima
+  configurável, nome de ficheiro higienizado e chave de armazenamento gerada pelo servidor — um nome
+  de ficheiro manipulado não consegue escapar da raiz de armazenamento, e o caminho resolvido é
+  validado contra essa raiz antes de qualquer leitura ou escrita.
 
 ## 9. Auditoria
 
@@ -139,6 +147,9 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Força bruta e *credential stuffing* | Bloqueio de conta + limitação por IP + respostas indistinguíveis |
 | Enumeração de contas | Resposta idêntica para conta inexistente e palavra-passe errada |
 | Fuga entre organizações | Filtros de consulta + intercetor de escrita + testes dedicados |
+| Acesso indevido a documento | Avaliação por recurso no servidor, com teto pelas permissões do perfil |
+| Travessia de caminho no armazenamento | Chave gerada pelo servidor e caminho validado contra a raiz |
+| Carregamento de ficheiro perigoso | Lista branca de extensões e tipos, limite de dimensão, nome higienizado |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

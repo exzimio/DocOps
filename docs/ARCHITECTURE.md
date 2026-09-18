@@ -41,8 +41,8 @@ benefício teórico. Ver [ADR-002](adr/ADR-002-authentication.md).
 | Identity & Access | Autenticação, perfis, permissões, sessão | 1 ✅ |
 | Organizations / Tenancy | Organizações, departamentos, adesões | 1 ✅ |
 | Audit & Compliance | Registo imutável, retenção, classificação, retenção legal | 1 (base) ✅ |
-| Document Management | Documentos, versões, metadados, permissões documentais | 2 |
-| Document Classification | Tipos de documento e campos de metadados | 2 |
+| Document Management | Documentos, versões, metadados, permissões documentais | 2 ✅ |
+| Document Classification | Tipos de documento e campos de metadados | 2 ✅ |
 | Workflow Management / Execution | Definições, instâncias, estados, prazos | 3–4 |
 | Tasks & Approvals | Tarefas humanas, aprovações, delegação, SLA | 3 |
 | AI Intelligence | Classificação, extração, perguntas sobre documentos | 5 |
@@ -120,8 +120,15 @@ As permissões residem na base de dados, o que permite a um administrador altera
 fazer sem novo *deploy*. A revalidação do *security stamp* a cada 5 minutos faz com que uma permissão
 revogada deixe de funcionar sem esperar pelo fim da sessão.
 
-Fase 2 acrescenta autorização ao nível do recurso (permissões por documento, departamento e
-utilizador) com um painel de *acesso efetivo* que explica por que razão um utilizador vê um documento.
+A autorização ao nível do recurso está implementada para documentos em
+`DocumentAccessEvaluator`: uma função pura que recebe os factos do documento, os factos do chamador e
+as permissões explícitas, e devolve os níveis concedidos **com a razão de cada regra**. É essa
+explicação que alimenta o painel de *acesso efetivo* na interface.
+
+Uma separação deliberada: o avaliador responde a *quem pode agir*; `DocumentLifecycle` responde a *o
+que pode ser feito no estado atual*. A primeira versão misturava as duas — e tornava impossível
+arquivar um documento aprovado, porque o estado "aprovado" retirava o direito de edição que o arquivo
+exigia. Um teste de integração apanhou-o.
 
 ## 7. Persistência
 

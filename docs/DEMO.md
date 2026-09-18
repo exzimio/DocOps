@@ -76,7 +76,57 @@ a auditoria é imutável por construção.
 
 ---
 
-## Cenário 1 — Fatura de fornecedor (previsto: Fases 2 a 8)
+## Demonstração disponível na Fase 2 — Repositório documental (≈5 minutos)
+
+### 1. Lista de documentos (60 s)
+
+Entre como `ricardo.lopes@asteria.example` e abra **Documentos**. São 37 documentos de demonstração
+em 8 tipos, com estados, classificações, versões e etiquetas coerentes.
+
+- Escreva `Northstar` na pesquisa: a lista reduz-se aos documentos desse fornecedor. A pesquisa corre
+  no servidor, sobre título, referência, descrição e metadados.
+- Clique no estado **Aguarda aprovação**: ficam as faturas e pedidos por decidir.
+- Repare no rodapé: a contagem e a paginação vêm do servidor — o browser nunca recebe a lista toda.
+
+### 2. Detalhe, metadados e versões (90 s)
+
+Abra a fatura **Atlas Tecnologia**.
+
+- **Visão geral** mostra as propriedades e os metadados tipados do tipo "Fatura de fornecedor"
+  (fornecedor, número, datas, IVA, total, moeda). Os campos não estão codificados na interface: vêm
+  do esquema de metadados definido no servidor.
+- **Versões** mostra o histórico, com autor, comentário, dimensão e impressão digital SHA-256 de cada
+  versão. Descarregue a versão 1 e a versão atual: são ficheiros diferentes, ambos preservados.
+- Carregue uma nova versão no painel lateral e veja o número de versão e a impressão digital mudarem.
+
+### 3. Acesso efetivo — a razão por trás da permissão (90 s)
+
+O painel **Acesso efetivo** explica a decisão de autorização, regra a regra:
+
+- "É o proprietário do documento" — concede ver, descarregar, editar, eliminar, partilhar, aprovar.
+- "Classificação confidencial: leitura para o departamento responsável".
+- "O perfil do utilizador não inclui estas permissões na organização" — remove `eliminar`, porque o
+  perfil *Finance Approver* não tem `documents.delete`.
+
+Isto demonstra o princípio: uma partilha de documento nunca concede mais do que o perfil permite.
+
+### 4. Isolamento por utilizador (60 s)
+
+Termine a sessão e entre como `contacto@northstar.example` (parceiro externo, Northstar Supplies).
+
+Abra **Documentos**: vê exatamente **um** documento — a fatura que lhe foi partilhada explicitamente.
+Nenhuma classificação abre documentos a um utilizador externo; só uma permissão explícita o faz.
+
+### 5. Trilho de auditoria do documento (60 s)
+
+De volta como Ricardo Lopes, abra um documento e o separador **Auditoria**. A cronologia junta o
+histórico do documento (criação, transições de estado, versões) às ações desta sessão (consulta,
+descarregamento). Cada entrada tem autor, data e identificador de correlação; as entradas com
+alteração mostram o antes e o depois.
+
+---
+
+## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.
 2. A fatura aparece na caixa de entrada documental da Asteria Group.
@@ -92,7 +142,7 @@ a auditoria é imutável por construção.
 11. Os indicadores do painel refletem a aprovação.
 12. O documento fica **Aprovado** e **Arquivado**.
 
-## Cenário 2 — Ciclo de vida de contrato (previsto: Fases 2 a 8)
+## Cenário 2 — Ciclo de vida de contrato (previsto: Fases 5 a 8)
 
 1. Carregar um contrato.
 2. Extrair metadados, incluindo a data de expiração.
@@ -115,3 +165,6 @@ a auditoria é imutável por construção.
 | Permissões visíveis no painel | Autorização por permissão, guardada em base de dados |
 | Auditoria imutável com correlação | Conformidade e diagnóstico ligados pelo mesmo identificador |
 | Testes de integração com SQL Server real | Os testes verificam comportamento relacional verdadeiro |
+| Painel de acesso efetivo | Autorização por recurso explicável, não apenas um sim/não |
+| Impressão digital por versão | Integridade verificável e base para a assinatura eletrónica |
+| Filtro aplicado dentro da consulta SQL | A contagem total não revela documentos que o utilizador não pode ver |

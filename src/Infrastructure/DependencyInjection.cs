@@ -1,12 +1,15 @@
 using DocOps.Application.Abstractions;
+using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Tenancy;
 using DocOps.Domain.Identity;
 using DocOps.Infrastructure.Auditing;
+using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Interceptors;
 using DocOps.Infrastructure.Persistence.Seed;
+using DocOps.Infrastructure.Storage;
 using DocOps.Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +42,17 @@ public static class DependencyInjection
         services.AddScoped<IUserSessionService, UserSessionService>();
         services.AddScoped<ITenantDirectory, TenantDirectory>();
         services.AddScoped<DemoDataSeeder>();
+        services.AddScoped<DocumentCatalogueSeeder>();
+        services.AddScoped<DocumentDemoSeeder>();
+
+        services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+
+        services.AddScoped<DocumentAccessResolver>();
+        services.AddScoped<DocumentReferenceGenerator>();
+        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IDocumentPermissionService, DocumentPermissionService>();
+        services.AddScoped<IDocumentCatalogue, DocumentCatalogue>();
 
         return services;
     }

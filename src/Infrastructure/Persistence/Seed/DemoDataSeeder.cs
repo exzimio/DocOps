@@ -16,6 +16,8 @@ public sealed class DemoDataSeeder(
     DocOpsDbContext dbContext,
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
+    DocumentCatalogueSeeder catalogueSeeder,
+    DocumentDemoSeeder documentSeeder,
     IOptions<SeedOptions> options,
     ILogger<DemoDataSeeder> logger)
 {
@@ -86,6 +88,12 @@ public sealed class DemoDataSeeder(
         await EnsureUsersAsync(vertice, VerticeUsers, cancellationToken);
 
         await AssignDepartmentManagersAsync(asteria, cancellationToken);
+
+        // Both organisations get the document catalogue; only Asteria Group gets the demonstration
+        // repository, so the isolation demo shows a genuinely empty second organisation.
+        await catalogueSeeder.SeedAsync(asteria, cancellationToken);
+        await catalogueSeeder.SeedAsync(vertice, cancellationToken);
+        await documentSeeder.SeedAsync(asteria, cancellationToken);
 
         logger.LogInformation("Demo seed completed for tenants {Asteria} and {Vertice}", asteria.Name, vertice.Name);
     }

@@ -1,9 +1,13 @@
 using DocOps.Application.Abstractions;
 using DocOps.Domain.Auditing;
+using DocOps.Domain.Common;
+using DocOps.Domain.Compliance;
+using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
 using DocOps.Domain.Tenancy;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace DocOps.Infrastructure.Persistence;
 
@@ -24,6 +28,16 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<UserDepartment> UserDepartments => Set<UserDepartment>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<DocumentVersion> DocumentVersions => Set<DocumentVersion>();
+    public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
+    public DbSet<DocumentMetadataField> DocumentMetadataFields => Set<DocumentMetadataField>();
+    public DbSet<DocumentMetadataValue> DocumentMetadataValues => Set<DocumentMetadataValue>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
+    public DbSet<DocumentPermission> DocumentPermissions => Set<DocumentPermission>();
+    public DbSet<RetentionPolicy> RetentionPolicies => Set<RetentionPolicy>();
+
     /// <summary>
     /// Null in unauthenticated contexts (migrations, seeding, the background worker). The query
     /// filters below then apply no tenant restriction — which is safe because every tenant-scoped
@@ -37,6 +51,21 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
         base.OnModelCreating(builder);
 
         builder.ApplyConfigurationsFromAssembly(typeof(DocOpsDbContext).Assembly);
+
+        // Our entities generate their own UUIDv7 keys. Telling EF so is not cosmetic: while a key is
+        // marked store-generated, EF uses "the key already has a value" to decide that an entity
+        // reached through a navigation is an existing row, and issues an UPDATE where an INSERT was
+        // meant — which surfaces as a spurious concurrency conflict when adding a child entity.
+        foreach (IMutableEntityType entityType in builder.Model.GetEntityTypes()
+            .Where(type => typeof(BaseEntity).IsAssignableFrom(type.ClrType)))
+        {
+            IMutableProperty? key = entityType.FindPrimaryKey()?.Properties.SingleOrDefault();
+
+            if (key is not null && key.ClrType == typeof(Guid))
+            {
+                key.ValueGenerated = ValueGenerated.Never;
+            }
+        }
 
         builder.Entity<Department>().HasQueryFilter(d =>
             !d.IsDeleted && (CurrentTenantId == null || d.TenantId == CurrentTenantId));
@@ -53,5 +82,30 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
             CurrentTenantId == null
             || (ud.User!.TenantId == CurrentTenantId && !ud.User.IsDeleted
                 && ud.Department!.TenantId == CurrentTenantId && !ud.Department.IsDeleted));
+
+        builder.Entity<Document>().HasQueryFilter(d =>
+            !d.IsDeleted && (CurrentTenantId == null || d.TenantId == CurrentTenantId));
+
+        builder.Entity<Tag>().HasQueryFilter(t =>
+            !t.IsDeleted && (CurrentTenantId == null || t.TenantId == CurrentTenantId));
+
+        builder.Entity<DocumentType>().HasQueryFilter(t => CurrentTenantId == null || t.TenantId == CurrentTenantId);
+        builder.Entity<DocumentMetadataField>().HasQueryFilter(f => CurrentTenantId == null || f.TenantId == CurrentTenantId);
+        builder.Entity<RetentionPolicy>().HasQueryFilter(p => CurrentTenantId == null || p.TenantId == CurrentTenantId);
+
+        // Dependents of Document repeat the parent's filter so a soft-deleted document cannot be
+        // reached through one of its children.
+        builder.Entity<DocumentVersion>().HasQueryFilter(v =>
+            !v.Document!.IsDeleted && (CurrentTenantId == null || v.TenantId == CurrentTenantId));
+
+        builder.Entity<DocumentMetadataValue>().HasQueryFilter(v =>
+            !v.Document!.IsDeleted && (CurrentTenantId == null || v.TenantId == CurrentTenantId));
+
+        builder.Entity<DocumentPermission>().HasQueryFilter(p =>
+            !p.Document!.IsDeleted && (CurrentTenantId == null || p.TenantId == CurrentTenantId));
+
+        builder.Entity<DocumentTag>().HasQueryFilter(dt =>
+            !dt.Document!.IsDeleted && !dt.Tag!.IsDeleted
+            && (CurrentTenantId == null || dt.Document.TenantId == CurrentTenantId));
     }
 }

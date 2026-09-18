@@ -19,6 +19,20 @@ public static class AuditActions
     public const string DepartmentUpdated = "department.updated";
     public const string TenantSettingsChanged = "tenant.settings.changed";
 
+    public const string DocumentCreated = "document.created";
+    public const string DocumentViewed = "document.viewed";
+    public const string DocumentDownloaded = "document.downloaded";
+    public const string DocumentMetadataChanged = "document.metadata.changed";
+    public const string DocumentStatusChanged = "document.status.changed";
+    public const string DocumentVersionCreated = "document.version.created";
+    public const string DocumentTagsChanged = "document.tags.changed";
+    public const string DocumentPermissionGranted = "document.permission.granted";
+    public const string DocumentPermissionRevoked = "document.permission.revoked";
+    public const string DocumentArchived = "document.archived";
+    public const string DocumentRestored = "document.restored";
+    public const string DocumentDeleted = "document.deleted";
+    public const string DocumentAccessDenied = "document.access.denied";
+
     public const string AuthorizationDenied = "security.authorization.denied";
     public const string TenantIsolationViolationBlocked = "security.tenant_isolation.blocked";
 }
@@ -31,4 +45,7 @@ public static class AuditEntityTypes
     public const string Department = "Department";
     public const string Tenant = "Tenant";
     public const string Session = "Session";
+    public const string Document = "Document";
+    public const string DocumentVersion = "DocumentVersion";
+    public const string DocumentPermission = "DocumentPermission";
 }
