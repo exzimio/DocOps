@@ -6,6 +6,10 @@ import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { DocumentsPage } from '@/pages/DocumentsPage'
 import { DocumentDetailPage } from '@/pages/DocumentDetailPage'
+import { TasksPage } from '@/pages/TasksPage'
+import { WorkflowsPage } from '@/pages/WorkflowsPage'
+import { WorkflowDefinitionPage } from '@/pages/WorkflowDefinitionPage'
+import { WorkflowInstancePage } from '@/pages/WorkflowInstancePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export function App() {
@@ -20,6 +24,10 @@ export function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="documents/:id" element={<DocumentDetailPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="workflows" element={<WorkflowsPage />} />
+          <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />
+          <Route path="workflows/:id" element={<WorkflowDefinitionPage />} />
         </Route>
       </Route>
 

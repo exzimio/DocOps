@@ -1,6 +1,6 @@
 # ADR-006 — Motor de workflow próprio, orientado a dados
 
-- **Estado:** aceite (implementação nas Fases 3 e 4)
+- **Estado:** aceite — motor implementado na Fase 3; designer visual na Fase 4
 - **Data:** 2026-09-18
 - **Âmbito:** definição, execução, prazos e cronologia de processos
 
@@ -63,3 +63,19 @@ eventos.
 paralela e junção; não implementa a especificação BPMN nem transações de compensação. Alterar uma
 definição ativa não afeta instâncias já em execução — cada instância guarda a versão da definição com
 que arrancou.
+
+## Como ficou, na prática
+
+- **Uma travessia é uma transação.** O motor percorre os nós até cada ramo ficar parado ou terminado
+  e só então grava. Instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
+- **Falhar em vez de saltar.** Um tipo de nó sem executor, uma ligação em falta ou uma transição de
+  documento ilegal param a instância e registam o motivo na cronologia. Foi um teste de integração
+  que impôs esta escolha: a primeira versão tentava arquivar um documento em rascunho e teria ficado
+  num estado inconsistente se o motor fosse permissivo.
+- **Condições sem linguagem de expressões.** Um operador de um conjunto fechado sobre uma variável
+  nomeada chega para as regras que um utilizador de negócio desenha, e não abre caminho a executar
+  código a partir de dados guardados.
+- **O motor não contorna o documento.** As alterações de estado configuradas num nó passam por
+  `DocumentLifecycle`, tal como as que um utilizador faz pela interface.
+- **Junções contam chegadas em variáveis da instância**, pelo que o estado de uma ramificação
+  paralela sobrevive a um reinício como o resto da instância.

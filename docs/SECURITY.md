@@ -45,6 +45,11 @@ aplicação deve estar atrás de HSTS.
   permissão explícita.
 - A lista de documentos aplica as regras de acesso **dentro da consulta SQL**, para que a contagem
   total e a paginação não revelem a existência de documentos que o utilizador não pode ver.
+- As tarefas seguem a mesma lógica: uma tarefa é visível a quem a tem atribuída e a quem pertence ao
+  departamento ou perfil a que foi oferecida. Agir sobre ela exige `tasks.act`, e reatribuir exige
+  `tasks.reassign` — ver uma tarefa nunca basta para a decidir.
+- As ações disponíveis numa tarefa são calculadas no servidor e enviadas com ela; a interface
+  apresenta o que lhe é dito, e cada *endpoint* volta a verificar a mesma regra antes de agir.
 
 ## 4. Isolamento entre organizações
 
@@ -150,12 +155,22 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Acesso indevido a documento | Avaliação por recurso no servidor, com teto pelas permissões do perfil |
 | Travessia de caminho no armazenamento | Chave gerada pelo servidor e caminho validado contra a raiz |
 | Carregamento de ficheiro perigoso | Lista branca de extensões e tipos, limite de dimensão, nome higienizado |
+| Decisão de aprovação por quem não devia | Autorização por tarefa no servidor, verificada em cada ação |
+| Execução de código a partir de dados guardados | As condições de workflow são um operador de conjunto fechado sobre uma variável, não uma linguagem de expressões |
+| Processo a contornar as regras do documento | As alterações de estado configuradas num nó passam pela máquina de estados do documento |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |
 | Divulgação em mensagens de erro | `ProblemDetails` uniformes, sem detalhe interno |
 
-## 13. Limitações conhecidas
+## 13. Trabalho em segundo plano
+
+O worker corre sem organização no contexto ambiente, o que lhe permite processar todas as
+organizações. É uma exceção deliberada: o processo não expõe superfície HTTP, os seus trabalhos são
+apenas escalonamento de prazos e retoma de temporizadores, e cada escrita continua a passar pelos
+mesmos intercetores de auditoria e de isolamento.
+
+## 14. Limitações conhecidas
 
 - Sem autenticação multifator (fora do âmbito desta demonstração; a arquitetura de Identity suporta a
   adição).

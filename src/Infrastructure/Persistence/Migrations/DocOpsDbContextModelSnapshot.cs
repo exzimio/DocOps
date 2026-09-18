@@ -898,6 +898,74 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.ToTable("UserDepartments", (string)null);
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ReadAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("WorkflowInstanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("WorkflowTaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientUserId", "IsRead", "CreatedAtUtc")
+                        .IsDescending(false, false, true);
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
             modelBuilder.Entity("DocOps.Domain.Tenancy.Department", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1029,6 +1097,472 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Tenants", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("DocumentTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Trigger")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("TenantId", "IsActive");
+
+                    b.ToTable("WorkflowDefinitions", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowEdge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Branch")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FromNodeKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ToNodeKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<Guid>("WorkflowDefinitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowDefinitionId", "FromNodeKey");
+
+                    b.ToTable("WorkflowEdges", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("MetadataJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NodeKey")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("WorkflowInstanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowInstanceId", "OccurredAtUtc");
+
+                    b.ToTable("WorkflowEvents", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowInstance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActiveNodeKeysJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DefinitionVersion")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DueAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset?>("ResumeAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("StartedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StatusReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VariablesJson")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("WorkflowDefinitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("WorkflowDefinitionId");
+
+                    b.HasIndex("Status", "ResumeAtUtc");
+
+                    b.HasIndex("TenantId", "Reference")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("WorkflowInstances", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowNode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConfigJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<double>("PositionX")
+                        .HasColumnType("float");
+
+                    b.Property<double>("PositionY")
+                        .HasColumnType("float");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("WorkflowDefinitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowDefinitionId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("WorkflowNodes", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AssignedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("AssignedToDepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssignedToRole")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("AssignedToUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssigneeDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("AssignmentStrategy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Decision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DecisionComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset?>("DueAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("EscalatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NodeKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ReassignedFromUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("RequiresDecision")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset?>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("WorkflowInstanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowInstanceId");
+
+                    b.HasIndex("AssignedToDepartmentId", "Status");
+
+                    b.HasIndex("AssignedToUserId", "Status");
+
+                    b.HasIndex("TenantId", "AssignedToRole", "Status");
+
+                    b.HasIndex("TenantId", "Status", "DueAtUtc");
+
+                    b.ToTable("WorkflowTasks", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -1288,6 +1822,85 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowDefinition", b =>
+                {
+                    b.HasOne("DocOps.Domain.Documents.DocumentType", "DocumentType")
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DocumentType");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowEdge", b =>
+                {
+                    b.HasOne("DocOps.Domain.Workflows.WorkflowDefinition", "Definition")
+                        .WithMany("Edges")
+                        .HasForeignKey("WorkflowDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Definition");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowEvent", b =>
+                {
+                    b.HasOne("DocOps.Domain.Workflows.WorkflowInstance", "Instance")
+                        .WithMany("Events")
+                        .HasForeignKey("WorkflowInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Instance");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowInstance", b =>
+                {
+                    b.HasOne("DocOps.Domain.Documents.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DocOps.Domain.Workflows.WorkflowDefinition", "Definition")
+                        .WithMany()
+                        .HasForeignKey("WorkflowDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Definition");
+
+                    b.Navigation("Document");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowNode", b =>
+                {
+                    b.HasOne("DocOps.Domain.Workflows.WorkflowDefinition", "Definition")
+                        .WithMany("Nodes")
+                        .HasForeignKey("WorkflowDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Definition");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowTask", b =>
+                {
+                    b.HasOne("DocOps.Domain.Tenancy.Department", "AssignedToDepartment")
+                        .WithMany()
+                        .HasForeignKey("AssignedToDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DocOps.Domain.Workflows.WorkflowInstance", "Instance")
+                        .WithMany("Tasks")
+                        .HasForeignKey("WorkflowInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedToDepartment");
+
+                    b.Navigation("Instance");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("DocOps.Domain.Identity.ApplicationRole", null)
@@ -1375,6 +1988,20 @@ namespace DocOps.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("DocOps.Domain.Tenancy.Tenant", b =>
                 {
                     b.Navigation("Departments");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowDefinition", b =>
+                {
+                    b.Navigation("Edges");
+
+                    b.Navigation("Nodes");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Workflows.WorkflowInstance", b =>
+                {
+                    b.Navigation("Events");
+
+                    b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618
         }

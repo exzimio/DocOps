@@ -84,6 +84,14 @@ npm --prefix src/Web install     # apenas na primeira vez
 npm --prefix src/Web run dev
 ```
 
+O **worker** de segundo plano é opcional para a demonstração — os dados semeados já incluem tarefas
+em atraso e escaladas — mas é o que faz o escalonamento e a retoma de temporizadores acontecerem em
+tempo real:
+
+```bash
+dotnet run --project src/Worker/DocOps.Worker.csproj
+```
+
 O servidor de desenvolvimento do Vite encaminha `/api` e `/health` para a API, de modo que o browser
 permanece numa única origem e o cookie de sessão funciona sem configuração de CORS no cliente.
 
@@ -147,6 +155,9 @@ npm --prefix src/Web run format:check
 | `OpenTelemetry__OtlpEndpoint` | vazio | Exportação OTLP de *traces* e métricas; vazio mantém a telemetria em processo |
 | `FileStorage__RootPath` | `storage` | Raiz do armazenamento de ficheiros (relativa ao *content root* da API) |
 | `FileStorage__MaxFileSizeBytes` | `26214400` | Dimensão máxima aceite num carregamento (25 MB) |
+| `BackgroundJobs__IntervalSeconds` | `60` (30 em desenvolvimento) | Intervalo entre ciclos do worker |
+| `BackgroundJobs__EscalateOverdueTasks` | `true` | Escalonamento de tarefas em atraso |
+| `BackgroundJobs__ResumeWorkflowTimers` | `true` | Retoma de instâncias paradas num temporizador |
 | `MSSQL_SA_PASSWORD` | `Local_Dev_Passw0rd!` | Palavra-passe do container de desenvolvimento |
 | `MSSQL_HOST_PORT` | `14330` | Porto publicado pelo container |
 | `VITE_API_PROXY_TARGET` | `http://localhost:5180` | Destino do proxy do servidor de desenvolvimento |

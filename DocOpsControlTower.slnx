@@ -12,6 +12,9 @@
   <Folder Name="/src/Infrastructure/">
     <Project Path="src/Infrastructure/DocOps.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Worker/">
+    <Project Path="src/Worker/DocOps.Worker.csproj" />
+  </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/IntegrationTests/">
     <Project Path="tests/IntegrationTests/DocOps.IntegrationTests.csproj" />

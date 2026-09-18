@@ -40,7 +40,7 @@ vem da base de dados através da API.
 | --- | --- | --- |
 | 1 | Arquitetura, solução, base de dados, autenticação, multi-tenancy, auditoria base | **Concluída** |
 | 2 | Documentos, versões, permissões, auditoria documental | **Concluída** |
-| 3 | Tarefas e motor de workflow | Planeada |
+| 3 | Tarefas e motor de workflow | **Concluída** |
 | 4 | Designer visual de workflow | Planeada |
 | 5 | Abstração de IA e inteligência documental | Planeada |
 | 6 | Pesquisa, caixa de entrada e integrações | Planeada |
@@ -91,14 +91,38 @@ vem da base de dados através da API.
 - Dados de demonstração: 37 documentos consistentes (com versões, etiquetas, metadados, permissões e
   histórico de auditoria retroativo) em 8 tipos de documento.
 
+### Entregue na Fase 3
+
+- **Motor de workflow próprio**, orientado a dados: definições com nós e ligações persistidas,
+  executadas como instâncias com estado, variáveis e cronologia.
+- Tipos de nó executáveis: início, tarefa humana, aprovação, condição, notificação, ramificação
+  paralela, junção, temporizador e fim. Os tipos ainda não implementados (IA, integrações) **falham
+  de forma explícita** em vez de serem ignorados, e a validação impede ativar uma definição que os use.
+- **Uma travessia é uma transação**: o motor percorre os nós até cada ramo ficar parado ou terminado
+  e só então persiste — instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
+- **Centro de tarefas** com âmbitos (minhas / organização / delegadas), indicadores de SLA, prazos,
+  prioridade, escalonamento e ações decididas no servidor (aprovar, rejeitar, concluir, pedir
+  informação, assumir, reatribuir).
+- Tarefas de grupo: uma tarefa oferecida a um departamento ou perfil é visível a quem pertence a esse
+  grupo e fica atribuída a quem age sobre ela.
+- **Cronologia por instância**, com transições de estado do documento, decisões, notificações e
+  escalonamentos.
+- **Validação de definições** (nós sem saída, ramos em falta, nós inalcançáveis, atribuição em falta),
+  distinguindo erros — que impedem a ativação — de avisos.
+- **Worker em processo separado** para o que não pertence ao pedido HTTP: escalonamento de prazos e
+  retoma de temporizadores.
+- Notificações na aplicação, com contador por ler no cabeçalho.
+- Dados de demonstração: 3 definições e 15 instâncias com tarefas pendentes, em atraso, escaladas,
+  concluídas e uma rejeitada — coerentes com o estado dos documentos.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 107 |
-| Integração com SQL Server real (Testcontainers) | 35 |
+| Unitários (xUnit) | 143 |
+| Integração com SQL Server real (Testcontainers) | 49 |
 | Componente (Vitest + Testing Library) | 8 |
-| End-to-end (Playwright, desktop e móvel) | 22 |
+| End-to-end (Playwright, desktop e móvel) | 30 |
 
 ## 4. Arquitetura
 
@@ -346,6 +370,16 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/documents/{id}/status` | Transição de estado validada pela máquina de estados |
 | `POST /api/documents/{id}/archive` · `/restore` · `DELETE /api/documents/{id}` | Arquivo, restauro e eliminação reversível |
 | `GET /api/documents/{id}/audit` | Trilho de auditoria do documento |
+| `GET /api/workflows` · `/{id}` | Definições de workflow e o seu grafo |
+| `POST /api/workflows/{id}/test` | Valida uma definição sem a executar |
+| `POST /api/workflows/{id}/activate` · `/deactivate` | Ativação (recusada se houver erros de validação) |
+| `GET /api/workflows/instances` · `/{id}` | Execuções, com cronologia, tarefas e variáveis |
+| `POST /api/workflows/instances` | Inicia um processo sobre um documento |
+| `POST /api/workflows/instances/{id}/cancel` | Cancela um processo e fecha as tarefas em aberto |
+| `GET /api/tasks` · `/statistics` | Centro de tarefas e indicadores |
+| `POST /api/tasks/{id}/approve` · `/reject` · `/complete` · `/request-information` | Decisões sobre uma tarefa |
+| `POST /api/tasks/{id}/claim` · `/reassign` | Assumir e reatribuir |
+| `GET /api/notifications` · `/unread-count` | Notificações do utilizador |
 | `GET/POST/DELETE /api/documents/{id}/permissions` | Permissões do documento |
 | `GET /api/documents/{id}/effective-access` | Acesso efetivo, com a razão de cada regra |
 | `GET /api/document-catalogue/types` · `/tags` · `/retention-policies` | Dados de referência dos formulários |
@@ -353,24 +387,69 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 
 ## 10. Motor de workflow
 
-O motor executa definições persistidas (nós e ligações) como instâncias com estado, tarefas humanas,
-prazos, escalonamento e cronologia completa. Desenho e justificação:
-[ADR-006](docs/adr/ADR-006-workflow-engine.md). *Implementação prevista para a Fase 3.*
+```mermaid
+flowchart LR
+    S(["Início"]) --> V["Validar dados<br/>tarefa · Compras · 24 h"]
+    V -->|aprovado| P["Submeter a aprovação<br/>documento → Aguarda aprovação"]
+    V -->|rejeitado| R(["Rejeitada"])
+    P --> C{"Valor > 10 000 euros?"}
+    C -->|sim| M["Aprovação de direção<br/>perfil Manager · 72 h"]
+    C -->|não| F["Aprovação financeira<br/>perfil FinanceApprover · 48 h"]
+    M -->|aprovado| A["Registar aprovação<br/>documento → Aprovado"]
+    F -->|aprovado| A
+    M -->|rejeitado| R
+    F -->|rejeitado| R
+    A --> E(["Arquivar<br/>documento → Arquivado"])
+```
 
-## 11. Arquitetura de IA
+O motor percorre a definição de nó em nó até cada ramo ficar **parado** (alguém tem de agir, ou um
+temporizador tem de decorrer) ou **terminado**, e só então grava. Uma travessia é uma transação: a
+instância, as suas tarefas, a cronologia e a alteração de estado do documento ficam consistentes
+entre si, e uma falha a meio deixa a instância exatamente onde estava.
+
+Princípios que valem a pena destacar:
+
+- **O motor não contorna as regras do documento.** Uma alteração de estado configurada num nó passa
+  pela máquina de estados do documento; se a transição for ilegal, a instância para com o motivo
+  registado em vez de forçar um estado inválido.
+- **Tipos de nó sem executor falham de forma explícita.** Um processo desenhado com um nó de IA não
+  pode sequer ser ativado — a validação recusa-o — e, se lá chegasse, pararia com a razão visível na
+  cronologia em vez de saltar o passo.
+- **As condições não são uma linguagem de expressões**, mas um operador de um conjunto fechado sobre
+  uma variável nomeada: suficiente para as regras que um utilizador de negócio desenha, e impossível
+  de transformar num meio de executar código a partir de dados guardados.
+- **Trabalho de grupo é trabalho reclamável.** Uma tarefa oferecida a um departamento ou perfil fica
+  por atribuir até alguém agir sobre ela; nesse momento fica registada a quem pertence a decisão.
+
+Desenho e alternativas ponderadas: [ADR-006](docs/adr/ADR-006-workflow-engine.md).
+
+## 11. Processamento em segundo plano
+
+O projeto `src/Worker` é um processo separado da API. Corre, num intervalo configurável:
+
+- **Retoma de temporizadores**: instâncias paradas num nó de espera cuja data chegou. Enquanto
+  esperam não custam nada — nem uma linha de execução, nem uma ligação: apenas uma data numa coluna.
+- **Escalonamento de prazos**: tarefas em aberto que passaram a data limite são escaladas uma única
+  vez, notificando o responsável do departamento (ou quem iniciou o processo), com entrada na
+  cronologia e registo de auditoria.
+
+Corre sem organização no contexto ambiente, o que é precisamente o que lhe permite ver todas as
+organizações. É uma exceção deliberada e confinada: nada disto é alcançável a partir de um pedido HTTP.
+
+## 12. Arquitetura de IA
 
 A aplicação depende de abstrações (`IAiDocumentService`, `IAiSearchService`, `IAiWorkflowService`) e
 nunca de um fornecedor concreto. O fornecedor de demonstração é determinístico e identificado como
 tal na interface — respostas de demonstração nunca são apresentadas como geradas por um modelo real.
 Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md). *Implementação prevista para a Fase 5.*
 
-## 12. Estratégia de integrações
+## 13. Estratégia de integrações
 
 Cada integração externa (correio eletrónico, ERP, CRM, assinatura, webhooks) é representada por um
 adaptador atrás de uma interface, com registo de sincronizações e erros. O desenvolvimento local
 nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 
-## 13. Observabilidade
+## 14. Observabilidade
 
 - **Logs estruturados** (Serilog) com `CorrelationId`, `UserId` e propriedades de pedido.
 - **Correlação ponta a ponta**: o mesmo identificador aparece no cabeçalho `X-Correlation-Id` da
@@ -380,7 +459,7 @@ nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 - **Health checks**: `/health/live` (processo vivo), `/health/ready` (dependências prontas),
   `/health` (visão completa) — sem revelar detalhe de infraestrutura.
 
-## 14. Estratégia de testes
+## 15. Estratégia de testes
 
 | Nível | Ferramenta | O que garante |
 | --- | --- | --- |
@@ -392,7 +471,7 @@ nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 Os testes de integração correm contra SQL Server em container, com as mesmas migrações da aplicação:
 não há base de dados em memória a mascarar comportamento relacional.
 
-## 15. Estratégia de implantação
+## 16. Estratégia de implantação
 
 `docker compose up` levanta a base de dados; a API aplica migrações e semeia dados de demonstração em
 desenvolvimento. Em produção, as migrações são um passo explícito do pipeline e a semeadura está
@@ -400,7 +479,7 @@ desligada. As abstrações de armazenamento, IA e identidade permitem mover para
 Azure SQL, Azure OpenAI e Microsoft Entra ID sem alterar o código de domínio — e nada disso é
 necessário para correr o projeto localmente.
 
-## 16. Compromissos assumidos
+## 17. Compromissos assumidos
 
 | Decisão | Alternativa ponderada | Porque assim |
 | --- | --- | --- |
@@ -414,8 +493,11 @@ necessário para correr o projeto localmente.
 | Conteúdo fora da base de dados | `varbinary(max)` ou `FILESTREAM` | Base pequena e rápida; mesmo código em disco local e em armazenamento de objetos |
 | Acesso separado do ciclo de vida | Um único cálculo de "pode editar" | Misturá-los tornava impossível arquivar um documento aprovado |
 | Metadados em EAV com colunas tipadas | Coluna por campo, ou só JSON | Esquema configurável pelo cliente sem perder filtros e ordenações em SQL |
+| Motor de workflow próprio | Elsa, BPMN, WF | Persistência e identidade próprias colidiriam com o isolamento e a auditoria; ver [ADR-006](docs/adr/ADR-006-workflow-engine.md) |
+| Condições como operador sobre variável | Linguagem de expressões | Suficiente para regras de negócio, e sem superfície para executar código a partir de dados |
+| Worker em processo separado | Trabalho em segundo plano dentro da API | Trabalho periódico e lento não partilha recursos com pedidos de utilizadores |
 
-## 17. Melhorias futuras
+## 18. Melhorias futuras
 
 - Extração de módulo de IA para processo próprio caso o volume o justifique.
 - Pesquisa por texto integral com índices de SQL Server e ranking por relevância.
@@ -433,6 +515,7 @@ Guião da demonstração: [`docs/DEMO.md`](docs/DEMO.md).
 
 ```bash
 docker compose up -d                                  # SQL Server
-dotnet run --project src/Api/DocOps.Api.csproj        # API   → http://localhost:5180
-npm --prefix src/Web run dev                          # Web   → http://localhost:5173
+dotnet run --project src/Api/DocOps.Api.csproj        # API    → http://localhost:5180
+npm --prefix src/Web run dev                          # Web    → http://localhost:5173
+dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker (opcional: prazos e temporizadores)
 ```

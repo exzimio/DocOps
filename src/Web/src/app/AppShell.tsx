@@ -7,6 +7,7 @@ import { navigationSections } from './navigation'
 import { hasPermission, useLogout, useSession } from '@/features/auth/session'
 import { Button } from '@/components/ui/Button'
 import { LanguageSwitcher, ThemeToggle } from '@/components/PreferencesControls'
+import { NotificationBell } from '@/features/workflows/NotificationBell'
 import { LoadingState } from '@/components/ui/Surface'
 
 export function AppShell() {
@@ -71,6 +72,7 @@ export function AppShell() {
             <LanguageSwitcher />
           </div>
           <ThemeToggle />
+          <NotificationBell />
 
           <div className="flex items-center gap-2 border-l border-subtle pl-2">
             <span

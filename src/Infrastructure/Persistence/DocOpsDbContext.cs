@@ -4,7 +4,9 @@ using DocOps.Domain.Common;
 using DocOps.Domain.Compliance;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
+using DocOps.Domain.Notifications;
 using DocOps.Domain.Tenancy;
+using DocOps.Domain.Workflows;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -37,6 +39,14 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
     public DbSet<DocumentPermission> DocumentPermissions => Set<DocumentPermission>();
     public DbSet<RetentionPolicy> RetentionPolicies => Set<RetentionPolicy>();
+
+    public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
+    public DbSet<WorkflowNode> WorkflowNodes => Set<WorkflowNode>();
+    public DbSet<WorkflowEdge> WorkflowEdges => Set<WorkflowEdge>();
+    public DbSet<WorkflowInstance> WorkflowInstances => Set<WorkflowInstance>();
+    public DbSet<WorkflowTask> WorkflowTasks => Set<WorkflowTask>();
+    public DbSet<WorkflowEvent> WorkflowEvents => Set<WorkflowEvent>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     /// <summary>
     /// Null in unauthenticated contexts (migrations, seeding, the background worker). The query
@@ -107,5 +117,19 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
         builder.Entity<DocumentTag>().HasQueryFilter(dt =>
             !dt.Document!.IsDeleted && !dt.Tag!.IsDeleted
             && (CurrentTenantId == null || dt.Document.TenantId == CurrentTenantId));
+
+        builder.Entity<WorkflowDefinition>().HasQueryFilter(d =>
+            !d.IsDeleted && (CurrentTenantId == null || d.TenantId == CurrentTenantId));
+
+        builder.Entity<WorkflowNode>().HasQueryFilter(n =>
+            !n.Definition!.IsDeleted && (CurrentTenantId == null || n.TenantId == CurrentTenantId));
+
+        builder.Entity<WorkflowEdge>().HasQueryFilter(e =>
+            !e.Definition!.IsDeleted && (CurrentTenantId == null || e.TenantId == CurrentTenantId));
+
+        builder.Entity<WorkflowInstance>().HasQueryFilter(i => CurrentTenantId == null || i.TenantId == CurrentTenantId);
+        builder.Entity<WorkflowTask>().HasQueryFilter(t => CurrentTenantId == null || t.TenantId == CurrentTenantId);
+        builder.Entity<WorkflowEvent>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        builder.Entity<Notification>().HasQueryFilter(n => CurrentTenantId == null || n.TenantId == CurrentTenantId);
     }
 }

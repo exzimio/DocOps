@@ -126,6 +126,68 @@ alteração mostram o antes e o depois.
 
 ---
 
+## Demonstração disponível na Fase 3 — Tarefas e processos (≈5 minutos)
+
+### 1. Centro de tarefas (60 s)
+
+Entre como `ricardo.lopes@asteria.example` e abra **Tarefas**.
+
+- Os indicadores no topo — pendentes, em curso, em atraso, concluídas, por atribuir — são calculados
+  pelo servidor a partir das tarefas reais.
+- Cada linha mostra o prazo com um ponto de SLA que passa de verde a âmbar e a vermelho à medida que
+  a data se aproxima, e uma marca de *escalada* quando o prazo foi ultrapassado.
+- Repare numa tarefa **Por atribuir**: foi oferecida ao perfil *FinanceApprover*, não a uma pessoa.
+  Está à espera de quem a assumir.
+- Os botões disponíveis vêm do servidor: uma tarefa de decisão oferece aprovar e rejeitar; uma tarefa
+  de execução oferece concluir.
+
+### 2. Decidir e ver o processo avançar (90 s)
+
+Aprove a tarefa *Aprovar fatura* de `WF-2026-00001` com um comentário.
+
+Abra **Workflows** → a instância `WF-2026-00001`. A cronologia conta a história completa:
+
+```
+Processo iniciado
+Documento passou de 'Draft' para 'InReview'
+Tarefa 'Validar dados da fatura' atribuída a Procurement
+Condição 'Valor acima de 10 000 €?' avaliada como verdadeira
+Tarefa 'Aprovar fatura' concluída por Ricardo Lopes (Aprovado)
+Documento passou de 'Approved' para 'Archived'
+Processo concluído
+```
+
+O documento ligado está agora **arquivado** — não porque a interface o disse, mas porque o nó final
+do processo pediu essa transição e a máquina de estados do documento a aceitou.
+
+### 3. Encaminhamento por condição (60 s)
+
+Abra a definição **Aprovação de fatura de fornecedor** (botão *Passos do processo*). Repare no nó de
+condição: faturas acima de 10 000 € seguem para aprovação de direção; abaixo, para aprovação
+financeira. As instâncias em curso mostram-no na prática — a fatura da Atlas Tecnologia (30 504 €)
+está parada em *Aprovação de direção*, as restantes em *Aprovação financeira*.
+
+### 4. Validação de definições (45 s)
+
+Na mesma página, o painel **Problemas de validação** mostra que o processo é executável. A validação
+recusa ativar uma definição com nós sem saída, ramos em falta ou tipos de nó que o motor ainda não
+executa — um processo desenhado com nós de IA não pode ser ativado antes de essa fase existir.
+
+### 5. Iniciar um processo a partir de um documento (45 s)
+
+Entre como `ana.ferreira@asteria.example`, abra uma fatura e use o painel **Workflows** na coluna
+lateral. Só aparecem processos ativos do tipo desse documento. Inicie um: a tarefa de validação
+aparece imediatamente em **Tarefas** para o departamento de Compras, e a notificação no sino do
+cabeçalho aparece com ela.
+
+### 6. Trabalho de segundo plano (30 s)
+
+Com o worker a correr (`dotnet run --project src/Worker/DocOps.Worker.csproj`), as tarefas que passam
+o prazo são escaladas uma única vez: notificação ao responsável do departamento, entrada na
+cronologia da instância e registo de auditoria. Nada disto acontece no pedido de um utilizador.
+
+---
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.
@@ -168,3 +230,6 @@ alteração mostram o antes e o depois.
 | Painel de acesso efetivo | Autorização por recurso explicável, não apenas um sim/não |
 | Impressão digital por versão | Integridade verificável e base para a assinatura eletrónica |
 | Filtro aplicado dentro da consulta SQL | A contagem total não revela documentos que o utilizador não pode ver |
+| Cronologia do processo | O estado atual é explicável passo a passo, não apenas observável |
+| Nó de IA impede a ativação | Falhar explicitamente em vez de saltar um passo do processo |
+| Ações da tarefa vindas do servidor | A interface reflete a autorização, não a define |

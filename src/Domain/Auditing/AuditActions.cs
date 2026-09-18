@@ -33,6 +33,18 @@ public static class AuditActions
     public const string DocumentDeleted = "document.deleted";
     public const string DocumentAccessDenied = "document.access.denied";
 
+    public const string WorkflowDefinitionCreated = "workflow.definition.created";
+    public const string WorkflowDefinitionUpdated = "workflow.definition.updated";
+    public const string WorkflowDefinitionActivated = "workflow.definition.activated";
+    public const string WorkflowDefinitionDeactivated = "workflow.definition.deactivated";
+    public const string WorkflowInstanceStarted = "workflow.instance.started";
+    public const string WorkflowInstanceCompleted = "workflow.instance.completed";
+    public const string WorkflowInstanceCancelled = "workflow.instance.cancelled";
+    public const string WorkflowInstanceFailed = "workflow.instance.failed";
+    public const string WorkflowTaskCompleted = "workflow.task.completed";
+    public const string WorkflowTaskReassigned = "workflow.task.reassigned";
+    public const string WorkflowTaskEscalated = "workflow.task.escalated";
+
     public const string AuthorizationDenied = "security.authorization.denied";
     public const string TenantIsolationViolationBlocked = "security.tenant_isolation.blocked";
 }
@@ -48,4 +60,7 @@ public static class AuditEntityTypes
     public const string Document = "Document";
     public const string DocumentVersion = "DocumentVersion";
     public const string DocumentPermission = "DocumentPermission";
+    public const string WorkflowDefinition = "WorkflowDefinition";
+    public const string WorkflowInstance = "WorkflowInstance";
+    public const string WorkflowTask = "WorkflowTask";
 }

@@ -43,15 +43,15 @@ benefício teórico. Ver [ADR-002](adr/ADR-002-authentication.md).
 | Audit & Compliance | Registo imutável, retenção, classificação, retenção legal | 1 (base) ✅ |
 | Document Management | Documentos, versões, metadados, permissões documentais | 2 ✅ |
 | Document Classification | Tipos de documento e campos de metadados | 2 ✅ |
-| Workflow Management / Execution | Definições, instâncias, estados, prazos | 3–4 |
-| Tasks & Approvals | Tarefas humanas, aprovações, delegação, SLA | 3 |
+| Workflow Management / Execution | Definições, instâncias, estados, prazos | 3 ✅ (designer visual na 4) |
+| Tasks & Approvals | Tarefas humanas, aprovações, delegação, SLA | 3 ✅ |
 | AI Intelligence | Classificação, extração, perguntas sobre documentos | 5 |
 | Search | Pesquisa por metadados, texto integral e linguagem natural | 6 |
 | Email / Inbox | Caixa de entrada e processamento de anexos | 6 |
 | Integrations | Adaptadores externos e registo de sincronização | 6 |
 | Electronic Signature | Pedidos e estados de assinatura | 7 |
 | Reporting & Analytics | Indicadores e gráficos a partir de dados reais | 8 |
-| Notifications | Notificações e escalonamentos | 3+ |
+| Notifications | Notificações e escalonamentos | 3 ✅ |
 | Administration | Gestão de utilizadores, perfis, departamentos e definições | 8 |
 
 ## 4. Pipeline de pedido
@@ -193,13 +193,55 @@ que endereço, com que identificador de correlação e — quando aplicável —
 - **Navegação orientada a dados e a permissões**: uma entrada só existe quando a rota, a API e a
   persistência existem.
 
-## 10. Processamento em segundo plano (Fase 3)
+## 10. Motor de workflow
 
-Temporizadores de workflow, deteção de tarefas em atraso, notificações, verificação de retenção e
-fila de processamento de IA correm num *worker* separado do pedido HTTP. Nenhum pedido do utilizador
-espera por trabalho de longa duração.
+```mermaid
+flowchart TB
+    subgraph Definicao["Definição (desenhada)"]
+        N["Nós<br/>tipo + configuração JSON"]
+        E["Ligações<br/>com ramo opcional"]
+    end
 
-## 11. Preparação para a nuvem
+    subgraph Execucao["Execução (por instância)"]
+        A["Nós ativos<br/>(mais do que um em paralelo)"]
+        V["Variáveis<br/>metadados do documento + decisões"]
+        T["Tarefas humanas"]
+        L["Cronologia"]
+    end
+
+    W["WorkflowEngine<br/>uma travessia = uma transação"]
+    X["Executores por tipo de nó"]
+
+    Definicao --> W
+    W --> X
+    X --> Execucao
+    W -->|"estado configurado no nó"| D["DocumentLifecycle<br/>valida a transição"]
+```
+
+O motor percorre os nós até cada ramo ficar parado — à espera de uma pessoa ou de um temporizador — ou
+terminado, e só então persiste. Consequências que importam:
+
+- **Consistência**: instância, tarefas, cronologia e estado do documento gravam juntos. Uma falha a
+  meio da travessia deixa a instância exatamente onde estava.
+- **Falhar em vez de saltar**: um tipo de nó sem executor, uma ligação em falta ou uma transição de
+  documento ilegal param a instância com o motivo registado na cronologia. Um processo que se
+  "desenrasca" sozinho é pior do que um processo que para e diz porquê.
+- **Espera sem custo**: uma instância parada não consome nada além de uma data numa coluna; o worker
+  retoma-a quando a data chega.
+- **Separação de responsabilidades**: `DocumentAccessEvaluator` diz quem pode agir,
+  `DocumentLifecycle` diz o que pode ser feito ao documento agora, e o motor diz para onde o processo
+  segue. Nenhum dos três decide pelos outros.
+
+## 11. Processamento em segundo plano
+
+O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores e escalonamento
+de prazos. Nenhum pedido de utilizador espera por trabalho periódico, e o worker vê todas as
+organizações — uma exceção deliberada, confinada a trabalho que nenhum pedido HTTP alcança.
+
+Verificação de retenção e fila de processamento de IA juntam-se a estes trabalhos nas fases
+respetivas.
+
+## 12. Preparação para a nuvem
 
 | Abstração | Implementação local | Implementação em Azure |
 | --- | --- | --- |

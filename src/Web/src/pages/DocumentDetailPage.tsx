@@ -23,6 +23,7 @@ import {
   VersionsPanel,
 } from '@/features/documents/panels'
 import { EditDocumentForm } from '@/features/documents/EditDocumentForm'
+import { StartWorkflowPanel } from '@/features/workflows/StartWorkflowPanel'
 import { DocumentStatus } from '@/features/documents/types'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
@@ -270,6 +271,12 @@ export function DocumentDetailPage() {
 
         <aside className="flex flex-col gap-4">
           <EffectiveAccessPanel access={document.effectiveAccess} />
+
+          <StartWorkflowPanel
+            documentId={document.summary.id}
+            documentTypeId={document.documentTypeId}
+            canStart={canEdit}
+          />
 
           {document.allowedNextStatuses.length > 0 && (
             <Card>

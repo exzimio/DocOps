@@ -18,6 +18,8 @@ public sealed class DemoDataSeeder(
     RoleManager<ApplicationRole> roleManager,
     DocumentCatalogueSeeder catalogueSeeder,
     DocumentDemoSeeder documentSeeder,
+    WorkflowCatalogueSeeder workflowCatalogueSeeder,
+    WorkflowInstanceSeeder workflowInstanceSeeder,
     IOptions<SeedOptions> options,
     ILogger<DemoDataSeeder> logger)
 {
@@ -94,6 +96,10 @@ public sealed class DemoDataSeeder(
         await catalogueSeeder.SeedAsync(asteria, cancellationToken);
         await catalogueSeeder.SeedAsync(vertice, cancellationToken);
         await documentSeeder.SeedAsync(asteria, cancellationToken);
+
+        await workflowCatalogueSeeder.SeedAsync(asteria, cancellationToken);
+        await workflowCatalogueSeeder.SeedAsync(vertice, cancellationToken);
+        await workflowInstanceSeeder.SeedAsync(asteria, DateTimeOffset.UtcNow, cancellationToken);
 
         logger.LogInformation("Demo seed completed for tenants {Asteria} and {Vertice}", asteria.Name, vertice.Name);
     }

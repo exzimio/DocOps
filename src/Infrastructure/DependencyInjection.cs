@@ -2,7 +2,9 @@ using DocOps.Application.Abstractions;
 using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Tenancy;
+using DocOps.Application.Workflows;
 using DocOps.Domain.Identity;
+using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Auditing;
 using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
@@ -11,6 +13,7 @@ using DocOps.Infrastructure.Persistence.Interceptors;
 using DocOps.Infrastructure.Persistence.Seed;
 using DocOps.Infrastructure.Storage;
 using DocOps.Infrastructure.Tenancy;
+using DocOps.Infrastructure.Workflows;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -44,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<DemoDataSeeder>();
         services.AddScoped<DocumentCatalogueSeeder>();
         services.AddScoped<DocumentDemoSeeder>();
+        services.AddScoped<WorkflowCatalogueSeeder>();
+        services.AddScoped<WorkflowInstanceSeeder>();
 
         services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
@@ -54,7 +59,43 @@ public static class DependencyInjection
         services.AddScoped<IDocumentPermissionService, DocumentPermissionService>();
         services.AddScoped<IDocumentCatalogue, DocumentCatalogue>();
 
+        AddWorkflows(services);
+
         return services;
+    }
+
+    private static void AddWorkflows(IServiceCollection services)
+    {
+        services.AddScoped<TaskAssignmentResolver>();
+        services.AddScoped<DocumentStatusEffect>();
+        services.AddScoped<WorkflowEngine>();
+
+        // One executor per node type. A type without an executor stops the instance with a clear
+        // reason instead of skipping the step, which is why the unimplemented ones are registered too.
+        services.AddScoped<INodeExecutor, StartNodeExecutor>();
+        services.AddScoped<INodeExecutor, EndNodeExecutor>();
+        services.AddScoped<INodeExecutor, ConditionNodeExecutor>();
+        services.AddScoped<INodeExecutor, ParallelBranchNodeExecutor>();
+        services.AddScoped<INodeExecutor, JoinNodeExecutor>();
+        services.AddScoped<INodeExecutor, DelayNodeExecutor>();
+        services.AddScoped<INodeExecutor, NotificationNodeExecutor>();
+
+        services.AddScoped<INodeExecutor>(provider => new HumanTaskNodeExecutor(
+            provider.GetRequiredService<TaskAssignmentResolver>(), WorkflowNodeType.HumanTask));
+
+        services.AddScoped<INodeExecutor>(provider => new HumanTaskNodeExecutor(
+            provider.GetRequiredService<TaskAssignmentResolver>(), WorkflowNodeType.Approval));
+
+        services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
+            WorkflowNodeType.AiClassification, "fase de IA"));
+        services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
+            WorkflowNodeType.AiExtraction, "fase de IA"));
+        services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
+            WorkflowNodeType.Integration, "fase de integrações"));
+
+        services.AddScoped<IWorkflowService, WorkflowService>();
+        services.AddScoped<ITaskService, TaskService>();
+        services.AddScoped<INotificationService, NotificationService>();
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration, bool isDevelopment)
