@@ -1,0 +1,138 @@
+{
+  "common": {
+    "appName": "DocOps Control Tower",
+    "tagline": "Turn documents into controlled, auditable business processes.",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "E-mail address",
+    "password": "Password",
+    "rememberMe": "Keep me signed in",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "cancel": "Cancel",
+    "close": "Close",
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "skipToContent": "Skip to main content",
+    "independentProject": "Independent portfolio project — not affiliated with any third party"
+  },
+  "landing": {
+    "heroTitle": "DocOps Control Tower",
+    "heroSubtitle": "Turn documents into controlled, auditable business processes.",
+    "heroBody": "A document operations platform combining a governed repository, workflow automation, AI-assisted processing and a complete audit trail.",
+    "launchDemo": "Launch interactive demo",
+    "viewArchitecture": "View architecture",
+    "capabilitiesTitle": "Capabilities",
+    "features": {
+      "documentIntelligence": {
+        "title": "Document intelligence",
+        "body": "Classification, metadata extraction and questions over content, with confidence indicators and human validation."
+      },
+      "workflowAutomation": {
+        "title": "Workflow automation",
+        "body": "Visual process design, execution with deadlines, escalation and reassignment, and a full timeline per instance."
+      },
+      "secureSearch": {
+        "title": "Secure search",
+        "body": "Metadata and full-text search with server-side paging, always limited to what the user is allowed to see."
+      },
+      "aiProcessing": {
+        "title": "AI-assisted processing",
+        "body": "An AI abstraction layer with a deterministic demo provider and optional connection to real models."
+      },
+      "auditCompliance": {
+        "title": "Audit & compliance",
+        "body": "Immutable record of access and decisions, retention policies, sensitivity classification and legal hold."
+      },
+      "integrations": {
+        "title": "Enterprise integrations",
+        "body": "Adapters for e-mail, ERP, CRM, electronic signature and webhooks, with synchronisation logs."
+      }
+    },
+    "demoTitle": "Demo credentials",
+    "demoBody": "The demo uses the fictional organisation Asteria Group. All data is invented.",
+    "footerNote": "Independent technical demonstration. Not a commercial product and not associated with any vendor."
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Access your DocOps Control Tower workspace.",
+    "submit": "Sign in",
+    "submitting": "Verifying…",
+    "demoAccounts": "Demo accounts",
+    "demoHint": "Password for every account: {{password}}",
+    "useAccount": "Use this account",
+    "validation": {
+      "emailRequired": "Enter your e-mail address.",
+      "emailInvalid": "Invalid e-mail address.",
+      "passwordRequired": "Enter your password."
+    },
+    "errors": {
+      "invalid_credentials": "Invalid credentials. Check the e-mail address and password.",
+      "account_locked": "Account temporarily locked after repeated failed attempts. Try again in a few minutes.",
+      "account_disabled": "This account is disabled. Contact your organisation's administrator.",
+      "tenant_inactive": "The organisation linked to this account is inactive.",
+      "validation_failed": "Check the highlighted fields.",
+      "origin_not_allowed": "Request blocked by the origin security policy.",
+      "http_429": "Too many attempts. Wait before trying again.",
+      "network": "Could not reach the server. Check that the API is running."
+    }
+  },
+  "nav": {
+    "sectionWork": "Work",
+    "sectionIntelligence": "Intelligence",
+    "sectionGovernance": "Governance",
+    "dashboard": "Dashboard",
+    "documents": "Documents",
+    "tasks": "Tasks",
+    "workflows": "Workflows",
+    "inbox": "Inbox",
+    "ai": "AI centre",
+    "search": "Search",
+    "reports": "Analytics",
+    "audit": "Audit",
+    "integrations": "Integrations",
+    "admin": "Administration",
+    "portal": "External portal"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Hello, {{name}}",
+    "subtitle": "Operational overview for {{tenant}}.",
+    "sessionTitle": "Session",
+    "identityTitle": "Identity & access",
+    "organisationTitle": "Organisation",
+    "departmentsTitle": "Departments",
+    "permissionsTitle": "Effective permissions",
+    "permissionsBody": "Permissions granted through the user's roles. Authorisation is always enforced on the server.",
+    "roles": "Roles",
+    "lastLogin": "Last sign-in",
+    "never": "No previous sign-in",
+    "primaryDepartment": "Primary department",
+    "jobTitle": "Job title",
+    "userType": "User type",
+    "userTypeInternal": "Internal",
+    "userTypeExternal": "External",
+    "platformAdmin": "Platform administrator",
+    "timeZone": "Time zone",
+    "legalName": "Legal name",
+    "manager": "Head of department",
+    "noManager": "No head assigned",
+    "memberCountLabel": "Members",
+    "phaseNoticeTitle": "Phased build",
+    "phaseNoticeBody": "This area grows with each project phase. Everything visible is wired to the real API and database — there are no static demo screens."
+  },
+  "errors": {
+    "genericTitle": "Something went wrong",
+    "genericBody": "The operation could not be completed. Please try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The requested address does not exist in this application.",
+    "forbiddenTitle": "Access denied",
+    "forbiddenBody": "You do not have permission to access this area.",
+    "backToDashboard": "Back to dashboard",
+    "correlationId": "Correlation id"
+  }
+}

@@ -1,0 +1,60 @@
+using DocOps.Application.Abstractions;
+using DocOps.Application.Tenancy;
+using DocOps.Domain.Common;
+using DocOps.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace DocOps.Infrastructure.Tenancy;
+
+/// <summary>
+/// Reads the caller's own organisation. Every query below relies on the context-level tenant filter,
+/// so no tenant identifier ever crosses the API boundary from the client.
+/// </summary>
+public sealed class TenantDirectory(DocOpsDbContext dbContext, ITenantContext tenantContext) : ITenantDirectory
+{
+    public async Task<TenantProfileDto> GetCurrentTenantAsync(CancellationToken cancellationToken = default)
+    {
+        Guid tenantId = tenantContext.TenantId;
+
+        var tenant = await dbContext.Tenants
+            .Where(t => t.Id == tenantId)
+            .Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.LegalName,
+                t.Slug,
+                t.DefaultCulture,
+                t.TimeZoneId,
+                t.IsActive
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new EntityNotFoundException(nameof(Domain.Tenancy.Tenant), tenantId);
+
+        IReadOnlyList<DepartmentDto> departments = await GetDepartmentsAsync(includeInactive: false, cancellationToken);
+
+        return new TenantProfileDto(
+            tenant.Id, tenant.Name, tenant.LegalName, tenant.Slug,
+            tenant.DefaultCulture, tenant.TimeZoneId, tenant.IsActive, departments);
+    }
+
+    public async Task<IReadOnlyList<DepartmentDto>> GetDepartmentsAsync(
+        bool includeInactive = false, CancellationToken cancellationToken = default) =>
+        await dbContext.Departments
+            .Where(d => includeInactive || d.IsActive)
+            .OrderBy(d => d.Name)
+            .Select(d => new DepartmentDto(
+                d.Id,
+                d.Name,
+                d.Code,
+                d.Description,
+                d.ParentDepartmentId,
+                d.ManagerUserId,
+                dbContext.Users
+                    .Where(u => u.Id == d.ManagerUserId)
+                    .Select(u => u.FirstName + " " + u.LastName)
+                    .FirstOrDefault(),
+                d.Members.Count(m => m.User!.IsActive),
+                d.IsActive))
+            .ToListAsync(cancellationToken);
+}

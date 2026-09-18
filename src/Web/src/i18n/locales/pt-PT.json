@@ -1,0 +1,138 @@
+{
+  "common": {
+    "appName": "DocOps Control Tower",
+    "tagline": "Transforme documentos em processos de negócio controlados e auditáveis.",
+    "loading": "A carregar…",
+    "retry": "Tentar novamente",
+    "signIn": "Iniciar sessão",
+    "signOut": "Terminar sessão",
+    "email": "Endereço de e-mail",
+    "password": "Palavra-passe",
+    "rememberMe": "Manter sessão iniciada",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Escuro",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "openMenu": "Abrir menu de navegação",
+    "closeMenu": "Fechar menu de navegação",
+    "skipToContent": "Saltar para o conteúdo principal",
+    "independentProject": "Projeto de portefólio independente — sem afiliação a terceiros"
+  },
+  "landing": {
+    "heroTitle": "DocOps Control Tower",
+    "heroSubtitle": "Transforme documentos em processos de negócio controlados e auditáveis.",
+    "heroBody": "Uma plataforma de operações documentais que combina repositório documental, automação de workflows, processamento assistido por IA e trilho de auditoria completo.",
+    "launchDemo": "Abrir demonstração interativa",
+    "viewArchitecture": "Ver arquitetura",
+    "capabilitiesTitle": "Capacidades",
+    "features": {
+      "documentIntelligence": {
+        "title": "Inteligência documental",
+        "body": "Classificação, extração de metadados e perguntas sobre o conteúdo, com indicadores de confiança e validação humana."
+      },
+      "workflowAutomation": {
+        "title": "Automação de workflows",
+        "body": "Desenho visual de circuitos, execução com prazos, escalonamento e reatribuição, e cronologia completa de cada instância."
+      },
+      "secureSearch": {
+        "title": "Pesquisa segura",
+        "body": "Pesquisa por metadados e texto integral com paginação do lado do servidor, sempre limitada ao que o utilizador pode ver."
+      },
+      "aiProcessing": {
+        "title": "Processamento assistido por IA",
+        "body": "Camada de abstração de IA com fornecedor de demonstração determinístico e ligação opcional a modelos reais."
+      },
+      "auditCompliance": {
+        "title": "Auditoria e conformidade",
+        "body": "Registo imutável de acessos e decisões, políticas de retenção, classificação de sensibilidade e retenção legal."
+      },
+      "integrations": {
+        "title": "Integrações empresariais",
+        "body": "Adaptadores para correio eletrónico, ERP, CRM, assinatura eletrónica e webhooks, com registo de sincronizações."
+      }
+    },
+    "demoTitle": "Credenciais de demonstração",
+    "demoBody": "A demonstração usa a organização fictícia Asteria Group. Todos os dados são inventados.",
+    "footerNote": "Demonstração técnica independente. Não constitui um produto comercial nem está associada a qualquer fornecedor."
+  },
+  "login": {
+    "title": "Iniciar sessão",
+    "subtitle": "Aceda à sua área de trabalho do DocOps Control Tower.",
+    "submit": "Entrar",
+    "submitting": "A validar…",
+    "demoAccounts": "Contas de demonstração",
+    "demoHint": "Palavra-passe para todas as contas: {{password}}",
+    "useAccount": "Utilizar esta conta",
+    "validation": {
+      "emailRequired": "Indique o seu endereço de e-mail.",
+      "emailInvalid": "Endereço de e-mail inválido.",
+      "passwordRequired": "Indique a sua palavra-passe."
+    },
+    "errors": {
+      "invalid_credentials": "Credenciais inválidas. Verifique o e-mail e a palavra-passe.",
+      "account_locked": "Conta temporariamente bloqueada após várias tentativas falhadas. Tente novamente dentro de alguns minutos.",
+      "account_disabled": "Esta conta está desativada. Contacte o administrador da sua organização.",
+      "tenant_inactive": "A organização associada a esta conta está inativa.",
+      "validation_failed": "Verifique os campos assinalados.",
+      "origin_not_allowed": "Pedido bloqueado por política de segurança de origem.",
+      "http_429": "Demasiadas tentativas. Aguarde antes de tentar novamente.",
+      "network": "Não foi possível contactar o servidor. Verifique se a API está em execução."
+    }
+  },
+  "nav": {
+    "sectionWork": "Trabalho",
+    "sectionIntelligence": "Inteligência",
+    "sectionGovernance": "Governação",
+    "dashboard": "Painel",
+    "documents": "Documentos",
+    "tasks": "Tarefas",
+    "workflows": "Workflows",
+    "inbox": "Caixa de entrada",
+    "ai": "Centro de IA",
+    "search": "Pesquisa",
+    "reports": "Análises",
+    "audit": "Auditoria",
+    "integrations": "Integrações",
+    "admin": "Administração",
+    "portal": "Portal externo"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "greeting": "Olá, {{name}}",
+    "subtitle": "Resumo operacional de {{tenant}}.",
+    "sessionTitle": "Sessão",
+    "identityTitle": "Identidade e acesso",
+    "organisationTitle": "Organização",
+    "departmentsTitle": "Departamentos",
+    "permissionsTitle": "Permissões efetivas",
+    "permissionsBody": "Permissões atribuídas através dos perfis do utilizador. A autorização é sempre validada no servidor.",
+    "roles": "Perfis",
+    "lastLogin": "Última sessão",
+    "never": "Sem registo anterior",
+    "primaryDepartment": "Departamento principal",
+    "jobTitle": "Função",
+    "userType": "Tipo de utilizador",
+    "userTypeInternal": "Interno",
+    "userTypeExternal": "Externo",
+    "platformAdmin": "Administrador de plataforma",
+    "timeZone": "Fuso horário",
+    "legalName": "Denominação social",
+    "manager": "Responsável",
+    "noManager": "Sem responsável atribuído",
+    "memberCountLabel": "Membros",
+    "phaseNoticeTitle": "Construção por fases",
+    "phaseNoticeBody": "Esta área cresce a cada fase do projeto. As funcionalidades visíveis estão ligadas à API e à base de dados reais — não há ecrãs de demonstração estáticos."
+  },
+  "errors": {
+    "genericTitle": "Ocorreu um erro",
+    "genericBody": "Não foi possível concluir a operação. Tente novamente.",
+    "notFoundTitle": "Página não encontrada",
+    "notFoundBody": "O endereço pedido não existe nesta aplicação.",
+    "forbiddenTitle": "Acesso negado",
+    "forbiddenBody": "Não tem permissões para aceder a esta área.",
+    "backToDashboard": "Voltar ao painel",
+    "correlationId": "Identificador de correlação"
+  }
+}

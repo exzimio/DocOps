@@ -1,0 +1,320 @@
+# DocOps Control Tower
+
+**Transforme documentos em processos de negócio controlados e auditáveis.**
+
+Plataforma de operações documentais que combina repositório documental governado, automação de
+workflows, processamento assistido por IA, pesquisa segura e trilho de auditoria completo.
+
+> **Projeto de portefólio independente.** Demonstração técnica pessoal, sem afiliação, associação ou
+> relação com qualquer produto ou fornecedor comercial. Todas as organizações, pessoas e documentos
+> usados na demonstração são fictícios.
+
+---
+
+## 1. Visão do produto
+
+Nas organizações, os documentos que importam — faturas de fornecedor, contratos, encomendas,
+processos de colaboradores — não são ficheiros: são o início de processos de negócio com
+responsáveis, prazos, decisões e obrigações de conformidade. O DocOps Control Tower trata o
+documento como aquilo que ele é, ligando repositório, metadados, circuito de aprovação, decisão e
+prova.
+
+## 2. Problema que resolve
+
+| Problema operacional | Resposta da plataforma |
+| --- | --- |
+| Documentos dispersos por e-mail e pastas partilhadas | Repositório único com metadados, tipos e versões |
+| Aprovações informais e sem rasto | Motor de workflow com tarefas, prazos e escalonamento |
+| Introdução manual de dados de faturas e contratos | Classificação e extração assistida por IA com validação humana |
+| "Quem viu, alterou ou aprovou isto?" | Registo de auditoria imutável e pesquisável |
+| Acessos concedidos sem critério | Autorização por permissão, departamento e documento, validada no servidor |
+| Retenção e obrigações legais geridas em folhas de cálculo | Políticas de retenção, classificação de sensibilidade e retenção legal |
+
+## 3. Estado de construção
+
+O projeto é construído por fases; cada fase é entregue a funcionar de ponta a ponta (base de dados,
+API, interface e testes). Não existem ecrãs de demonstração estáticos: tudo o que a interface mostra
+vem da base de dados através da API.
+
+| Fase | Âmbito | Estado |
+| --- | --- | --- |
+| 1 | Arquitetura, solução, base de dados, autenticação, multi-tenancy, auditoria base | **Concluída** |
+| 2 | Documentos, versões, permissões, auditoria documental | Planeada |
+| 3 | Tarefas e motor de workflow | Planeada |
+| 4 | Designer visual de workflow | Planeada |
+| 5 | Abstração de IA e inteligência documental | Planeada |
+| 6 | Pesquisa, caixa de entrada e integrações | Planeada |
+| 7 | Portal externo e assinatura eletrónica | Planeada |
+| 8 | Relatórios e administração | Planeada |
+| 9 | Testes, segurança e observabilidade | Planeada |
+| 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
+
+### Entregue na Fase 1
+
+- Monólito modular .NET 10 com fronteiras explícitas (`Domain`, `Application`, `Infrastructure`, `Api`).
+- Base de dados SQL Server modelada com EF Core: chaves estrangeiras, índices, índices únicos
+  filtrados, tokens de concorrência, *soft delete* e carimbos temporais automáticos.
+- Multi-tenancy com isolamento imposto em duas camadas (filtros globais de leitura + intercetor de
+  escrita).
+- Autenticação por cookie `HttpOnly` com ASP.NET Core Identity, bloqueio por tentativas e política
+  de palavra-passe.
+- Autorização por permissões (não por perfis) com permissões guardadas em base de dados e
+  políticas geradas a pedido.
+- Trilho de auditoria imutável, já a registar autenticações, com identificador de correlação.
+- API REST documentada em OpenAPI, `ProblemDetails` consistente, *rate limiting*, cabeçalhos de
+  segurança e proteção CSRF por validação de origem.
+- Observabilidade: logging estruturado (Serilog), OpenTelemetry e *health checks* `/health`,
+  `/health/live`, `/health/ready`.
+- Frontend React 19 + TypeScript com design system próprio, tema claro/escuro, pt-PT/en e
+  navegação protegida.
+- 45 testes unitários, 16 testes de integração com SQL Server real (Testcontainers), 8 testes de
+  componente (Vitest) e 6 testes end-to-end (Playwright).
+
+## 4. Arquitetura
+
+```mermaid
+flowchart TB
+    subgraph Cliente
+        Web["React 19 + TypeScript<br/>Vite · TanStack Query"]
+    end
+
+    subgraph API["ASP.NET Core Web API"]
+        MW["Pipeline<br/>correlação · segurança · CORS<br/>origem · rate limit · autenticação"]
+        Ctrl["Controladores REST"]
+    end
+
+    subgraph App["Application"]
+        Contracts["Contratos e DTO<br/>validação FluentValidation"]
+        Abstr["Abstrações<br/>ICurrentUser · ITenantContext · IAuditService"]
+    end
+
+    subgraph Domain["Domain"]
+        Ent["Entidades e invariantes<br/>catálogo de permissões"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        EF["EF Core · DocOpsDbContext<br/>filtros de tenant · intercetores"]
+        Ident["Identity · sessão · claims"]
+        Audit["Serviço de auditoria"]
+    end
+
+    DB[("SQL Server")]
+    OTel["OpenTelemetry / Serilog"]
+
+    Web -->|"cookie HttpOnly"| MW --> Ctrl --> Contracts
+    Contracts --> Abstr
+    Ctrl --> Ident
+    Abstr -.implementadas por.-> Infra
+    App --> Domain
+    Infra --> Domain
+    EF --> DB
+    Audit --> DB
+    API --> OTel
+```
+
+**Porquê um monólito modular:** o domínio é altamente transacional e fortemente relacionado
+(documento → workflow → tarefa → auditoria). Microserviços introduziriam consistência eventual e
+custo operacional sem benefício correspondente nesta escala. As fronteiras entre módulos são
+explícitas no código, o que mantém aberta a opção de extrair um módulo mais tarde.
+Ver [ADR-001](docs/adr/ADR-001-modular-monolith.md).
+
+Documentação detalhada: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## 5. Stack tecnológica
+
+| Camada | Tecnologia |
+| --- | --- |
+| Backend | .NET 10, C# 14, ASP.NET Core Web API, EF Core 10 |
+| Base de dados | SQL Server 2022 (container) |
+| Identidade | ASP.NET Core Identity, cookies `HttpOnly`, autorização por permissões |
+| Validação | FluentValidation |
+| Observabilidade | Serilog, OpenTelemetry, health checks |
+| Frontend | React 19, TypeScript, Vite, TanStack Query, React Hook Form, Zod, Tailwind CSS 4, i18next |
+| Testes | xUnit, Testcontainers, Vitest, Testing Library, Playwright |
+| Infraestrutura | Docker Compose, GitHub Actions |
+
+## 6. Modelo de segurança
+
+- **A interface nunca é fonte de verdade.** Todas as decisões de autorização são tomadas no servidor;
+  o frontend apenas esconde o que o utilizador não pode usar.
+- **Tenant nunca vem do cliente.** O identificador da organização é lido exclusivamente das *claims*
+  do cookie de sessão. Não existe rota, cabeçalho ou campo que o aceite.
+- **Isolamento em duas camadas.** Filtros globais de consulta impedem leituras cruzadas;
+  `TenantGuardInterceptor` recusa escritas cruzadas com exceção explícita e registo de erro.
+- **Permissões, não perfis.** Os *endpoints* exigem permissões (`documents.approve`), guardadas como
+  *claims* de perfil na base de dados e editáveis sem novo *deploy*.
+- **Sessão em cookie `HttpOnly`, `SameSite=Lax`.** Nenhum token é acessível a JavaScript. CSRF é
+  mitigado pelo `SameSite` e por validação de `Origin`/`Referer` em todos os métodos que alteram estado.
+- **Auditoria imutável.** A aplicação recusa alterar ou apagar registos de auditoria; a base de dados
+  revoga `UPDATE`/`DELETE` ao *login* aplicacional.
+
+Detalhe completo: [`docs/SECURITY.md`](docs/SECURITY.md).
+
+## 7. Desenho da base de dados
+
+```mermaid
+erDiagram
+    TENANTS ||--o{ DEPARTMENTS : "contém"
+    TENANTS ||--o{ USERS : "emprega"
+    DEPARTMENTS ||--o{ USER_DEPARTMENTS : "tem membros"
+    USERS ||--o{ USER_DEPARTMENTS : "pertence a"
+    USERS ||--o{ USER_ROLES : "assume"
+    ROLES ||--o{ USER_ROLES : "atribuído a"
+    ROLES ||--o{ ROLE_CLAIMS : "concede permissões"
+    TENANTS ||--o{ AUDIT_EVENTS : "regista"
+    USERS ||--o{ AUDIT_EVENTS : "origina"
+
+    TENANTS {
+        uniqueidentifier Id PK
+        nvarchar Slug UK
+        nvarchar Name
+        bit IsActive
+        rowversion RowVersion
+    }
+    DEPARTMENTS {
+        uniqueidentifier Id PK
+        uniqueidentifier TenantId FK
+        nvarchar Code "único por tenant"
+        uniqueidentifier ManagerUserId
+        bit IsDeleted "soft delete"
+    }
+    USERS {
+        uniqueidentifier Id PK
+        uniqueidentifier TenantId FK
+        nvarchar Email UK
+        int UserType "interno/externo"
+        bit IsPlatformAdministrator
+    }
+    ROLE_CLAIMS {
+        int Id PK
+        uniqueidentifier RoleId FK
+        nvarchar ClaimType "docops:permission"
+        nvarchar ClaimValue
+    }
+    AUDIT_EVENTS {
+        uniqueidentifier Id PK
+        datetimeoffset OccurredAtUtc
+        nvarchar Action
+        nvarchar CorrelationId
+        nvarchar BeforeJson
+        nvarchar AfterJson
+    }
+```
+
+Decisões de modelação relevantes: identificadores UUIDv7 (inserção sequencial em índice
+clusterizado), `rowversion` como token de concorrência otimista, índices únicos filtrados para
+permitir reutilização de códigos após *soft delete*, e desnormalização do nome do ator na auditoria
+para o trilho continuar legível depois de o utilizador mudar de nome ou ser desativado.
+
+## 8. Fluxo de autenticação
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant A as API
+    participant I as Identity
+    participant D as SQL Server
+    participant L as Auditoria
+
+    B->>A: POST /api/auth/login (Origin verificada)
+    A->>A: Validação (FluentValidation) e rate limit por IP
+    A->>I: Procura utilizador e valida palavra-passe
+    I->>D: Lê utilizador, perfis e permissões
+    alt Credenciais inválidas
+        A->>L: user.login.failed (severidade: segurança)
+        A-->>B: 401 ProblemDetails (code: invalid_credentials)
+    else Conta bloqueada
+        A->>L: user.login.locked_out
+        A-->>B: 423 ProblemDetails (code: account_locked)
+    else Sucesso
+        I->>I: Constrói principal: tenant, tipo, perfis, permissões
+        A->>D: Atualiza LastLoginAtUtc
+        A->>L: user.login.succeeded
+        A-->>B: 200 + Set-Cookie docops.session (HttpOnly, SameSite=Lax)
+    end
+    B->>A: GET /api/auth/me (cookie)
+    A-->>B: Perfil, perfis e permissões efetivas
+```
+
+## 9. Motor de workflow
+
+O motor executa definições persistidas (nós e ligações) como instâncias com estado, tarefas humanas,
+prazos, escalonamento e cronologia completa. Desenho e justificação:
+[ADR-006](docs/adr/ADR-006-workflow-engine.md). *Implementação prevista para a Fase 3.*
+
+## 10. Arquitetura de IA
+
+A aplicação depende de abstrações (`IAiDocumentService`, `IAiSearchService`, `IAiWorkflowService`) e
+nunca de um fornecedor concreto. O fornecedor de demonstração é determinístico e identificado como
+tal na interface — respostas de demonstração nunca são apresentadas como geradas por um modelo real.
+Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md). *Implementação prevista para a Fase 5.*
+
+## 11. Estratégia de integrações
+
+Cada integração externa (correio eletrónico, ERP, CRM, assinatura, webhooks) é representada por um
+adaptador atrás de uma interface, com registo de sincronizações e erros. O desenvolvimento local
+nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
+
+## 12. Observabilidade
+
+- **Logs estruturados** (Serilog) com `CorrelationId`, `UserId` e propriedades de pedido.
+- **Correlação ponta a ponta**: o mesmo identificador aparece no cabeçalho `X-Correlation-Id` da
+  resposta, nos logs, no *trace* e em cada registo de auditoria do pedido.
+- **OpenTelemetry** para *traces* e métricas de ASP.NET Core e HttpClient; exportação OTLP ativada
+  apenas quando existe *endpoint* configurado.
+- **Health checks**: `/health/live` (processo vivo), `/health/ready` (dependências prontas),
+  `/health` (visão completa) — sem revelar detalhe de infraestrutura.
+
+## 13. Estratégia de testes
+
+| Nível | Ferramenta | O que garante |
+| --- | --- | --- |
+| Unitário | xUnit | Avaliação de permissões, catálogo de perfis, leitura de identidade, paginação, validação |
+| Integração | xUnit + Testcontainers (SQL Server real) | Autenticação, auditoria, isolamento de tenant, *soft delete*, imutabilidade da auditoria, cabeçalhos de segurança |
+| Componente | Vitest + Testing Library | Formulários, estados de erro, contrato do cliente HTTP |
+| End-to-end | Playwright (desktop e móvel) | Percursos reais no browser, incluindo cookie `HttpOnly` e troca de idioma |
+
+Os testes de integração correm contra SQL Server em container, com as mesmas migrações da aplicação:
+não há base de dados em memória a mascarar comportamento relacional.
+
+## 14. Estratégia de implantação
+
+`docker compose up` levanta a base de dados; a API aplica migrações e semeia dados de demonstração em
+desenvolvimento. Em produção, as migrações são um passo explícito do pipeline e a semeadura está
+desligada. As abstrações de armazenamento, IA e identidade permitem mover para Azure Blob Storage,
+Azure SQL, Azure OpenAI e Microsoft Entra ID sem alterar o código de domínio — e nada disso é
+necessário para correr o projeto localmente.
+
+## 15. Compromissos assumidos
+
+| Decisão | Alternativa ponderada | Porque assim |
+| --- | --- | --- |
+| Monólito modular | Microserviços | Domínio transacional e coeso; evita consistência eventual desnecessária |
+| Um tenant por utilizador | Adesão N:N a organizações | Simplifica cada consulta e o início de sessão; administradores de plataforma cobrem o caso excecional |
+| Permissões em *claims* de perfil | Tabela de permissões própria | Reutiliza a infraestrutura do Identity; permissões editáveis sem novo *deploy* |
+| `IdentityUser` no domínio | Entidade de domínio separada do utilizador de autenticação | Evita duplicação de modelos e sincronização entre eles; ver [ADR-002](docs/adr/ADR-002-authentication.md) |
+| Cookies em vez de JWT | *Bearer tokens* no cliente | Sem token acessível a JavaScript; XSS não permite roubo de sessão |
+| Validação de `Origin` | *Tokens* antifalsificação | Protege toda a API sem estado adicional no cliente; `SameSite=Lax` cobre o resto |
+| Sem MediatR/CQRS | Pipeline de comandos e consultas | Custo de indireção não justificado nesta dimensão |
+
+## 16. Melhorias futuras
+
+- Extração de módulo de IA para processo próprio caso o volume o justifique.
+- Pesquisa por texto integral com índices de SQL Server e ranking por relevância.
+- Adesão de um utilizador a várias organizações, com seletor de contexto auditado.
+- Aplicação instalável (PWA) com trabalho offline para consulta documental.
+- Exportação de auditoria assinada criptograficamente.
+- Idiomas adicionais (es, fr, ro) — a arquitetura de localização já os suporta.
+
+---
+
+## Começar
+
+Pré-requisitos, comandos e credenciais: [`docs/SETUP.md`](docs/SETUP.md).
+Guião da demonstração: [`docs/DEMO.md`](docs/DEMO.md).
+
+```bash
+docker compose up -d                                  # SQL Server
+dotnet run --project src/Api/DocOps.Api.csproj        # API   → http://localhost:5180
+npm --prefix src/Web run dev                          # Web   → http://localhost:5173
+```

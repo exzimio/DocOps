@@ -1,0 +1,42 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+## Node / frontend
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+## Environment & secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+secrets.json
+
+## Local file storage (documents uploaded in dev)
+storage/
+src/Api/App_Data/
+
+## SQL Server container volume
+.docker/mssql/
+
+## OS
+.DS_Store
+Thumbs.db
+tests/e2e/screenshots/
+tests/e2e/test-results/
