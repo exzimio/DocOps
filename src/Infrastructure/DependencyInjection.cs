@@ -69,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<TaskAssignmentResolver>();
         services.AddScoped<DocumentStatusEffect>();
         services.AddScoped<WorkflowEngine>();
+        services.AddScoped<WorkflowDesignService>();
 
         // One executor per node type. A type without an executor stops the instance with a clear
         // reason instead of skipping the step, which is why the unimplemented ones are registered too.

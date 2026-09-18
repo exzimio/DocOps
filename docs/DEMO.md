@@ -188,6 +188,60 @@ cronologia da instância e registo de auditoria. Nada disto acontece no pedido d
 
 ---
 
+## Demonstração disponível na Fase 4 — Desenhar um processo (≈5 minutos)
+
+Entre como `admin@asteria.example`, que é quem tem a permissão `workflows.design`.
+
+### 1. Abrir o desenhador (30 s)
+
+Em **Workflows**, use **Desenhar** num dos processos de demonstração. O grafo guardado aparece no
+diagrama tal como foi desenhado, com o tipo de cada passo, o responsável e o prazo por baixo do nome.
+Um aviso no topo diz o que este processo já tem: *«já tem execuções; guardar cria a versão 2»*.
+
+### 2. Criar um processo do zero (90 s)
+
+**Novo workflow** → dê um nome. O processo nasce com início e fim já ligados: nunca abre num estado
+que o motor não saiba executar.
+
+Na paleta, adicione uma **Aprovação**. O painel da direita muda para os campos que um passo de
+aprovação realmente usa — título da tarefa, a quem é atribuída, prazo, escalonamento, prioridade e o
+estado que o documento passa a ter ao entrar no passo. Arraste das pegas dos nós para desenhar as
+ligações.
+
+Repare no que a paleta **não** esconde: os nós de IA e de integração aparecem marcados como *ainda
+não executáveis*. Podem ser desenhados, mas a validação do servidor impede ativar um processo que os
+use.
+
+### 3. Ramos que o motor sabe seguir (45 s)
+
+Selecione a ligação que sai da aprovação. O campo **Ramo** oferece apenas `Aprovado` e `Rejeitado` —
+os dois valores que o motor compara quando resolve a saída de um passo com decisão. Numa condição
+oferece `Verdadeiro` e `Falso`. Não há ramos livres: um desenho que a interface permite é um desenho
+que o motor executa.
+
+### 4. Guardar, validar e ativar (60 s)
+
+**Guardar** grava o grafo; o indicador *Alterações por guardar* desaparece. **Validar** corre a
+validação no servidor e lista o que impede a execução. Tente **Ativar** com um passo por configurar:
+a resposta é `409` e o processo continua inativo — a decisão é do servidor, não do botão.
+
+### 5. Versionamento com processos a correr (60 s)
+
+Abra um processo que já tenha execuções e altere um passo. O botão diz **Guardar nova versão**. Ao
+guardar, o URL muda para o registo da versão 2, o crachá passa a `v2` e a versão anterior fica
+marcada como não editável — continua na base de dados porque as instâncias em curso resolvem os nós
+nela. Abra uma dessas instâncias em **Workflows → Execuções**: os passos que mostra são os da versão
+com que arrancou.
+
+### 6. O que o servidor recusa (45 s)
+
+- **Eliminar** um processo com execuções em curso: `409 workflow_has_running_instances`.
+- Guardar a partir de um separador desatualizado: `409 concurrency_conflict`.
+- Entrar como `ana.ferreira@asteria.example` (sem `workflows.design`): os botões de desenho não
+  aparecem, e um `POST /api/workflows` feito à mão responde `403`.
+
+---
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

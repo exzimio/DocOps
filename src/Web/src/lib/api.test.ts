@@ -42,6 +42,23 @@ describe('api client', () => {
     expect(apiError.fieldErrors.Email).toEqual(['Indique um endereço de e-mail válido.'])
   })
 
+  it('parses the application/problem+json media type the API actually sends', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ status: 409, code: 'workflow_validation_failed' }), {
+            status: 409,
+            headers: { 'content-type': 'application/problem+json; charset=utf-8' },
+          }),
+      ),
+    )
+
+    const error = (await api.post('/api/workflows/1/activate').catch((caught: unknown) => caught)) as ApiError
+
+    expect(error.code).toBe('workflow_validation_failed')
+  })
+
   it('flags an unauthenticated response so callers can distinguish it from a real failure', async () => {
     vi.stubGlobal(
       'fetch',

@@ -158,6 +158,10 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Decisão de aprovação por quem não devia | Autorização por tarefa no servidor, verificada em cada ação |
 | Execução de código a partir de dados guardados | As condições de workflow são um operador de conjunto fechado sobre uma variável, não uma linguagem de expressões |
 | Processo a contornar as regras do documento | As alterações de estado configuradas num nó passam pela máquina de estados do documento |
+| Desenho de processo a contornar a validação | Desenhar exige `workflows.design` e ativar exige `workflows.activate`; a validação que decide a ativação corre no servidor, sobre o que está gravado |
+| Configuração de nó arbitrária vinda do cliente | O JSON é analisado no servidor contra o modelo de configuração conhecido e regravado normalizado; o que não pertence ao tipo do nó não sobrevive à gravação |
+| Escrita perdida em edição concorrente | O `rowversion` da definição é sempre verificado ao guardar, mesmo quando só o grafo mudou |
+| Processo em curso alterado debaixo dos pés | Guardar uma definição com execuções cria uma versão nova; as instâncias continuam a resolver os nós na versão com que arrancaram |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

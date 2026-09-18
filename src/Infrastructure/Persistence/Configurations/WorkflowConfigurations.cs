@@ -18,7 +18,8 @@ public sealed class WorkflowDefinitionConfiguration : IEntityTypeConfiguration<W
         builder.Property(d => d.Trigger).HasConversion<int>();
         builder.Property(d => d.RowVersion).IsRowVersion();
 
-        builder.HasIndex(d => new { d.TenantId, d.Code }).IsUnique().HasFilter("[IsDeleted] = 0");
+        // Versions of the same process coexist: a running instance keeps resolving its own version.
+        builder.HasIndex(d => new { d.TenantId, d.Code, d.Version }).IsUnique().HasFilter("[IsDeleted] = 0");
         builder.HasIndex(d => new { d.TenantId, d.IsActive });
 
         builder.HasOne(d => d.DocumentType)

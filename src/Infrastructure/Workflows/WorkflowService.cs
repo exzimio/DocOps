@@ -15,6 +15,7 @@ namespace DocOps.Infrastructure.Workflows;
 public sealed class WorkflowService(
     DocOpsDbContext dbContext,
     WorkflowEngine engine,
+    WorkflowDesignService designService,
     DocumentAccessResolver accessResolver,
     IAuditService auditService,
     ICurrentUser currentUser,
@@ -23,7 +24,14 @@ public sealed class WorkflowService(
     public async Task<IReadOnlyList<WorkflowDefinitionSummaryDto>> GetDefinitionsAsync(
         bool includeInactive = true, CancellationToken cancellationToken = default)
     {
+        // Only the newest version of each process is listed. Older versions stay in the database so
+        // their running instances resolve, but they are history, not choices.
+        var latestVersions = dbContext.WorkflowDefinitions
+            .GroupBy(d => d.Code)
+            .Select(group => new { Code = group.Key, Version = group.Max(d => d.Version) });
+
         var definitions = await dbContext.WorkflowDefinitions
+            .Where(d => latestVersions.Any(latest => latest.Code == d.Code && latest.Version == d.Version))
             .Where(d => includeInactive || d.IsActive)
             .OrderBy(d => d.Name)
             .Select(d => new
@@ -65,10 +73,39 @@ public sealed class WorkflowService(
                 NodeCount = d.NodeCount,
                 RunningInstances = d.Running,
                 CompletedInstances = d.Completed,
-                LastStartedAtUtc = d.LastStarted
+                LastStartedAtUtc = d.LastStarted,
+                IsLatestVersion = true,
+                IsEditableInPlace = d.Running + d.Completed == 0
             })
         ];
     }
+
+    public async Task<WorkflowDefinitionDetailDto> CreateAsync(
+        CreateWorkflowRequest request, CancellationToken cancellationToken = default)
+    {
+        WorkflowDefinition definition = await designService.CreateAsync(request, cancellationToken);
+
+        return await BuildDefinitionDetailAsync(definition, cancellationToken);
+    }
+
+    public async Task<WorkflowDefinitionDetailDto> SaveAsync(
+        Guid definitionId, SaveWorkflowRequest request, CancellationToken cancellationToken = default)
+    {
+        WorkflowDefinition definition = await designService.SaveAsync(definitionId, request, cancellationToken);
+
+        return await BuildDefinitionDetailAsync(definition, cancellationToken);
+    }
+
+    public async Task<WorkflowDefinitionDetailDto> DuplicateAsync(
+        Guid definitionId, DuplicateWorkflowRequest request, CancellationToken cancellationToken = default)
+    {
+        WorkflowDefinition copy = await designService.DuplicateAsync(definitionId, request, cancellationToken);
+
+        return await BuildDefinitionDetailAsync(copy, cancellationToken);
+    }
+
+    public Task DeleteAsync(Guid definitionId, CancellationToken cancellationToken = default) =>
+        designService.DeleteAsync(definitionId, cancellationToken);
 
     public async Task<WorkflowDefinitionDetailDto> GetDefinitionAsync(
         Guid definitionId, CancellationToken cancellationToken = default)
@@ -209,6 +246,7 @@ public sealed class WorkflowService(
     private async Task<WorkflowDefinitionDetailDto> BuildDefinitionDetailAsync(
         WorkflowDefinition definition, CancellationToken cancellationToken)
     {
+        (bool isLatest, bool editableInPlace) = await designService.GetEditStateAsync(definition, cancellationToken);
         IReadOnlyList<WorkflowDefinitionSummaryDto> summaries = await GetDefinitionsAsync(true, cancellationToken);
 
         WorkflowDefinitionSummaryDto summary = summaries.FirstOrDefault(s => s.Id == definition.Id)
@@ -226,6 +264,8 @@ public sealed class WorkflowService(
                 RunningInstances = 0,
                 CompletedInstances = 0
             };
+
+        summary = summary with { IsLatestVersion = isLatest, IsEditableInPlace = editableInPlace };
 
         return new WorkflowDefinitionDetailDto
         {

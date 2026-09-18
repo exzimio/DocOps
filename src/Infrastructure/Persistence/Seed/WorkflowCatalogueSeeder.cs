@@ -42,9 +42,9 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
             "Validação de dados, aprovação financeira e — acima de 10 000 € — aprovação de direção.",
             "SupplierInvoice",
             [
-                new("start", "Início", WorkflowNodeType.Start, 0, 160),
+                new("start", "Início", WorkflowNodeType.Start, 0, 190),
 
-                new("validation", "Validar dados da fatura", WorkflowNodeType.HumanTask, 180, 160,
+                new("validation", "Validar dados da fatura", WorkflowNodeType.HumanTask, 310, 190,
                     new NodeConfiguration
                     {
                         // Entering the process puts the document under review, which is also what makes
@@ -62,7 +62,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                     },
                     "Conferência dos dados extraídos face ao documento original."),
 
-                new("submitted", "Submeter a aprovação", WorkflowNodeType.Notification, 360, 160,
+                new("submitted", "Submeter a aprovação", WorkflowNodeType.Notification, 610, 190,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.PendingApproval,
@@ -74,7 +74,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         }
                     }),
 
-                new("amount-check", "Valor acima de 10 000 €?", WorkflowNodeType.Condition, 540, 160,
+                new("amount-check", "Valor acima de 10 000 €?", WorkflowNodeType.Condition, 920, 190,
                     new NodeConfiguration
                     {
                         Condition = new ConditionConfiguration
@@ -86,7 +86,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                     },
                     "Faturas de valor elevado exigem também aprovação de direção."),
 
-                new("management-approval", "Aprovação de direção", WorkflowNodeType.Approval, 720, 60,
+                new("management-approval", "Aprovação de direção", WorkflowNodeType.Approval, 1220, 70,
                     new NodeConfiguration
                     {
                         TaskTitle = "Aprovar fatura de valor elevado",
@@ -100,7 +100,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         Priority = WorkflowTaskPriority.High
                     }),
 
-                new("finance-approval", "Aprovação financeira", WorkflowNodeType.Approval, 720, 260,
+                new("finance-approval", "Aprovação financeira", WorkflowNodeType.Approval, 1220, 310,
                     new NodeConfiguration
                     {
                         TaskTitle = "Aprovar fatura",
@@ -114,7 +114,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         Priority = WorkflowTaskPriority.Normal
                     }),
 
-                new("approved", "Registar aprovação", WorkflowNodeType.Notification, 900, 160,
+                new("approved", "Registar aprovação", WorkflowNodeType.Notification, 1530, 190,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.Approved,
@@ -126,14 +126,14 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         }
                     }),
 
-                new("archive", "Arquivar", WorkflowNodeType.End, 1080, 160,
+                new("archive", "Arquivar", WorkflowNodeType.End, 1840, 190,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.Archived,
                         Outcome = "Aprovada e arquivada"
                     }),
 
-                new("rejected", "Rejeitada", WorkflowNodeType.End, 900, 380,
+                new("rejected", "Rejeitada", WorkflowNodeType.End, 1530, 460,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.Rejected,
@@ -161,9 +161,9 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
             "Revisão jurídica, aprovação de direção e preparação do pedido de assinatura.",
             "Contract",
             [
-                new("start", "Início", WorkflowNodeType.Start, 0, 120),
+                new("start", "Início", WorkflowNodeType.Start, 0, 140),
 
-                new("legal-review", "Revisão jurídica", WorkflowNodeType.HumanTask, 180, 120,
+                new("legal-review", "Revisão jurídica", WorkflowNodeType.HumanTask, 310, 140,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.InReview,
@@ -178,7 +178,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         Priority = WorkflowTaskPriority.Normal
                     }),
 
-                new("management-approval", "Aprovação de direção", WorkflowNodeType.Approval, 380, 120,
+                new("management-approval", "Aprovação de direção", WorkflowNodeType.Approval, 650, 140,
                     new NodeConfiguration
                     {
                         TaskTitle = "Aprovar contrato",
@@ -192,7 +192,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         Priority = WorkflowTaskPriority.High
                     }),
 
-                new("signature-preparation", "Preparar pedido de assinatura", WorkflowNodeType.HumanTask, 580, 120,
+                new("signature-preparation", "Preparar pedido de assinatura", WorkflowNodeType.HumanTask, 990, 140,
                     new NodeConfiguration
                     {
                         TaskTitle = "Preparar pedido de assinatura",
@@ -202,7 +202,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         Priority = WorkflowTaskPriority.Normal
                     }),
 
-                new("approved", "Registar aprovação", WorkflowNodeType.Notification, 780, 120,
+                new("approved", "Registar aprovação", WorkflowNodeType.Notification, 1330, 140,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.Approved,
@@ -214,10 +214,10 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         }
                     }),
 
-                new("end", "Concluído", WorkflowNodeType.End, 960, 120,
+                new("end", "Concluído", WorkflowNodeType.End, 1630, 140,
                     new NodeConfiguration { Outcome = "Contrato aprovado" }),
 
-                new("rejected", "Rejeitado", WorkflowNodeType.End, 780, 300,
+                new("rejected", "Rejeitado", WorkflowNodeType.End, 1330, 360,
                     new NodeConfiguration
                     {
                         DocumentStatus = DocumentStatus.Rejected,
@@ -241,10 +241,10 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
             "Duas frentes em paralelo — recursos humanos e operações — que convergem antes da comunicação de boas-vindas.",
             "EmployeeDocument",
             [
-                new("start", "Início", WorkflowNodeType.Start, 0, 160),
-                new("split", "Preparar integração", WorkflowNodeType.ParallelBranch, 160, 160),
+                new("start", "Início", WorkflowNodeType.Start, 0, 190),
+                new("split", "Preparar integração", WorkflowNodeType.ParallelBranch, 270, 190),
 
-                new("hr-file", "Processo de recursos humanos", WorkflowNodeType.HumanTask, 340, 60,
+                new("hr-file", "Processo de recursos humanos", WorkflowNodeType.HumanTask, 580, 70,
                     new NodeConfiguration
                     {
                         TaskTitle = "Instruir processo individual",
@@ -257,7 +257,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         DueInHours = 48
                     }),
 
-                new("it-setup", "Preparar posto de trabalho", WorkflowNodeType.HumanTask, 340, 260,
+                new("it-setup", "Preparar posto de trabalho", WorkflowNodeType.HumanTask, 580, 310,
                     new NodeConfiguration
                     {
                         TaskTitle = "Preparar equipamento e acessos",
@@ -270,9 +270,9 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         DueInHours = 48
                     }),
 
-                new("join", "Integração preparada", WorkflowNodeType.Join, 520, 160),
+                new("join", "Integração preparada", WorkflowNodeType.Join, 880, 190),
 
-                new("welcome", "Comunicar boas-vindas", WorkflowNodeType.Notification, 700, 160,
+                new("welcome", "Comunicar boas-vindas", WorkflowNodeType.Notification, 1190, 190,
                     new NodeConfiguration
                     {
                         Notification = new NotificationConfiguration
@@ -287,7 +287,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
                         }
                     }),
 
-                new("end", "Concluído", WorkflowNodeType.End, 880, 160,
+                new("end", "Concluído", WorkflowNodeType.End, 1500, 190,
                     new NodeConfiguration { Outcome = "Integração concluída" })
             ],
             [

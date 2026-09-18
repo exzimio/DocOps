@@ -89,6 +89,10 @@ export interface WorkflowDefinitionSummary {
   runningInstances: number
   completedInstances: number
   lastStartedAtUtc: string | null
+  /** False for a superseded version kept only so its running instances still resolve their nodes. */
+  isLatestVersion: boolean
+  /** True while the definition has never been used, which is when it can be edited in place. */
+  isEditableInPlace: boolean
 }
 
 export interface WorkflowValidationIssue {

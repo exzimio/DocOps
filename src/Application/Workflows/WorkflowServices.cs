@@ -17,6 +17,23 @@ public interface IWorkflowService
     Task<WorkflowDefinitionDetailDto> SetActiveAsync(
         Guid definitionId, bool isActive, CancellationToken cancellationToken = default);
 
+    /// <summary>Creates an empty draft definition with a start and an end node, ready to be designed.</summary>
+    Task<WorkflowDefinitionDetailDto> CreateAsync(
+        CreateWorkflowRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Saves the designed graph. A definition that has never been used is edited in place; one with
+    /// instances is superseded by a new version, so running processes keep the graph they started with.
+    /// </summary>
+    Task<WorkflowDefinitionDetailDto> SaveAsync(
+        Guid definitionId, SaveWorkflowRequest request, CancellationToken cancellationToken = default);
+
+    Task<WorkflowDefinitionDetailDto> DuplicateAsync(
+        Guid definitionId, DuplicateWorkflowRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Soft-deletes a definition. Refused while it still has running instances.</summary>
+    Task DeleteAsync(Guid definitionId, CancellationToken cancellationToken = default);
+
     Task<PagedResult<WorkflowInstanceListItemDto>> SearchInstancesAsync(
         WorkflowInstanceSearchRequest request, CancellationToken cancellationToken = default);
 
@@ -92,6 +109,70 @@ public sealed class ReassignTaskRequestValidator : AbstractValidator<ReassignTas
         RuleFor(x => x.ToUserId).NotEmpty().WithMessage("Selecione o utilizador que passa a ser responsável.");
         RuleFor(x => x.Comment).MaximumLength(1000);
     }
+}
+
+public sealed class CreateWorkflowRequestValidator : AbstractValidator<CreateWorkflowRequest>
+{
+    public CreateWorkflowRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Indique o nome do workflow.")
+            .MaximumLength(150);
+
+        RuleFor(x => x.Description).MaximumLength(1000);
+    }
+}
+
+public sealed class SaveWorkflowRequestValidator : AbstractValidator<SaveWorkflowRequest>
+{
+    public SaveWorkflowRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Indique o nome do workflow.")
+            .MaximumLength(150);
+
+        RuleFor(x => x.Description).MaximumLength(1000);
+
+        RuleFor(x => x.ConcurrencyToken)
+            .NotEmpty().WithMessage("Token de concorrência em falta. Recarregue o workflow.");
+
+        RuleFor(x => x.Nodes)
+            .NotEmpty().WithMessage("O workflow tem de ter pelo menos um nó.");
+
+        RuleForEach(x => x.Nodes).ChildRules(node =>
+        {
+            node.RuleFor(n => n.Key)
+                .NotEmpty().WithMessage("Cada nó precisa de um identificador.")
+                .MaximumLength(60)
+                .Matches("^[a-z0-9][a-z0-9-]*$")
+                .WithMessage("O identificador do nó só pode conter minúsculas, dígitos e hífenes.");
+
+            node.RuleFor(n => n.Name).NotEmpty().MaximumLength(150);
+            node.RuleFor(n => n.Description).MaximumLength(500);
+            node.RuleFor(n => n.ConfigJson).MaximumLength(4000);
+            node.RuleFor(n => n.Type).IsInEnum();
+        });
+
+        RuleFor(x => x.Nodes)
+            .Must(nodes => nodes.Select(n => n.Key).Distinct(StringComparer.Ordinal).Count() == nodes.Count)
+            .WithMessage("Existem nós com o mesmo identificador.");
+
+        RuleForEach(x => x.Edges).ChildRules(edge =>
+        {
+            edge.RuleFor(e => e.FromNodeKey).NotEmpty().MaximumLength(60);
+            edge.RuleFor(e => e.ToNodeKey).NotEmpty().MaximumLength(60);
+            edge.RuleFor(e => e.Label).MaximumLength(100);
+            edge.RuleFor(e => e.Branch).MaximumLength(60);
+        });
+    }
+}
+
+public sealed class DuplicateWorkflowRequestValidator : AbstractValidator<DuplicateWorkflowRequest>
+{
+    public DuplicateWorkflowRequestValidator() =>
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Indique o nome da cópia.")
+            .MaximumLength(150);
 }
 
 public sealed class CancelWorkflowRequestValidator : AbstractValidator<CancelWorkflowRequest>

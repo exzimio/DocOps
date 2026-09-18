@@ -41,7 +41,7 @@ vem da base de dados através da API.
 | 1 | Arquitetura, solução, base de dados, autenticação, multi-tenancy, auditoria base | **Concluída** |
 | 2 | Documentos, versões, permissões, auditoria documental | **Concluída** |
 | 3 | Tarefas e motor de workflow | **Concluída** |
-| 4 | Designer visual de workflow | Planeada |
+| 4 | Designer visual de workflow | **Concluída** |
 | 5 | Abstração de IA e inteligência documental | Planeada |
 | 6 | Pesquisa, caixa de entrada e integrações | Planeada |
 | 7 | Portal externo e assinatura eletrónica | Planeada |
@@ -115,14 +115,34 @@ vem da base de dados através da API.
 - Dados de demonstração: 3 definições e 15 instâncias com tarefas pendentes, em atraso, escaladas,
   concluídas e uma rejeitada — coerentes com o estado dos documentos.
 
+### Entregue na Fase 4
+
+- **Desenhador visual de processos** sobre React Flow: paleta de nós, ligações desenhadas à mão,
+  arrasto de posições e painel de propriedades que muda conforme o tipo de nó selecionado.
+- Cada campo do painel corresponde a algo que o motor lê. Não há definições decorativas: os ramos
+  oferecidos numa ligação são exatamente os que o motor sabe seguir (`true`/`false` numa condição,
+  `approved`/`rejected` num passo com decisão).
+- **Versionamento por supersessão**: um processo que nunca correu é editado no próprio registo; a
+  partir do momento em que tem execuções, guardar cria uma **nova versão** e reforma a anterior, que
+  permanece na base de dados porque as instâncias em curso continuam a resolver os nós nela.
+- **Concorrência otimista real**: guardar com um token antigo é recusado com `409`, mesmo quando só
+  mudou o grafo — o registo da definição é sempre atualizado para que o `rowversion` seja verificado.
+- Validação em duas camadas: avisos locais enquanto se desenha (passo sem saída, passo inalcançável,
+  ramo em falta) e a validação do servidor, que continua a ser a única que decide se um processo pode
+  ser ativado.
+- Criar, duplicar (sempre inativo) e eliminar processos; eliminar é recusado enquanto existirem
+  execuções em curso.
+- O desenhador é carregado à parte (`React.lazy`): quem nunca o abre não descarrega a biblioteca de
+  diagramas.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
 | Unitários (xUnit) | 143 |
-| Integração com SQL Server real (Testcontainers) | 49 |
-| Componente (Vitest + Testing Library) | 8 |
-| End-to-end (Playwright, desktop e móvel) | 30 |
+| Integração com SQL Server real (Testcontainers) | 58 |
+| Componente e unidade no frontend (Vitest + Testing Library) | 24 |
+| End-to-end (Playwright, desktop e móvel) | 36 |
 
 ## 4. Arquitetura
 
@@ -371,6 +391,9 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/documents/{id}/archive` · `/restore` · `DELETE /api/documents/{id}` | Arquivo, restauro e eliminação reversível |
 | `GET /api/documents/{id}/audit` | Trilho de auditoria do documento |
 | `GET /api/workflows` · `/{id}` | Definições de workflow e o seu grafo |
+| `POST /api/workflows` | Cria um processo em rascunho, já com início e fim ligados |
+| `PUT /api/workflows/{id}` | Guarda o grafo desenhado (edita no sítio ou cria nova versão) |
+| `POST /api/workflows/{id}/duplicate` · `DELETE /api/workflows/{id}` | Duplicação e eliminação reversível |
 | `POST /api/workflows/{id}/test` | Valida uma definição sem a executar |
 | `POST /api/workflows/{id}/activate` · `/deactivate` | Ativação (recusada se houver erros de validação) |
 | `GET /api/workflows/instances` · `/{id}` | Execuções, com cronologia, tarefas e variáveis |

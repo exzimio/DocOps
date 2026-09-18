@@ -37,6 +37,12 @@ public sealed record WorkflowDefinitionSummaryDto
     public required int RunningInstances { get; init; }
     public required int CompletedInstances { get; init; }
     public DateTimeOffset? LastStartedAtUtc { get; init; }
+
+    /// <summary>False for a superseded version that only exists so its running instances still resolve.</summary>
+    public bool IsLatestVersion { get; init; } = true;
+
+    /// <summary>True while the definition has never been used, which is when it can be edited in place.</summary>
+    public bool IsEditableInPlace { get; init; } = true;
 }
 
 public sealed record WorkflowDefinitionDetailDto
@@ -52,6 +58,54 @@ public sealed record WorkflowDefinitionDetailDto
 }
 
 public sealed record WorkflowValidationIssueDto(string Severity, string Code, string Message, string? NodeKey);
+
+// ---------------------------------------------------------------------------------------------
+// Designing
+// ---------------------------------------------------------------------------------------------
+
+public sealed record SaveWorkflowNodeRequest
+{
+    public required string Key { get; init; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public required WorkflowNodeType Type { get; init; }
+
+    /// <summary>Node settings as JSON, shaped by the node type. Validated on save.</summary>
+    public string? ConfigJson { get; init; }
+
+    public double PositionX { get; init; }
+    public double PositionY { get; init; }
+}
+
+public sealed record SaveWorkflowEdgeRequest
+{
+    public required string FromNodeKey { get; init; }
+    public required string ToNodeKey { get; init; }
+    public string? Label { get; init; }
+    public string? Branch { get; init; }
+}
+
+public sealed record CreateWorkflowRequest
+{
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public Guid? DocumentTypeId { get; init; }
+}
+
+public sealed record SaveWorkflowRequest
+{
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public Guid? DocumentTypeId { get; init; }
+    public WorkflowTriggerType Trigger { get; init; } = WorkflowTriggerType.Manual;
+    public required IReadOnlyList<SaveWorkflowNodeRequest> Nodes { get; init; }
+    public required IReadOnlyList<SaveWorkflowEdgeRequest> Edges { get; init; }
+
+    /// <summary>Token received with the definition; rejects a save based on a stale read.</summary>
+    public required string ConcurrencyToken { get; init; }
+}
+
+public sealed record DuplicateWorkflowRequest(string Name);
 
 // ---------------------------------------------------------------------------------------------
 // Instances

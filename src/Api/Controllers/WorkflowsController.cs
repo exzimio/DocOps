@@ -36,6 +36,52 @@ public sealed class WorkflowsController(IWorkflowService workflowService) : Cont
         Guid id, CancellationToken cancellationToken) =>
         Ok(await workflowService.ValidateDefinitionAsync(id, cancellationToken));
 
+    /// <summary>Creates a draft process with a start and an end node, ready to be designed.</summary>
+    [HttpPost]
+    [HasPermission(Permissions.WorkflowsDesign)]
+    [ProducesResponseType<WorkflowDefinitionDetailDto>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<WorkflowDefinitionDetailDto>> Create(
+        CreateWorkflowRequest request, CancellationToken cancellationToken)
+    {
+        WorkflowDefinitionDetailDto definition = await workflowService.CreateAsync(request, cancellationToken);
+
+        return CreatedAtAction(nameof(GetDefinition), new { id = definition.Summary.Id }, definition);
+    }
+
+    /// <summary>
+    /// Saves the designed graph. A process that has never run is edited in place; one with instances
+    /// is superseded by a new version, so running processes keep the graph they started with.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [HasPermission(Permissions.WorkflowsDesign)]
+    [ProducesResponseType<WorkflowDefinitionDetailDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<WorkflowDefinitionDetailDto>> Save(
+        Guid id, SaveWorkflowRequest request, CancellationToken cancellationToken) =>
+        Ok(await workflowService.SaveAsync(id, request, cancellationToken));
+
+    [HttpPost("{id:guid}/duplicate")]
+    [HasPermission(Permissions.WorkflowsDesign)]
+    [ProducesResponseType<WorkflowDefinitionDetailDto>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<WorkflowDefinitionDetailDto>> Duplicate(
+        Guid id, DuplicateWorkflowRequest request, CancellationToken cancellationToken)
+    {
+        WorkflowDefinitionDetailDto copy = await workflowService.DuplicateAsync(id, request, cancellationToken);
+
+        return CreatedAtAction(nameof(GetDefinition), new { id = copy.Summary.Id }, copy);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [HasPermission(Permissions.WorkflowsDesign)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        await workflowService.DeleteAsync(id, cancellationToken);
+
+        return NoContent();
+    }
+
     [HttpPost("{id:guid}/activate")]
     [HasPermission(Permissions.WorkflowsActivate)]
     [ProducesResponseType<WorkflowDefinitionDetailDto>(StatusCodes.Status200OK)]

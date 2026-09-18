@@ -11,6 +11,7 @@ import type {
   WorkflowDefinitionSummary,
   WorkflowInstanceDetail,
   WorkflowInstanceListItem,
+  WorkflowValidationIssue,
 } from './types'
 
 export const workflowKeys = {
@@ -72,6 +73,102 @@ export function useSetDefinitionActive(definitionId: string) {
     onSuccess: (detail) => {
       queryClient.setQueryData(workflowKeys.definition(definitionId), detail)
       void queryClient.invalidateQueries({ queryKey: workflowKeys.definitions })
+    },
+  })
+}
+
+export interface SaveWorkflowNodeInput {
+  key: string
+  name: string
+  description: string | null
+  type: number
+  configJson: string | null
+  positionX: number
+  positionY: number
+}
+
+export interface SaveWorkflowEdgeInput {
+  fromNodeKey: string
+  toNodeKey: string
+  label: string | null
+  branch: string | null
+}
+
+export interface SaveWorkflowInput {
+  name: string
+  description: string | null
+  documentTypeId: string | null
+  trigger: number
+  nodes: SaveWorkflowNodeInput[]
+  edges: SaveWorkflowEdgeInput[]
+  concurrencyToken: string
+}
+
+export function useCreateWorkflow() {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    WorkflowDefinitionDetail,
+    ApiError,
+    { name: string; description?: string | null; documentTypeId?: string | null }
+  >({
+    mutationFn: (input) => api.post<WorkflowDefinitionDetail>('/api/workflows', input),
+    onSuccess: (detail) => {
+      queryClient.setQueryData(workflowKeys.definition(detail.summary.id), detail)
+      void queryClient.invalidateQueries({ queryKey: workflowKeys.definitions })
+    },
+  })
+}
+
+/**
+ * Saving may return a *different* definition id: once a process has instances the server supersedes
+ * it with a new version instead of rewriting the graph those instances still resolve against.
+ */
+export function useSaveWorkflow(definitionId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation<WorkflowDefinitionDetail, ApiError, SaveWorkflowInput>({
+    mutationFn: (input) => api.put<WorkflowDefinitionDetail>(`/api/workflows/${definitionId}`, input),
+    onSuccess: (detail) => {
+      queryClient.setQueryData(workflowKeys.definition(detail.summary.id), detail)
+      void queryClient.invalidateQueries({ queryKey: workflowKeys.definition(definitionId) })
+      void queryClient.invalidateQueries({ queryKey: workflowKeys.definitions })
+    },
+  })
+}
+
+export function useDuplicateWorkflow() {
+  const queryClient = useQueryClient()
+
+  return useMutation<WorkflowDefinitionDetail, ApiError, { definitionId: string; name: string }>({
+    mutationFn: ({ definitionId, name }) =>
+      api.post<WorkflowDefinitionDetail>(`/api/workflows/${definitionId}/duplicate`, { name }),
+    onSuccess: (detail) => {
+      queryClient.setQueryData(workflowKeys.definition(detail.summary.id), detail)
+      void queryClient.invalidateQueries({ queryKey: workflowKeys.definitions })
+    },
+  })
+}
+
+export function useDeleteWorkflow() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, ApiError, string>({
+    mutationFn: (definitionId) => api.delete<void>(`/api/workflows/${definitionId}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: workflowKeys.definitions })
+    },
+  })
+}
+
+/** Runs the server-side validator against the stored definition and returns what it found. */
+export function useValidateWorkflow(definitionId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation<WorkflowValidationIssue[], ApiError, void>({
+    mutationFn: () => api.post<WorkflowValidationIssue[]>(`/api/workflows/${definitionId}/test`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: workflowKeys.definition(definitionId) })
     },
   })
 }

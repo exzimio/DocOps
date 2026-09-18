@@ -49,7 +49,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     return undefined as T
   }
 
-  const isJson = response.headers.get('content-type')?.includes('application/json') ?? false
+  // Errors arrive as `application/problem+json`, successes as `application/json`; matching the
+  // `+json` suffix too is what keeps the error code and the field errors from being thrown away.
+  const contentType = response.headers.get('content-type') ?? ''
+  const isJson = /^application\/([\w.-]+\+)?json\b/.test(contentType)
   const payload = isJson ? await response.json() : undefined
 
   if (!response.ok) {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CircleCheck, CircleSlash, GitBranch, TriangleAlert } from 'lucide-react'
+import { CircleCheck, CircleSlash, GitBranch, PenLine, Plus, TriangleAlert } from 'lucide-react'
 import { hasPermission, useSession } from '@/features/auth/session'
 import {
   useSetDefinitionActive,
@@ -10,6 +10,7 @@ import {
 } from '@/features/workflows/api'
 import type { WorkflowDefinitionSummary } from '@/features/workflows/types'
 import { instanceTone } from '@/features/workflows/presentation'
+import { NewWorkflowDialog } from '@/features/workflows/designer/NewWorkflowDialog'
 import { formatDateTime } from '@/features/documents/format'
 import { Button } from '@/components/ui/Button'
 import {
@@ -25,21 +26,43 @@ import {
 export function WorkflowsPage() {
   const { t, i18n } = useTranslation()
   const { data: user } = useSession()
+  const navigate = useNavigate()
 
   const [definitionFilter, setDefinitionFilter] = useState<string | undefined>(undefined)
   const [page, setPage] = useState(1)
+  const [isCreating, setIsCreating] = useState(false)
 
   const definitionsQuery = useWorkflowDefinitions()
   const instancesQuery = useWorkflowInstances({ definitionId: definitionFilter, page })
 
   const canActivate = hasPermission(user, 'workflows.activate')
+  const canDesign = hasPermission(user, 'workflows.design')
 
   return (
     <div className="mx-auto flex max-w-[95rem] flex-col gap-4">
-      <header>
-        <h1 className="text-lg font-semibold text-ink">{t('workflows.title')}</h1>
-        <p className="text-sm text-ink-muted">{t('workflows.subtitle')}</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold text-ink">{t('workflows.title')}</h1>
+          <p className="text-sm text-ink-muted">{t('workflows.subtitle')}</p>
+        </div>
+
+        {canDesign && (
+          <Button size="sm" onClick={() => setIsCreating(true)}>
+            <Plus aria-hidden className="size-4" />
+            {t('workflows.designer.newWorkflow')}
+          </Button>
+        )}
       </header>
+
+      {isCreating && (
+        <NewWorkflowDialog
+          onClose={() => setIsCreating(false)}
+          onCreated={(definitionId) => {
+            setIsCreating(false)
+            navigate(`/app/workflows/${definitionId}/designer`)
+          }}
+        />
+      )}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -54,7 +77,12 @@ export function WorkflowsPage() {
 
         <div className="grid gap-3 lg:grid-cols-3">
           {definitionsQuery.data?.map((definition) => (
-            <DefinitionCard key={definition.id} definition={definition} canActivate={canActivate} />
+            <DefinitionCard
+              key={definition.id}
+              definition={definition}
+              canActivate={canActivate}
+              canDesign={canDesign}
+            />
           ))}
         </div>
       </section>
@@ -206,9 +234,11 @@ export function WorkflowsPage() {
 function DefinitionCard({
   definition,
   canActivate,
+  canDesign,
 }: {
   definition: WorkflowDefinitionSummary
   canActivate: boolean
+  canDesign: boolean
 }) {
   const { t, i18n } = useTranslation()
   const setActive = useSetDefinitionActive(definition.id)
@@ -248,6 +278,15 @@ function DefinitionCard({
               {t('workflows.steps')}
             </Button>
           </Link>
+
+          {canDesign && (
+            <Link to={`/app/workflows/${definition.id}/designer`}>
+              <Button variant="secondary" size="sm">
+                <PenLine aria-hidden className="size-4" />
+                {t('workflows.designer.open')}
+              </Button>
+            </Link>
+          )}
 
           {canActivate && (
             <Button

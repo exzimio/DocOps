@@ -1164,11 +1164,11 @@ namespace DocOps.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("DocumentTypeId");
 
-                    b.HasIndex("TenantId", "Code")
+                    b.HasIndex("TenantId", "IsActive");
+
+                    b.HasIndex("TenantId", "Code", "Version")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
-
-                    b.HasIndex("TenantId", "IsActive");
 
                     b.ToTable("WorkflowDefinitions", (string)null);
                 });

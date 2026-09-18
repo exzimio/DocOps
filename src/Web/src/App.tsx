@@ -1,4 +1,6 @@
+import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AppShell } from '@/app/AppShell'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { LandingPage } from '@/pages/LandingPage'
@@ -11,8 +13,16 @@ import { WorkflowsPage } from '@/pages/WorkflowsPage'
 import { WorkflowDefinitionPage } from '@/pages/WorkflowDefinitionPage'
 import { WorkflowInstancePage } from '@/pages/WorkflowInstancePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { LoadingState } from '@/components/ui/Surface'
+
+// The designer pulls in the diagramming library; only the people who open it pay for it.
+const WorkflowDesignerPage = lazy(() =>
+  import('@/pages/WorkflowDesignerPage').then((module) => ({ default: module.WorkflowDesignerPage })),
+)
 
 export function App() {
+  const { t } = useTranslation()
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -28,6 +38,14 @@ export function App() {
           <Route path="workflows" element={<WorkflowsPage />} />
           <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />
           <Route path="workflows/:id" element={<WorkflowDefinitionPage />} />
+          <Route
+            path="workflows/:id/designer"
+            element={
+              <Suspense fallback={<LoadingState label={t('common.loading')} />}>
+                <WorkflowDesignerPage />
+              </Suspense>
+            }
+          />
         </Route>
       </Route>
 

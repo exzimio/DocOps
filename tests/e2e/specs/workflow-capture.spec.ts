@@ -25,4 +25,20 @@ test.describe('Capturas de workflows', () => {
     await page.getByText('Cronologia').waitFor()
     await page.screenshot({ path: 'screenshots/workflow-instance.png', fullPage: true })
   })
+
+  test('desenhador de processos', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel('Endereço de e-mail').fill('admin@asteria.example')
+    await page.getByLabel('Palavra-passe').fill('Demo!Pass123')
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await page.waitForURL(/\/app\/dashboard$/)
+
+    await page.goto('/app/workflows')
+    await page.getByRole('link', { name: 'Desenhar' }).first().click()
+    await page.waitForURL(/\/app\/workflows\/[0-9a-f-]+\/designer$/)
+    await page.getByRole('heading', { name: 'Desenhador de processos' }).waitFor()
+    await page.locator('.react-flow__node').first().waitFor()
+    await page.waitForLoadState('networkidle')
+    await page.screenshot({ path: 'screenshots/workflow-designer.png', fullPage: true })
+  })
 })

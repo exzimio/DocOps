@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, ArrowRight, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, ArrowRight, PenLine, TriangleAlert } from 'lucide-react'
+import { hasPermission, useSession } from '@/features/auth/session'
 import { useWorkflowDefinition } from '@/features/workflows/api'
 import type { WorkflowNode } from '@/features/workflows/types'
 import { Button } from '@/components/ui/Button'
@@ -9,7 +10,9 @@ import { Badge, Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/c
 export function WorkflowDefinitionPage() {
   const { t } = useTranslation()
   const { id = '' } = useParams<{ id: string }>()
+  const { data: user } = useSession()
   const definitionQuery = useWorkflowDefinition(id)
+  const canDesign = hasPermission(user, 'workflows.design')
 
   if (definitionQuery.isLoading) {
     return <LoadingState label={t('common.loading')} />
@@ -63,6 +66,15 @@ export function WorkflowDefinitionPage() {
           <h1 className="mt-1 text-lg font-semibold text-ink">{definition.summary.name}</h1>
           <p className="text-sm text-ink-muted">{definition.summary.description}</p>
         </div>
+
+        {canDesign && (
+          <Link to={`/app/workflows/${definition.summary.id}/designer`}>
+            <Button size="sm">
+              <PenLine aria-hidden className="size-4" />
+              {t('workflows.designer.open')}
+            </Button>
+          </Link>
+        )}
       </header>
 
       <Card>

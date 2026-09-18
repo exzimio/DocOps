@@ -232,6 +232,39 @@ terminado, e só então persiste. Consequências que importam:
   `DocumentLifecycle` diz o que pode ser feito ao documento agora, e o motor diz para onde o processo
   segue. Nenhum dos três decide pelos outros.
 
+### O desenhador e o versionamento das definições
+
+O desenhador escreve exatamente o mesmo modelo que o motor lê: nós com tipo e configuração em JSON,
+ligações com ramo opcional. Não existe um formato de desenho separado do formato de execução.
+
+A regra que decide o que acontece ao guardar é uma só: **uma instância em curso tem de continuar a
+resolver os nós com que arrancou.**
+
+```mermaid
+flowchart LR
+    S["Guardar"] --> Q{"Tem instâncias?"}
+    Q -->|"Não"| E["Edita o próprio registo<br/>versão mantida"]
+    Q -->|"Sim"| N["Cria a versão seguinte<br/>e desativa a anterior"]
+    N --> K["A versão anterior fica na base de dados:<br/>as instâncias em curso apontam para ela"]
+```
+
+Consequências que moldaram o desenho:
+
+- O índice único das definições é `(TenantId, Code, Version)`, e não `(TenantId, Code)`. Várias
+  versões do mesmo processo coexistem por construção, não por acidente.
+- Guardar marca sempre o registo da definição como alterado. Nós e ligações vivem em tabelas
+  próprias: sem isto, uma gravação feita a partir de uma leitura desatualizada reescreveria o grafo
+  sem que o `rowversion` chegasse a ser verificado. Foi um teste de integração que revelou a falha.
+- Uma cópia nasce sempre inativa e na versão 1: duplicar um processo ativo não pode pôr um segundo
+  processo a arrancar sozinho.
+- Eliminar é recusado enquanto houver execuções em curso, e é reversível quando é aceite.
+
+A validação está dividida por propósito, não duplicada. O desenhador assinala no momento o que é
+óbvio ao desenhar (um passo sem saída, um passo que nenhuma ligação alcança, uma condição sem os dois
+ramos) para dar resposta imediata; o servidor é quem decide se um processo pode ser ativado, e é a
+sua validação que aparece na lista de problemas. Um processo por acabar **pode** ser guardado: estar
+meio desenhado é um estado normal de trabalho.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores e escalonamento

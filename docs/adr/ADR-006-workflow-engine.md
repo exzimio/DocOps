@@ -79,3 +79,9 @@ que arrancou.
   `DocumentLifecycle`, tal como as que um utilizador faz pela interface.
 - **Junções contam chegadas em variáveis da instância**, pelo que o estado de uma ramificação
   paralela sobrevive a um reinício como o resto da instância.
+- **Alterar um processo em uso cria uma versão nova.** A definição antiga não é arquivada nem
+  apagada: fica no seu próprio registo porque as instâncias em curso continuam a resolver os nós
+  nela. O índice único é `(TenantId, Code, Version)` precisamente para que isso seja possível.
+- **O desenhador não inventa vocabulário.** Os ramos que oferece numa ligação são os que
+  `ResolveNextNodes` sabe comparar, e os campos que mostra num nó são os que o executor desse tipo
+  lê. Um desenho que a interface permite é um desenho que o motor executa.
