@@ -216,3 +216,17 @@ public sealed record DocumentSearchRequest
 }
 
 public sealed record DocumentDownload(Stream Content, string FileName, string ContentType, long Length, string ContentHash);
+
+public sealed record DocumentTextLineDto(int Number, int Page, string? Section, string Text);
+
+/// <summary>
+/// The current version's text, numbered exactly as citations number it, so a line quoted by the AI
+/// can be shown in place. Empty for formats stored without extractable text.
+/// </summary>
+public sealed record DocumentTextDto(
+    int VersionNumber,
+    string FileName,
+    string ContentType,
+    bool HasText,
+    bool Truncated,
+    IReadOnlyList<DocumentTextLineDto> Lines);

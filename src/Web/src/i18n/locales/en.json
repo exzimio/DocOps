@@ -184,7 +184,8 @@
       "overview": "Overview",
       "versions": "Versions",
       "permissions": "Permissions",
-      "audit": "Audit"
+      "audit": "Audit",
+      "intelligence": "Intelligence"
     },
     "overview": {
       "metadata": "Metadata",
@@ -275,7 +276,9 @@
       "3": "Restricted"
     },
     "status": "Status",
-    "classification": "Classification"
+    "classification": "Classification",
+    "unclassifiedHint": "This document has no type yet. The analysis reads the content and suggests the type and metadata for you to review.",
+    "openIntelligence": "Review with AI"
   },
   "tasks": {
     "title": "Tasks",
@@ -441,7 +444,10 @@
       "notification.sent": "Notification sent",
       "timer.scheduled": "Timer scheduled",
       "timer.elapsed": "Timer elapsed",
-      "document.status.applied": "Document status changed"
+      "document.status.applied": "Document status changed",
+      "ai.requested": "AI analysis requested",
+      "ai.completed": "AI analysis completed",
+      "ai.failed": "AI analysis without result"
     },
     "errors": {
       "workflow_not_active": "This workflow is not active.",
@@ -514,7 +520,8 @@
         "true": "True",
         "false": "False",
         "approved": "Approved",
-        "rejected": "Rejected"
+        "rejected": "Rejected",
+        "failed": "No result"
       },
       "assignment": {
         "Role": "Role",
@@ -541,7 +548,10 @@
         "node_without_exit": "This step has no outgoing connection.",
         "node_unreachable": "No connection reaches this step.",
         "condition_missing_branch": "The condition has no exit for the true and false branches."
-      }
+      },
+      "aiClassificationHelp": "Requests an analysis of the process's document and writes the suggested type and its confidence to variables. A condition after it can decide on them.",
+      "aiExtractionHelp": "Requests an analysis of the process's document and writes the suggested values to variables (for example, ai.totalAmount) along with how many required fields were not found.",
+      "aiNeverApplies": "The step never changes the document: its suggestions wait for review like any other analysis. With no text to read, the process continues on the \"No result\" branch."
     }
   },
   "notifications": {
@@ -549,5 +559,124 @@
     "empty": "No notifications",
     "markAllRead": "Mark all as read",
     "open": "Open notifications"
+  },
+  "ai": {
+    "source": {
+      "demoShort": "Demonstration",
+      "demoTitle": "Demonstration mode.",
+      "demoDetail": "Results produced by deterministic rules over the document's text — not by a language model. The same document always gives the same result, and every value shows the line it was read from.",
+      "modelShort": "Language model",
+      "modelDetail": "Suggestions from a configured language model. Only values and quotations found in the document's text are shown."
+    },
+    "status": {
+      "0": "Queued",
+      "1": "Awaiting review",
+      "2": "Applied",
+      "3": "Rejected",
+      "4": "No result"
+    },
+    "decision": {
+      "0": "Pending",
+      "1": "Accepted",
+      "2": "Corrected",
+      "3": "Rejected"
+    },
+    "text": {
+      "title": "Document text",
+      "noText": "“{{file}}” has no extractable text (a scan, for instance). Optical character recognition is not part of this demonstration.",
+      "noAccess": "You do not have permission to see this document's content.",
+      "truncated": "The text was truncated to the first 2000 lines."
+    },
+    "review": {
+      "title": "AI suggestions",
+      "analyse": "Analyse document",
+      "analyseAgain": "Analyse again",
+      "neverAnalysed": "This document has not been analysed yet. The analysis reads the current version and suggests its type and metadata values; nothing is saved without your decision.",
+      "cannotProcess": "Only someone who can edit the document, in a status that allows metadata changes, can request an analysis.",
+      "readVersion": "Read version {{version}}",
+      "byWorkflow": "Requested by a process",
+      "stale": "The document has a newer version than the one analysed. Analyse it again before applying.",
+      "appliedBy": "Applied by {{name}} on {{when}}.",
+      "discarded": "This analysis was rejected; nothing was applied to the document.",
+      "classification": "Classification",
+      "acceptType": "Change to {{type}}",
+      "keepType": "Keep {{type}}",
+      "fields": "{{type}} fields",
+      "nothingRecognised": "The analysis recognised no known document type and found no values.",
+      "missing": "Undecided or missing: {{fields}}. Accept, correct or enter these values before applying.",
+      "acceptAll": "Accept everything found",
+      "apply": "Apply to document",
+      "applyBlocked": "Decide the classification and fill in the required fields before applying.",
+      "discard": "Reject analysis",
+      "readOnly": "You can see this analysis but you do not have permission to decide on it.",
+      "required": "required",
+      "notFound": "Not found in the document",
+      "current": "Current value: {{value}}",
+      "accept": "Accept",
+      "edit": "Correct",
+      "fillIn": "Enter value",
+      "reject": "Reject",
+      "saveEdit": "Save",
+      "acceptField": "Accept {{field}}",
+      "editField": "Correct {{field}}",
+      "rejectField": "Reject {{field}}",
+      "line": "line {{line}}"
+    },
+    "ask": {
+      "title": "Ask this document",
+      "label": "Question about the document",
+      "placeholder": "For example: what is the invoice total?",
+      "submit": "Ask",
+      "example1": "What is the total?",
+      "example2": "When is it due?",
+      "example3": "Who approved this document?",
+      "page": "page {{page}}",
+      "auditRecord": "Approval record",
+      "discarded_one": "{{count}} quotation returned by the provider did not match the text and is not shown.",
+      "discarded_other": "{{count}} quotations returned by the provider did not match the text and are not shown."
+    },
+    "center": {
+      "title": "Document intelligence",
+      "subtitle": "Documents awaiting classification, suggestions awaiting review and how often suggestions were right.",
+      "statistics": "Indicators",
+      "awaiting": "Awaiting review",
+      "applied30": "Applied in the last 30 days",
+      "decided": "Decisions taken",
+      "decidedDetail": "{{accepted}} accepted · {{edited}} corrected · {{rejected}} rejected",
+      "acceptanceRate": "Acceptance rate",
+      "acceptanceRateDetail": "Suggestions accepted as they came. A correction does not count as right.",
+      "intakeTitle": "Awaiting classification",
+      "intakeDescription": "Documents received whose type nobody has identified yet.",
+      "intakeEmpty": "Nothing to classify",
+      "intakeEmptyBody": "Every document you can see already has a type.",
+      "queueTitle": "Analyses",
+      "tabs": {
+        "review": "Awaiting review",
+        "applied": "Applied",
+        "discarded": "Rejected",
+        "failed": "No result"
+      },
+      "queueEmpty": "No analyses in this state",
+      "columns": {
+        "document": "Document",
+        "suggestion": "Classification",
+        "fields": "Fields",
+        "origin": "Requested by",
+        "status": "Status",
+        "when": "When"
+      },
+      "fieldsSummary": "{{found}} found · {{missing}} missing · {{decided}} decided"
+    },
+    "errors": {
+      "ai_classification_undecided": "Accept or reject the suggested classification before applying.",
+      "ai_required_fields_missing": "Required fields are missing. Enter them before applying.",
+      "ai_run_stale": "The document changed since the analysis. Analyse it again.",
+      "ai_run_not_reviewable": "This analysis is no longer under review.",
+      "ai_nothing_to_accept": "This field was not found; enter the value instead of accepting.",
+      "ai_edit_requires_value": "Enter the corrected value.",
+      "invalid_metadata_value": "The value is not valid for this field.",
+      "metadata_locked": "The document's status does not allow metadata changes.",
+      "forbidden": "You do not have permission for this operation."
+    }
   }
 }

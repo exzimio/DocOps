@@ -11,6 +11,10 @@ export function branchOptions(type: number | undefined): string[] {
     case WorkflowNodeType.Approval:
     case WorkflowNodeType.HumanTask:
       return ['approved', 'rejected']
+    // An AI step continues on its unconditional exit, or on "failed" when there was nothing to read.
+    case WorkflowNodeType.AiClassification:
+    case WorkflowNodeType.AiExtraction:
+      return ['failed']
     default:
       return []
   }

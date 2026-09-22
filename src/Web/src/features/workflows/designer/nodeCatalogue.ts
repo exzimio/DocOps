@@ -37,8 +37,8 @@ export const nodeCatalogue: NodeKind[] = [
   { type: WorkflowNodeType.Join, icon: Merge, accent: 'graphite', executable: true },
   { type: WorkflowNodeType.Delay, icon: Timer, accent: 'graphite', executable: true },
   { type: WorkflowNodeType.End, icon: Flag, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.AiClassification, icon: Bot, accent: 'red', executable: false },
-  { type: WorkflowNodeType.AiExtraction, icon: ScanText, accent: 'red', executable: false },
+  { type: WorkflowNodeType.AiClassification, icon: Bot, accent: 'teal', executable: true },
+  { type: WorkflowNodeType.AiExtraction, icon: ScanText, accent: 'teal', executable: true },
   { type: WorkflowNodeType.Integration, icon: Plug, accent: 'red', executable: false },
 ]
 

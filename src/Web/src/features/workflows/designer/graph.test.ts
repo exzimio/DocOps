@@ -261,6 +261,7 @@ describe('branchOptions', () => {
     expect(branchOptions(WorkflowNodeType.Condition)).toEqual(['true', 'false'])
     expect(branchOptions(WorkflowNodeType.Approval)).toEqual(['approved', 'rejected'])
     expect(branchOptions(WorkflowNodeType.Notification)).toEqual([])
+    expect(branchOptions(WorkflowNodeType.AiExtraction)).toEqual(['failed'])
   })
 })
 

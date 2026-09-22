@@ -51,6 +51,12 @@ public sealed class DocumentCatalogueSeeder(DocOpsDbContext dbContext)
 
     private static readonly TypeSeed[] Types =
     [
+        // The intake type. No required fields, so a file can be stored before anyone has read it;
+        // sensitive by default, because until it is read nobody knows what it contains.
+        new(DocumentTypeCodes.Unclassified, "Por classificar", "DOC", "inbox", SecurityClassification.Confidential, "GER-3A",
+            "Documentos recebidos cujo tipo ainda não foi identificado",
+            []),
+
         new("SupplierInvoice", "Fatura de fornecedor", "FAT", "receipt", SecurityClassification.Confidential, "FIN-10A",
             "Faturas recebidas de fornecedores, sujeitas a validação e aprovação financeira",
             [

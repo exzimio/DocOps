@@ -12,6 +12,9 @@ public sealed class BackgroundJobOptions
 
     public bool EscalateOverdueTasks { get; set; } = true;
     public bool ResumeWorkflowTimers { get; set; } = true;
+
+    /// <summary>Runs the AI analyses queued by workflow steps and resumes their instances.</summary>
+    public bool ProcessAiQueue { get; set; } = true;
 }
 
 /// <summary>
@@ -63,6 +66,14 @@ public sealed class BackgroundJobRunner(
         if (_options.EscalateOverdueTasks)
         {
             await scope.ServiceProvider.GetRequiredService<OverdueTaskEscalationJob>().RunAsync(cancellationToken);
+        }
+
+        if (_options.ProcessAiQueue)
+        {
+            // Its own scope: the analyses and the instances they resume are tracked separately from
+            // the timer and escalation work above.
+            await using AsyncServiceScope aiScope = scopeFactory.CreateAsyncScope();
+            await aiScope.ServiceProvider.GetRequiredService<AiProcessingJob>().RunAsync(cancellationToken);
         }
     }
 }

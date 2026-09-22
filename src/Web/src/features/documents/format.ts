@@ -39,7 +39,12 @@ export function formatDateTime(value: string | null | undefined, locale: string)
  * Metadata values arrive as canonical strings (ISO dates, invariant decimals). Rendering applies the
  * viewer's locale without ever changing what the server stored.
  */
-export function formatMetadataValue(value: string | null, fieldType: number, locale: string): string {
+export function formatMetadataValue(
+  value: string | null,
+  fieldType: number,
+  locale: string,
+  currency?: string | null,
+): string {
   if (!value) {
     return '—'
   }
@@ -50,7 +55,12 @@ export function formatMetadataValue(value: string | null, fieldType: number, loc
     case 1:
       return new Intl.NumberFormat(locale).format(Number(value))
     case 4:
-      return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(Number(value))
+      // The document's own currency when it has one; a bare amount otherwise, never an assumed euro.
+      return currency && /^[A-Z]{3}$/.test(currency)
+        ? new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number(value))
+        : new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+            Number(value),
+          )
     case 3:
       return value.toLowerCase() === 'true' ? '✓' : '✗'
     default:

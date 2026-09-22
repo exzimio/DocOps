@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CheckSquare, FileText, GitBranch, LayoutDashboard } from 'lucide-react'
+import { CheckSquare, FileText, GitBranch, LayoutDashboard, Sparkles } from 'lucide-react'
 import { Permission } from '@/lib/types'
 
 export interface NavItem {
@@ -42,6 +42,17 @@ export const navigationSections: NavSection[] = [
         to: '/app/workflows',
         icon: GitBranch,
         permission: Permission.workflowsView,
+      },
+    ],
+  },
+  {
+    labelKey: 'nav.sectionIntelligence',
+    items: [
+      {
+        labelKey: 'nav.ai',
+        to: '/app/ai',
+        icon: Sparkles,
+        permission: Permission.aiUse,
       },
     ],
   },

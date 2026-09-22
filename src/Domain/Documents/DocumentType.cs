@@ -29,6 +29,17 @@ public sealed class DocumentType : TenantEntity
     public ICollection<DocumentMetadataField> MetadataFields { get; set; } = [];
 }
 
+/// <summary>Document type codes the platform itself relies on.</summary>
+public static class DocumentTypeCodes
+{
+    /// <summary>
+    /// The intake type: a document whose content is known but whose type is not yet. It has no
+    /// required fields, which is what lets a file be uploaded before anyone — person or AI — has
+    /// read it. Never offered as a classification result.
+    /// </summary>
+    public const string Unclassified = "Unclassified";
+}
+
 /// <summary>Definition of one metadata field on a document type.</summary>
 public sealed class DocumentMetadataField : TenantEntity
 {

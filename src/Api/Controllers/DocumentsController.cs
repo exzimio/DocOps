@@ -123,6 +123,17 @@ public sealed class DocumentsController(
         return File(download.Content, download.ContentType, download.FileName, enableRangeProcessing: true);
     }
 
+    /// <summary>
+    /// The current version's text, numbered the way AI citations number it, for showing a cited line
+    /// in place. Needs the right to download the document, and is audited as a preview.
+    /// </summary>
+    [HttpGet("{id:guid}/text")]
+    [HasPermission(Permissions.DocumentsDownload)]
+    [ProducesResponseType<DocumentTextDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<DocumentTextDto>> Text(Guid id, CancellationToken cancellationToken) =>
+        Ok(await documentService.GetTextAsync(id, cancellationToken));
+
     [HttpGet("{id:guid}/audit")]
     [HasPermission(Permissions.DocumentsView)]
     [ProducesResponseType<PagedResult<DocumentAuditEntryDto>>(StatusCodes.Status200OK)]

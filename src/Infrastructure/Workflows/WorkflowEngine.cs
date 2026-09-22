@@ -211,6 +211,30 @@ public sealed class WorkflowEngine(
         return instance;
     }
 
+    /// <summary>
+    /// Walks a waiting instance again from its active nodes, after something outside a person's action
+    /// completed — an AI analysis the worker finished, for instance. Each active node decides for
+    /// itself whether it is done: a node whose work is not finished simply waits again.
+    /// </summary>
+    public async Task<WorkflowInstance> ResumeAsync(Guid instanceId, CancellationToken cancellationToken = default)
+    {
+        WorkflowInstance instance = await LoadInstanceAsync(instanceId, cancellationToken);
+
+        if (instance.IsFinished)
+        {
+            return instance;
+        }
+
+        WorkflowDefinition definition = await LoadDefinitionAsync(instance.WorkflowDefinitionId, cancellationToken);
+        Dictionary<string, string?> variables = WorkflowVariables.Parse(instance.VariablesJson);
+        WorkflowExecutionContext context = CreateContext(instance, definition, variables, null, "Sistema");
+
+        await WalkAsync(context, WorkflowVariables.ParseNodeKeys(instance.ActiveNodeKeysJson), cancellationToken);
+        await PersistAsync(context, cancellationToken);
+
+        return instance;
+    }
+
     public async Task<WorkflowInstance> CancelAsync(
         Guid instanceId, string reason, CancellationToken cancellationToken = default)
     {
@@ -343,8 +367,11 @@ public sealed class WorkflowEngine(
     {
         List<WorkflowEdge> outgoing = [.. definition.OutgoingEdges(nodeKey)];
 
+        // With no branch chosen, only unconditional edges are followed. A branch edge is followed
+        // only when its branch is chosen: otherwise a step with a normal exit and a "failed" exit
+        // would take both, and the process would end wherever the database happened to list first.
         List<WorkflowEdge> matching = branch is null
-            ? outgoing
+            ? [.. outgoing.Where(edge => string.IsNullOrWhiteSpace(edge.Branch))]
             : [.. outgoing.Where(edge => string.Equals(edge.Branch, branch, StringComparison.OrdinalIgnoreCase))];
 
         if (matching.Count == 0 && branch is not null)

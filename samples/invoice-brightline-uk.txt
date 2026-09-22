@@ -1,0 +1,24 @@
+Brightline Analytics Ltd
+14 Harbour Street, Leeds LS1 4AB, United Kingdom
+VAT GB 123 4567 89
+
+INVOICE
+=======
+
+Invoice number: BL-2026-0418
+Invoice date: 28 August 2026
+
+Bill to: Asteria Group, S.A.
+Avenida da Liberdade, 200, 1250-147 Lisboa, Portugal
+
+DESCRIPTION                                  AMOUNT
+Market data subscription (Q4 2026)         2,400.00
+Custom dashboard development                 850.00
+
+Net amount: 3,250.00
+VAT (0%, reverse charge): 0.00
+Amount due: £3,250.00
+
+Please quote the invoice number on your payment.
+
+Fictitious document, created for the DocOps Control Tower demonstration.

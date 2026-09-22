@@ -4,6 +4,7 @@ using DocOps.Domain.Common;
 using DocOps.Domain.Compliance;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
+using DocOps.Domain.Intelligence;
 using DocOps.Domain.Notifications;
 using DocOps.Domain.Tenancy;
 using DocOps.Domain.Workflows;
@@ -47,6 +48,9 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<WorkflowTask> WorkflowTasks => Set<WorkflowTask>();
     public DbSet<WorkflowEvent> WorkflowEvents => Set<WorkflowEvent>();
     public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<AiProcessingRun> AiProcessingRuns => Set<AiProcessingRun>();
+    public DbSet<AiFieldSuggestion> AiFieldSuggestions => Set<AiFieldSuggestion>();
 
     /// <summary>
     /// Null in unauthenticated contexts (migrations, seeding, the background worker). The query
@@ -131,5 +135,12 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
         builder.Entity<WorkflowTask>().HasQueryFilter(t => CurrentTenantId == null || t.TenantId == CurrentTenantId);
         builder.Entity<WorkflowEvent>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         builder.Entity<Notification>().HasQueryFilter(n => CurrentTenantId == null || n.TenantId == CurrentTenantId);
+
+        // AI output about a document disappears with the document, like its versions and metadata.
+        builder.Entity<AiProcessingRun>().HasQueryFilter(r =>
+            !r.Document!.IsDeleted && (CurrentTenantId == null || r.TenantId == CurrentTenantId));
+
+        builder.Entity<AiFieldSuggestion>().HasQueryFilter(f =>
+            !f.Run!.Document!.IsDeleted && (CurrentTenantId == null || f.TenantId == CurrentTenantId));
     }
 }

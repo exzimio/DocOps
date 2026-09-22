@@ -182,9 +182,16 @@ public sealed class DelayNodeExecutor : INodeExecutor
         NodeConfiguration config = NodeConfiguration.Parse(node.ConfigJson);
         int hours = config.DelayHours ?? 24;
 
-        // Already waiting on this timer: the worker resumed the instance, so the wait is over.
-        if (context.Instance.ResumeAtUtc is { } resumeAt && resumeAt <= context.Now)
+        if (context.Instance.ResumeAtUtc is { } resumeAt)
         {
+            // Still running: the instance was walked for another reason (a parallel branch, an AI
+            // result arriving) and the timer must not be restarted from zero.
+            if (resumeAt > context.Now)
+            {
+                return Task.FromResult(NodeResult.Wait());
+            }
+
+            // The worker resumed the instance because the moment arrived: the wait is over.
             context.Instance.ResumeAtUtc = null;
             context.AddEvent(WorkflowEventTypes.TimerElapsed, $"Temporizador '{node.Name}' terminou", node.Key);
 

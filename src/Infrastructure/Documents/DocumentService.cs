@@ -6,6 +6,7 @@ using DocOps.Domain.Auditing;
 using DocOps.Domain.Common;
 using DocOps.Domain.Compliance;
 using DocOps.Domain.Documents;
+using DocOps.Domain.Intelligence;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ public sealed class DocumentService(
     DocOpsDbContext dbContext,
     DocumentAccessResolver accessResolver,
     DocumentReferenceGenerator referenceGenerator,
+    DocumentMetadataWriter metadataWriter,
     IFileStorage fileStorage,
     IOptions<FileStorageOptions> storageOptions,
     IAuditService auditService,
@@ -101,6 +103,31 @@ public sealed class DocumentService(
         return new DocumentDownload(content, version.FileName, version.ContentType, version.FileSizeBytes, version.ContentHash);
     }
 
+    public async Task<DocumentTextDto> GetTextAsync(Guid documentId, CancellationToken cancellationToken = default)
+    {
+        const int MaxLines = 2_000;
+
+        Document document = await LoadAsync(documentId, cancellationToken);
+
+        // Reading the text is reading the content: the same right as downloading it.
+        await accessResolver.EnsureAsync(document, DocumentAccessLevel.Download, clock.UtcNow, cancellationToken);
+
+        DocumentVersion version = document.Versions.Single(v => v.IsCurrent);
+        DocumentText text = new(version.ExtractedText);
+
+        await auditService.WriteAsync(
+            DocumentAudit(document, AuditActions.DocumentPreviewed, $"Conteúdo da versão {version.VersionNumber} pré-visualizado"),
+            cancellationToken);
+
+        return new DocumentTextDto(
+            version.VersionNumber,
+            version.FileName,
+            version.ContentType,
+            !text.IsEmpty,
+            text.Lines.Count > MaxLines,
+            [.. text.Lines.Take(MaxLines).Select(l => new DocumentTextLineDto(l.Number, l.Page, l.Section, l.Text))]);
+    }
+
     public async Task<PagedResult<DocumentAuditEntryDto>> GetAuditTrailAsync(
         Guid documentId, PageRequest paging, CancellationToken cancellationToken = default)
     {
@@ -178,7 +205,7 @@ public sealed class DocumentService(
         document.CurrentVersionNumber = version.VersionNumber;
         document.CurrentVersionId = version.Id;
 
-        ApplyMetadata(document, type, request.Metadata);
+        metadataWriter.Apply(document, type, request.Metadata);
         await ApplyTagsAsync(document, request.Tags, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -240,7 +267,7 @@ public sealed class DocumentService(
         document.BusinessEntity = request.BusinessEntity?.Trim();
         document.Classification = request.Classification;
 
-        ApplyMetadata(document, type, request.Metadata);
+        metadataWriter.Apply(document, type, request.Metadata);
         await ApplyTagsAsync(document, request.Tags, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -621,63 +648,6 @@ public sealed class DocumentService(
         if (!_storageOptions.AllowedContentTypes.Contains(upload.ContentType, StringComparer.OrdinalIgnoreCase))
         {
             throw new DomainException($"O tipo de conteúdo '{upload.ContentType}' não é permitido.", "content_type_not_allowed");
-        }
-    }
-
-    private void ApplyMetadata(Document document, DocumentType type, IReadOnlyDictionary<string, string?> values)
-    {
-        Dictionary<string, DocumentMetadataField> fieldsByCode =
-            type.MetadataFields.ToDictionary(f => f.Code, StringComparer.OrdinalIgnoreCase);
-
-        foreach ((string code, string? raw) in values)
-        {
-            if (!fieldsByCode.TryGetValue(code, out DocumentMetadataField? field))
-            {
-                throw new DomainException(
-                    $"O campo de metadados '{code}' não existe no tipo '{type.Name}'.", "unknown_metadata_field");
-            }
-
-            DocumentMetadataValue? value = document.MetadataValues.FirstOrDefault(v => v.FieldId == field.Id);
-
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                if (field.IsRequired)
-                {
-                    throw new DomainException($"O campo '{field.Label}' é obrigatório.", "required_metadata_missing");
-                }
-
-                if (value is not null)
-                {
-                    document.MetadataValues.Remove(value);
-                    dbContext.DocumentMetadataValues.Remove(value);
-                }
-
-                continue;
-            }
-
-            if (value is null)
-            {
-                value = new DocumentMetadataValue
-                {
-                    TenantId = document.TenantId,
-                    DocumentId = document.Id,
-                    FieldId = field.Id
-                };
-
-                document.MetadataValues.Add(value);
-            }
-
-            MetadataValueBinder.Assign(field, value, raw.Trim());
-        }
-
-        foreach (DocumentMetadataField required in type.MetadataFields.Where(f => f.IsRequired))
-        {
-            bool present = document.MetadataValues.Any(v => v.FieldId == required.Id);
-
-            if (!present)
-            {
-                throw new DomainException($"O campo '{required.Label}' é obrigatório.", "required_metadata_missing");
-            }
         }
     }
 

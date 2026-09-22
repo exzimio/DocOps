@@ -36,12 +36,35 @@ public sealed class DocumentDemoSeeder(
         string? Description = null,
         SecurityClassification? Classification = null,
         int Versions = 1,
-        GrantSeed[]? Grants = null);
+        GrantSeed[]? Grants = null,
+        string? ContentFile = null);
 
     private const string BusinessEntity = "Asteria Group, S.A.";
 
     private static readonly DocumentSeed[] Seeds =
     [
+        // --------------------------------------------------------------------- Por classificar
+        // Files that arrived but that nobody has read yet. Their text is realistic — laid out like
+        // real invoices and contracts — which is what the AI processing screen works from.
+        new(DocumentTypeCodes.Unclassified, "Documento recebido — fatura-atlas-tecnologia", "ana.ferreira@asteria.example", "PRC",
+            DocumentStatus.Draft, 0, [], ["recebido"],
+            Description: "Recebido por correio eletrónico da Atlas Tecnologia; tipo por identificar.",
+            ContentFile: "fatura-atlas-tecnologia.txt"),
+
+        new(DocumentTypeCodes.Unclassified, "Documento recebido — contrato-nordhavn-logistica", "carla.nunes@asteria.example", "LEG",
+            DocumentStatus.Draft, 1, [], ["recebido"],
+            Description: "Minuta assinada enviada pela Nordhavn Logística.",
+            ContentFile: "contrato-nordhavn-logistica.txt"),
+
+        new(DocumentTypeCodes.Unclassified, "Documento recebido — invoice-brightline-uk", "ricardo.lopes@asteria.example", "FIN",
+            DocumentStatus.Draft, 0, [], ["recebido"],
+            Description: "Fatura em inglês de um fornecedor do Reino Unido.",
+            ContentFile: "invoice-brightline-uk.txt"),
+
+        new(DocumentTypeCodes.Unclassified, "Documento recebido — encomenda-verdemar", "ana.ferreira@asteria.example", "PRC",
+            DocumentStatus.Draft, 1, [], ["recebido"],
+            ContentFile: "encomenda-verdemar.txt"),
+
         // ---------------------------------------------------------------------------------- Faturas
         new("SupplierInvoice", "Fatura Northstar Supplies 2026/1184", "ricardo.lopes@asteria.example", "FIN",
             DocumentStatus.PendingApproval, 3,
@@ -132,7 +155,7 @@ public sealed class DocumentDemoSeeder(
              ("governingLaw", "Lei portuguesa")],
             ["contrato", "confidencialidade", "assinado"]),
 
-        new("Contract", "Contrato de arrendamento — Armazém de Alverca", "helena.vasconcelos@asteria.example", "MGT",
+        new("Contract", "Contrato de arrendamento — Armazém de Alverca", "admin@asteria.example", "MGT",
             DocumentStatus.Approved, 300,
             [("counterparty", "Predial Tejo, Lda."), ("contractType", "Arrendamento"),
              ("startDate", "2025-12-01"), ("endDate", "2030-11-30"), ("contractValue", "420000.00"),
@@ -213,7 +236,7 @@ public sealed class DocumentDemoSeeder(
             ["rh", "arquivado"]),
 
         // -------------------------------------------------------------------- Comunicações internas
-        new("InternalMemo", "Política de teletrabalho 2026", "helena.vasconcelos@asteria.example", "MGT",
+        new("InternalMemo", "Política de teletrabalho 2026", "admin@asteria.example", "MGT",
             DocumentStatus.Approved, 90,
             [("subject", "Política de teletrabalho"), ("audience", "Toda a organização")],
             ["comunicação", "política"],
@@ -230,7 +253,7 @@ public sealed class DocumentDemoSeeder(
             ["comunicação", "processos", "rascunho"],
             Description: "Proposta de revisão do circuito de aprovação com limiares por valor."),
 
-        new("InternalMemo", "Plano de continuidade de negócio", "helena.vasconcelos@asteria.example", "MGT",
+        new("InternalMemo", "Plano de continuidade de negócio", "admin@asteria.example", "MGT",
             DocumentStatus.Approved, 150,
             [("subject", "Continuidade de negócio"), ("audience", "Direção")],
             ["comunicação", "continuidade"],
@@ -282,7 +305,7 @@ public sealed class DocumentDemoSeeder(
             [("period", "3.º trimestre de 2026"), ("author", "Sofia Martins")],
             ["relatório", "operações"]),
 
-        new("Report", "Relatório de conformidade documental — 1.º semestre", "helena.vasconcelos@asteria.example", "MGT",
+        new("Report", "Relatório de conformidade documental — 1.º semestre", "admin@asteria.example", "MGT",
             DocumentStatus.Approved, 80,
             [("period", "1.º semestre de 2026"), ("author", "Helena Vasconcelos")],
             ["relatório", "conformidade"],
@@ -323,6 +346,7 @@ public sealed class DocumentDemoSeeder(
 
         Dictionary<string, int> sequences = [];
         List<AuditEvent> auditTrail = [];
+        int created = 0;
 
         foreach (DocumentSeed seed in Seeds)
         {
@@ -355,6 +379,7 @@ public sealed class DocumentDemoSeeder(
             };
 
             dbContext.Documents.Add(document);
+            created++;
 
             await AddVersionsAsync(document, type, seed, owner, createdAt, auditTrail, cancellationToken);
             AddMetadata(document, type, seed);
@@ -377,7 +402,7 @@ public sealed class DocumentDemoSeeder(
 
         logger.LogInformation(
             "Seeded {DocumentCount} demo documents and {AuditCount} audit entries for tenant {Tenant}",
-            Seeds.Length, auditTrail.Count, tenant.Name);
+            created, auditTrail.Count, tenant.Name);
     }
 
     private async Task AddVersionsAsync(
@@ -394,7 +419,10 @@ public sealed class DocumentDemoSeeder(
             bool isCurrent = number == seed.Versions;
             DateTimeOffset versionDate = createdAt.AddDays(number - 1);
 
-            string content = BuildFileContent(document, type, seed, number);
+            string content = seed.ContentFile is { } sample
+                ? SampleDocuments.Read(sample)
+                : BuildFileContent(document, type, seed, number);
+            string fileName = seed.ContentFile ?? $"{document.Reference}-v{number}.txt";
             byte[] bytes = Encoding.UTF8.GetBytes(content);
 
             await using MemoryStream stream = new(bytes);
@@ -403,7 +431,7 @@ public sealed class DocumentDemoSeeder(
                 stream,
                 document.TenantId,
                 document.Id,
-                new FileDescriptor($"{document.Reference}-v{number}.txt", "text/plain"),
+                new FileDescriptor(fileName, "text/plain"),
                 cancellationToken);
 
             DocumentVersion version = new()
@@ -412,7 +440,7 @@ public sealed class DocumentDemoSeeder(
                 DocumentId = document.Id,
                 VersionNumber = number,
                 StorageKey = stored.StorageKey,
-                FileName = $"{document.Reference}-v{number}.txt",
+                FileName = fileName,
                 ContentType = "text/plain",
                 FileSizeBytes = stored.SizeBytes,
                 ContentHash = stored.ContentHash,

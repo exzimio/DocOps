@@ -18,8 +18,6 @@ public static class WorkflowDefinitionValidator
     /// <summary>Node types the engine cannot execute yet. Designing with them is allowed; activating is not.</summary>
     private static readonly Dictionary<WorkflowNodeType, string> NotYetExecutable = new()
     {
-        [WorkflowNodeType.AiClassification] = "fase de IA",
-        [WorkflowNodeType.AiExtraction] = "fase de IA",
         [WorkflowNodeType.Integration] = "fase de integrações"
     };
 

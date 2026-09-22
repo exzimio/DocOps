@@ -1,6 +1,7 @@
 using DocOps.Application.Abstractions;
 using DocOps.Application.Documents;
 using DocOps.Application.Identity;
+using DocOps.Application.Intelligence;
 using DocOps.Application.Tenancy;
 using DocOps.Application.Workflows;
 using DocOps.Domain.Identity;
@@ -8,6 +9,7 @@ using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Auditing;
 using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
+using DocOps.Infrastructure.Intelligence;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Interceptors;
 using DocOps.Infrastructure.Persistence.Seed;
@@ -55,13 +57,46 @@ public static class DependencyInjection
 
         services.AddScoped<DocumentAccessResolver>();
         services.AddScoped<DocumentReferenceGenerator>();
+        services.AddScoped<DocumentMetadataWriter>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IDocumentPermissionService, DocumentPermissionService>();
         services.AddScoped<IDocumentCatalogue, DocumentCatalogue>();
 
         AddWorkflows(services);
+        AddIntelligence(services, configuration);
 
         return services;
+    }
+
+    private static void AddIntelligence(IServiceCollection services, IConfiguration configuration)
+    {
+        IConfigurationSection section = configuration.GetSection(AiOptions.SectionName);
+        services.Configure<AiOptions>(section);
+        AiOptions ai = section.Get<AiOptions>() ?? new AiOptions();
+
+        if (ai.UsesModel)
+        {
+            // Asked for a model but not told how to reach it: refuse to start rather than fail on
+            // the first document. The message names the settings, never their values.
+            if (string.IsNullOrWhiteSpace(ai.Endpoint) || string.IsNullOrWhiteSpace(ai.ApiKey) || string.IsNullOrWhiteSpace(ai.Model))
+            {
+                throw new InvalidOperationException(
+                    "Ai:Provider is 'OpenAiCompatible' but Ai:Endpoint, Ai:ApiKey or Ai:Model is missing. " +
+                    "Set them as environment variables (Ai__Endpoint, Ai__ApiKey, Ai__Model).");
+            }
+
+            services.AddHttpClient<IAiDocumentService, OpenAiCompatibleProvider>(client =>
+                client.Timeout = TimeSpan.FromSeconds(Math.Clamp(ai.TimeoutSeconds, 5, 300)));
+        }
+        else
+        {
+            // Stateless and deterministic, so one instance serves every request.
+            services.AddSingleton<IAiDocumentService, DemoAiProvider>();
+        }
+
+        services.AddScoped<AiDocumentAnalyzer>();
+        services.AddScoped<IAiProcessingService, AiProcessingService>();
+        services.AddScoped<AiQueueProcessor>();
     }
 
     private static void AddWorkflows(IServiceCollection services)
@@ -87,10 +122,10 @@ public static class DependencyInjection
         services.AddScoped<INodeExecutor>(provider => new HumanTaskNodeExecutor(
             provider.GetRequiredService<TaskAssignmentResolver>(), WorkflowNodeType.Approval));
 
-        services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
-            WorkflowNodeType.AiClassification, "fase de IA"));
-        services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
-            WorkflowNodeType.AiExtraction, "fase de IA"));
+        services.AddScoped<INodeExecutor>(provider => new AiNodeExecutor(
+            provider.GetRequiredService<DocOpsDbContext>(), WorkflowNodeType.AiClassification));
+        services.AddScoped<INodeExecutor>(provider => new AiNodeExecutor(
+            provider.GetRequiredService<DocOpsDbContext>(), WorkflowNodeType.AiExtraction));
         services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
             WorkflowNodeType.Integration, "fase de integrações"));
 

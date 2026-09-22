@@ -145,4 +145,7 @@ public static class WorkflowEventTypes
     public const string TimerScheduled = "timer.scheduled";
     public const string TimerElapsed = "timer.elapsed";
     public const string DocumentStatusApplied = "document.status.applied";
+    public const string AiRequested = "ai.requested";
+    public const string AiCompleted = "ai.completed";
+    public const string AiFailed = "ai.failed";
 }

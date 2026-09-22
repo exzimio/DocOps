@@ -21,6 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The sample documents a person can upload by hand, uploaded the same way by the tests. -->
+    <None Include="..\..\samples\*.txt" LinkBase="Samples" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Api\DocOps.Api.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\DocOps.Infrastructure.csproj" />
   </ItemGroup>

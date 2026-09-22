@@ -15,4 +15,14 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The intake documents the demo seeds, from the same files a person can upload by hand. -->
+    <EmbeddedResource Include="..\..\samples\*.txt" LogicalName="DocOps.Samples.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The value parsers are implementation details of the demo provider, but worth testing on their own. -->
+    <InternalsVisibleTo Include="DocOps.UnitTests" />
+  </ItemGroup>
+
 </Project>

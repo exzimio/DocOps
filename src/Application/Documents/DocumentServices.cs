@@ -40,6 +40,9 @@ public interface IDocumentService
     Task<DocumentDownload> DownloadAsync(
         Guid documentId, int? versionNumber, CancellationToken cancellationToken = default);
 
+    /// <summary>The current version's text, line by line. Needs the right to download; audited as a preview.</summary>
+    Task<DocumentTextDto> GetTextAsync(Guid documentId, CancellationToken cancellationToken = default);
+
     Task<PagedResult<DocumentAuditEntryDto>> GetAuditTrailAsync(
         Guid documentId, PageRequest paging, CancellationToken cancellationToken = default);
 }

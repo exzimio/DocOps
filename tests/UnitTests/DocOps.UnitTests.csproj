@@ -19,6 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The same sample documents the demo seeds and a person can upload by hand. -->
+    <None Include="..\..\samples\*.txt" LinkBase="Samples" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Domain\DocOps.Domain.csproj" />
     <ProjectReference Include="..\..\src\Application\DocOps.Application.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\DocOps.Infrastructure.csproj" />

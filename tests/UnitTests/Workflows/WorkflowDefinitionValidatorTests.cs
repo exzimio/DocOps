@@ -174,15 +174,28 @@ public class WorkflowDefinitionValidatorTests
     public void Refuses_to_activate_a_definition_that_uses_a_node_type_without_an_executor()
     {
         WorkflowDefinition definition = ValidDefinition();
-        definition.Nodes.Add(Node("extract", WorkflowNodeType.AiExtraction, "Extrair dados"));
-        definition.Edges.Add(Edge("review", "extract"));
-        definition.Edges.Add(Edge("extract", "end"));
+        definition.Nodes.Add(Node("erp", WorkflowNodeType.Integration, "Enviar para o ERP"));
+        definition.Edges.Add(Edge("review", "erp"));
+        definition.Edges.Add(Edge("erp", "end"));
 
         WorkflowValidationIssue issue = Assert.Single(
             WorkflowDefinitionValidator.Validate(definition), i => i.Code == "node_type_not_implemented");
 
         Assert.Equal(ValidationSeverity.Error, issue.Severity);
         Assert.False(WorkflowDefinitionValidator.CanActivate(definition));
+    }
+
+    [Theory]
+    [InlineData(WorkflowNodeType.AiClassification)]
+    [InlineData(WorkflowNodeType.AiExtraction)]
+    public void AI_steps_are_executable_since_the_document_intelligence_phase(WorkflowNodeType type)
+    {
+        WorkflowDefinition definition = ValidDefinition();
+        definition.Nodes.Add(Node("ai", type, "Analisar documento"));
+        definition.Edges.Add(Edge("review", "ai"));
+        definition.Edges.Add(Edge("ai", "end"));
+
+        Assert.DoesNotContain(WorkflowDefinitionValidator.Validate(definition), i => i.Code == "node_type_not_implemented");
     }
 
     [Fact]

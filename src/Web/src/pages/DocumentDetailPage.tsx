@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Archive, ArrowLeft, Download, FilePlus2, Pencil, RotateCcw, Trash2 } from 'lucide-react'
+import { Archive, ArrowLeft, Download, FilePlus2, Pencil, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 import { api, type ApiError } from '@/lib/api'
 import type { Department } from '@/lib/types'
@@ -24,18 +24,27 @@ import {
 } from '@/features/documents/panels'
 import { EditDocumentForm } from '@/features/documents/EditDocumentForm'
 import { StartWorkflowPanel } from '@/features/workflows/StartWorkflowPanel'
+import { DocumentIntelligenceTab } from '@/features/ai/DocumentIntelligenceTab'
+import { hasPermission, useSession } from '@/features/auth/session'
 import { DocumentStatus } from '@/features/documents/types'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
 
-type Tab = 'overview' | 'versions' | 'permissions' | 'audit'
+type Tab = 'overview' | 'intelligence' | 'versions' | 'permissions' | 'audit'
+
+/** The intake type: uploaded, not yet read. Mirrors DocumentTypeCodes.Unclassified on the server. */
+const UnclassifiedTypeCode = 'Unclassified'
 
 export function DocumentDetailPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { id = '' } = useParams<{ id: string }>()
+  const { data: user } = useSession()
 
-  const [tab, setTab] = useState<Tab>('overview')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState<Tab>(() =>
+    searchParams.get('tab') === 'intelligence' ? 'intelligence' : 'overview',
+  )
   const [editing, setEditing] = useState(false)
   const [versionFile, setVersionFile] = useState<File | null>(null)
   const [versionComment, setVersionComment] = useState('')
@@ -89,6 +98,8 @@ export function DocumentDetailPage() {
   const canAddVersion = canEdit && document.canChangeContent
   const canDelete = access.includes('delete')
   const isArchived = document.summary.status === DocumentStatus.Archived
+  const canUseAi = hasPermission(user, 'ai.use')
+  const isUnclassified = document.summary.typeCode === UnclassifiedTypeCode
 
   const submitVersion = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -141,6 +152,7 @@ export function DocumentDetailPage() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: t('documents.tabs.overview') },
+    ...(canUseAi ? [{ key: 'intelligence' as const, label: t('documents.tabs.intelligence') }] : []),
     { key: 'versions', label: `${t('documents.tabs.versions')} (${document.versions.length})` },
     { key: 'permissions', label: t('documents.tabs.permissions') },
     { key: 'audit', label: t('documents.tabs.audit') },
@@ -259,7 +271,19 @@ export function DocumentDetailPage() {
                 ))}
               </div>
 
+              {tab === 'overview' && isUnclassified && canUseAi && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+                  <span>{t('documents.unclassifiedHint')}</span>
+                  <Button size="sm" onClick={() => setTab('intelligence')}>
+                    <Sparkles aria-hidden className="size-4" />
+                    {t('documents.openIntelligence')}
+                  </Button>
+                </div>
+              )}
               {tab === 'overview' && <OverviewPanel document={document} />}
+              {tab === 'intelligence' && canUseAi && (
+                <DocumentIntelligenceTab document={document} canProcess={canEdit} />
+              )}
               {tab === 'versions' && <VersionsPanel document={document} />}
               {tab === 'permissions' && (
                 <PermissionsPanel document={document} departments={departmentsQuery.data ?? []} />

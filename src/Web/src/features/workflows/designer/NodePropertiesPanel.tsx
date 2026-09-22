@@ -346,6 +346,22 @@ export function NodePropertiesPanel({
         </>
       )}
 
+      {(node.type === WorkflowNodeType.AiClassification || node.type === WorkflowNodeType.AiExtraction) && (
+        <div className="flex flex-col gap-2 rounded-md border border-subtle bg-sunken p-3 text-xs text-ink-secondary">
+          <p>
+            {node.type === WorkflowNodeType.AiClassification
+              ? t('workflows.designer.aiClassificationHelp')
+              : t('workflows.designer.aiExtractionHelp')}
+          </p>
+          <p>{t('workflows.designer.aiNeverApplies')}</p>
+          <p className="font-mono text-[11px] text-ink-muted">
+            {node.type === WorkflowNodeType.AiClassification
+              ? 'ai.status · ai.suggestedType · ai.classificationConfidence'
+              : 'ai.status · ai.fieldsFound · ai.requiredMissing · ai.<campo>'}
+          </p>
+        </div>
+      )}
+
       {node.type === WorkflowNodeType.Delay && (
         <NumberField
           label={t('workflows.designer.delayHours')}

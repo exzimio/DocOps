@@ -184,7 +184,8 @@
       "overview": "Visão geral",
       "versions": "Versões",
       "permissions": "Permissões",
-      "audit": "Auditoria"
+      "audit": "Auditoria",
+      "intelligence": "Inteligência"
     },
     "overview": {
       "metadata": "Metadados",
@@ -275,7 +276,9 @@
       "3": "Restrito"
     },
     "status": "Estado",
-    "classification": "Classificação"
+    "classification": "Classificação",
+    "unclassifiedHint": "Este documento ainda não tem tipo. A análise lê o conteúdo e sugere o tipo e os metadados para rever.",
+    "openIntelligence": "Rever com IA"
   },
   "tasks": {
     "title": "Tarefas",
@@ -441,7 +444,10 @@
       "notification.sent": "Notificação enviada",
       "timer.scheduled": "Temporizador agendado",
       "timer.elapsed": "Temporizador terminado",
-      "document.status.applied": "Estado do documento alterado"
+      "document.status.applied": "Estado do documento alterado",
+      "ai.requested": "Análise de IA pedida",
+      "ai.completed": "Análise de IA concluída",
+      "ai.failed": "Análise de IA sem resultado"
     },
     "errors": {
       "workflow_not_active": "Este workflow não está ativo.",
@@ -514,7 +520,8 @@
         "true": "Verdadeiro",
         "false": "Falso",
         "approved": "Aprovado",
-        "rejected": "Rejeitado"
+        "rejected": "Rejeitado",
+        "failed": "Sem resultado"
       },
       "assignment": {
         "Role": "Papel",
@@ -541,7 +548,10 @@
         "node_without_exit": "Este passo não tem ligação de saída.",
         "node_unreachable": "Nenhuma ligação chega a este passo.",
         "condition_missing_branch": "A condição não tem saída para os ramos verdadeiro e falso."
-      }
+      },
+      "aiClassificationHelp": "Pede uma análise do documento do processo e escreve nas variáveis o tipo sugerido e o grau de confiança. Uma condição a seguir pode decidir com base nelas.",
+      "aiExtractionHelp": "Pede uma análise do documento do processo e escreve nas variáveis os valores sugeridos (por exemplo, ai.totalAmount) e quantos campos obrigatórios não foram encontrados.",
+      "aiNeverApplies": "O passo nunca altera o documento: as sugestões ficam à espera de revisão, como qualquer outra análise. Sem texto para ler, o processo segue pelo ramo «Sem resultado»."
     }
   },
   "notifications": {
@@ -549,5 +559,124 @@
     "empty": "Sem notificações",
     "markAllRead": "Marcar todas como lidas",
     "open": "Abrir notificações"
+  },
+  "ai": {
+    "source": {
+      "demoShort": "Demonstração",
+      "demoTitle": "Modo de demonstração.",
+      "demoDetail": "Resultados produzidos por regras determinísticas sobre o texto do documento — não por um modelo de linguagem. O mesmo documento dá sempre o mesmo resultado, e cada valor indica a linha de onde foi lido.",
+      "modelShort": "Modelo de linguagem",
+      "modelDetail": "Sugestões de um modelo de linguagem configurado. Só são mostrados valores e citações que foram encontrados no texto do documento."
+    },
+    "status": {
+      "0": "Em fila",
+      "1": "Em revisão",
+      "2": "Aplicada",
+      "3": "Rejeitada",
+      "4": "Sem resultado"
+    },
+    "decision": {
+      "0": "Pendente",
+      "1": "Aceite",
+      "2": "Corrigido",
+      "3": "Rejeitado"
+    },
+    "text": {
+      "title": "Texto do documento",
+      "noText": "“{{file}}” não tem texto extraível (por exemplo, uma digitalização). O reconhecimento ótico de caracteres não faz parte desta demonstração.",
+      "noAccess": "Não tem permissão para ver o conteúdo deste documento.",
+      "truncated": "O texto foi truncado nas primeiras 2000 linhas."
+    },
+    "review": {
+      "title": "Sugestões da IA",
+      "analyse": "Analisar documento",
+      "analyseAgain": "Analisar novamente",
+      "neverAnalysed": "Este documento ainda não foi analisado. A análise lê a versão atual e sugere o tipo e os valores dos metadados; nada é gravado sem a sua decisão.",
+      "cannotProcess": "Só quem pode editar o documento, num estado que permite alterar metadados, pode pedir uma análise.",
+      "readVersion": "Leu a versão {{version}}",
+      "byWorkflow": "Pedido por um processo",
+      "stale": "O documento tem uma versão mais recente do que a analisada. Analise novamente antes de aplicar.",
+      "appliedBy": "Aplicada por {{name}} em {{when}}.",
+      "discarded": "Esta análise foi rejeitada; nada foi aplicado ao documento.",
+      "classification": "Classificação",
+      "acceptType": "Passar a {{type}}",
+      "keepType": "Manter {{type}}",
+      "fields": "Campos de {{type}}",
+      "nothingRecognised": "A análise não reconheceu nenhum tipo de documento conhecido nem encontrou valores.",
+      "missing": "Por decidir ou em falta: {{fields}}. Aceite, corrija ou indique estes valores antes de aplicar.",
+      "acceptAll": "Aceitar tudo o que foi encontrado",
+      "apply": "Aplicar ao documento",
+      "applyBlocked": "Decida a classificação e preencha os campos obrigatórios antes de aplicar.",
+      "discard": "Rejeitar análise",
+      "readOnly": "Pode consultar esta análise, mas não tem permissão para decidir sobre ela.",
+      "required": "obrigatório",
+      "notFound": "Não encontrado no documento",
+      "current": "Valor atual: {{value}}",
+      "accept": "Aceitar",
+      "edit": "Corrigir",
+      "fillIn": "Indicar valor",
+      "reject": "Rejeitar",
+      "saveEdit": "Guardar",
+      "acceptField": "Aceitar {{field}}",
+      "editField": "Corrigir {{field}}",
+      "rejectField": "Rejeitar {{field}}",
+      "line": "linha {{line}}"
+    },
+    "ask": {
+      "title": "Perguntar ao documento",
+      "label": "Pergunta sobre o documento",
+      "placeholder": "Por exemplo: qual é o total da fatura?",
+      "submit": "Perguntar",
+      "example1": "Qual é o total?",
+      "example2": "Quando vence?",
+      "example3": "Quem aprovou este documento?",
+      "page": "página {{page}}",
+      "auditRecord": "Registo de aprovação",
+      "discarded_one": "{{count}} citação devolvida pelo fornecedor não correspondia ao texto e não é mostrada.",
+      "discarded_other": "{{count}} citações devolvidas pelo fornecedor não correspondiam ao texto e não são mostradas."
+    },
+    "center": {
+      "title": "Inteligência documental",
+      "subtitle": "Documentos por classificar, sugestões à espera de revisão e a taxa de acerto das sugestões.",
+      "statistics": "Indicadores",
+      "awaiting": "Em revisão",
+      "applied30": "Aplicadas nos últimos 30 dias",
+      "decided": "Decisões tomadas",
+      "decidedDetail": "{{accepted}} aceites · {{edited}} corrigidas · {{rejected}} rejeitadas",
+      "acceptanceRate": "Taxa de aceitação",
+      "acceptanceRateDetail": "Sugestões aceites tal como vieram. Uma correção não conta como acerto.",
+      "intakeTitle": "Por classificar",
+      "intakeDescription": "Documentos recebidos cujo tipo ainda ninguém identificou.",
+      "intakeEmpty": "Nada por classificar",
+      "intakeEmptyBody": "Todos os documentos que pode ver já têm tipo.",
+      "queueTitle": "Análises",
+      "tabs": {
+        "review": "Em revisão",
+        "applied": "Aplicadas",
+        "discarded": "Rejeitadas",
+        "failed": "Sem resultado"
+      },
+      "queueEmpty": "Sem análises neste estado",
+      "columns": {
+        "document": "Documento",
+        "suggestion": "Classificação",
+        "fields": "Campos",
+        "origin": "Pedido por",
+        "status": "Estado",
+        "when": "Quando"
+      },
+      "fieldsSummary": "{{found}} encontrados · {{missing}} em falta · {{decided}} decididos"
+    },
+    "errors": {
+      "ai_classification_undecided": "Aceite ou rejeite a classificação sugerida antes de aplicar.",
+      "ai_required_fields_missing": "Faltam campos obrigatórios. Indique-os antes de aplicar.",
+      "ai_run_stale": "O documento mudou desde a análise. Analise-o novamente.",
+      "ai_run_not_reviewable": "Esta análise já não está em revisão.",
+      "ai_nothing_to_accept": "Este campo não foi encontrado; indique o valor em vez de aceitar.",
+      "ai_edit_requires_value": "Indique o valor corrigido.",
+      "invalid_metadata_value": "O valor não é válido para este campo.",
+      "metadata_locked": "O estado do documento não permite alterar metadados.",
+      "forbidden": "Não tem permissão para esta operação."
+    }
   }
 }

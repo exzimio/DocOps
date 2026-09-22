@@ -78,7 +78,12 @@ export function OverviewPanel({ document }: { document: DocumentDetail }) {
             <dl className="divide-y divide-subtle">
               {document.metadata.map((field) => (
                 <DataRow key={field.fieldId} label={field.label}>
-                  {formatMetadataValue(field.value, field.fieldType, i18n.language)}
+                  {formatMetadataValue(
+                    field.value,
+                    field.fieldType,
+                    i18n.language,
+                    documentCurrency(document),
+                  )}
                   {field.aiConfidence !== null && (
                     <Badge tone="amber" className="ml-2">
                       IA {Math.round(field.aiConfidence * 100)}%
@@ -92,6 +97,11 @@ export function OverviewPanel({ document }: { document: DocumentDetail }) {
       </Card>
     </div>
   )
+}
+
+/** The currency a document states for its own amounts, when its type has a currency field. */
+function documentCurrency(document: DocumentDetail): string | null {
+  return document.metadata.find((field) => field.code === 'currency')?.value ?? null
 }
 
 export function VersionsPanel({ document }: { document: DocumentDetail }) {

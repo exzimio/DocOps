@@ -22,6 +22,7 @@ public static class AuditActions
     public const string DocumentCreated = "document.created";
     public const string DocumentViewed = "document.viewed";
     public const string DocumentDownloaded = "document.downloaded";
+    public const string DocumentPreviewed = "document.previewed";
     public const string DocumentMetadataChanged = "document.metadata.changed";
     public const string DocumentStatusChanged = "document.status.changed";
     public const string DocumentVersionCreated = "document.version.created";
@@ -44,6 +45,19 @@ public static class AuditActions
     public const string WorkflowTaskCompleted = "workflow.task.completed";
     public const string WorkflowTaskReassigned = "workflow.task.reassigned";
     public const string WorkflowTaskEscalated = "workflow.task.escalated";
+
+    public const string DocumentReclassified = "document.reclassified";
+    public const string DocumentQuestionAsked = "document.question.asked";
+
+    public const string AiRunCreated = "ai.run.created";
+    public const string AiRunFailed = "ai.run.failed";
+    public const string AiRunApplied = "ai.run.applied";
+    public const string AiRunDiscarded = "ai.run.discarded";
+    public const string AiClassificationAccepted = "ai.classification.accepted";
+    public const string AiClassificationRejected = "ai.classification.rejected";
+    public const string AiSuggestionAccepted = "ai.suggestion.accepted";
+    public const string AiSuggestionEdited = "ai.suggestion.edited";
+    public const string AiSuggestionRejected = "ai.suggestion.rejected";
 
     public const string AuthorizationDenied = "security.authorization.denied";
     public const string TenantIsolationViolationBlocked = "security.tenant_isolation.blocked";
