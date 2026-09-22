@@ -36,6 +36,19 @@ O container publica o porto **14330** (e não o predefinido 1433) para não coli
 de SQL Server já existente na máquina. Para usar outro porto, defina `MSSQL_HOST_PORT` no `.env` e
 ajuste a cadeia de ligação.
 
+**A imagem é construída, não puxada.** A oficial do SQL Server não traz o componente de pesquisa de
+texto integral, de que a pesquisa documental depende (ADR-005); `docker/sql-server/Dockerfile`
+acrescenta-o. A primeira construção demora alguns minutos e as seguintes vêm da cache. Para confirmar
+que ficou instalado:
+
+```bash
+docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa   -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT SERVERPROPERTY('IsFullTextInstalled')"   # 1
+```
+
+Um servidor **sem** o componente também serve: a migração que cria os índices está protegida, a
+aplicação arranca na mesma, e a pesquisa passa a comparar por subcadeia — dizendo-o em cada
+resposta e no ecrã. É o que acontece nos testes de integração, que levantam a imagem oficial.
+
 ## 4. Migrações e dados de demonstração
 
 Em ambiente de desenvolvimento a API aplica as migrações e semeia os dados no arranque

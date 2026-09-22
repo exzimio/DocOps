@@ -42,7 +42,8 @@ public sealed class DocumentService(
         IQueryable<Document> query = dbContext.Documents
             .Where(DocumentAccessResolver.BuildVisibilityPredicate(subject, clock.UtcNow));
 
-        query = ApplyFilters(query, request, subject);
+        query = DocumentFilters.ApplyTextContains(query, request.Query);
+        query = DocumentFilters.ApplyFacets(dbContext, query, request, subject.UserId);
 
         long total = await query.LongCountAsync(cancellationToken);
 
@@ -51,7 +52,7 @@ public sealed class DocumentService(
             return PagedResult<DocumentListItemDto>.Empty(request.Paging.NormalizedPage, request.Paging.NormalizedPageSize);
         }
 
-        List<DocumentListItemDto> items = await ApplySort(query, request)
+        List<DocumentListItemDto> items = await DocumentFilters.ApplySort(query, request)
             .Skip(request.Paging.Skip)
             .Take(request.Paging.NormalizedPageSize)
             .Select(DocumentProjections.ToListItem(dbContext))
@@ -743,93 +744,6 @@ public sealed class DocumentService(
 
         return policy.CalculateDueDate(trigger);
     }
-
-    private static IQueryable<Document> ApplyFilters(
-        IQueryable<Document> query, DocumentSearchRequest request, AccessSubject subject)
-    {
-        if (!string.IsNullOrWhiteSpace(request.Query))
-        {
-            string term = request.Query.Trim();
-
-            query = query.Where(d =>
-                d.Title.Contains(term)
-                || d.Reference.Contains(term)
-                || (d.Summary != null && d.Summary.Contains(term))
-                || d.MetadataValues.Any(v => v.TextValue != null && v.TextValue.Contains(term)));
-        }
-
-        if (request.TypeIds.Count > 0)
-        {
-            Guid[] typeIds = [.. request.TypeIds];
-            query = query.Where(d => typeIds.Contains(d.DocumentTypeId));
-        }
-
-        if (request.Statuses.Count > 0)
-        {
-            DocumentStatus[] statuses = [.. request.Statuses];
-            query = query.Where(d => statuses.Contains(d.Status));
-        }
-
-        if (request.DepartmentIds.Count > 0)
-        {
-            Guid[] departmentIds = [.. request.DepartmentIds];
-            query = query.Where(d => d.DepartmentId != null && departmentIds.Contains(d.DepartmentId.Value));
-        }
-
-        if (request.Classifications.Count > 0)
-        {
-            SecurityClassification[] classifications = [.. request.Classifications];
-            query = query.Where(d => classifications.Contains(d.Classification));
-        }
-
-        if (request.TagIds.Count > 0)
-        {
-            Guid[] tagIds = [.. request.TagIds];
-            query = query.Where(d => d.Tags.Any(t => tagIds.Contains(t.TagId)));
-        }
-
-        if (request.OwnerUserId is { } ownerId)
-        {
-            query = query.Where(d => d.OwnerUserId == ownerId);
-        }
-
-        if (request.OnlyMine)
-        {
-            query = query.Where(d => d.OwnerUserId == subject.UserId);
-        }
-
-        if (request.CreatedFromUtc is { } from)
-        {
-            query = query.Where(d => d.CreatedAtUtc >= from);
-        }
-
-        if (request.CreatedToUtc is { } to)
-        {
-            query = query.Where(d => d.CreatedAtUtc <= to);
-        }
-
-        if (!request.IncludeArchived)
-        {
-            query = query.Where(d => d.Status != DocumentStatus.Archived);
-        }
-
-        return query;
-    }
-
-    private static IQueryable<Document> ApplySort(IQueryable<Document> query, DocumentSearchRequest request) =>
-        (request.SortBy, request.SortDescending) switch
-        {
-            (DocumentSortField.Title, true) => query.OrderByDescending(d => d.Title),
-            (DocumentSortField.Title, false) => query.OrderBy(d => d.Title),
-            (DocumentSortField.Reference, true) => query.OrderByDescending(d => d.Reference),
-            (DocumentSortField.Reference, false) => query.OrderBy(d => d.Reference),
-            (DocumentSortField.Status, true) => query.OrderByDescending(d => d.Status).ThenByDescending(d => d.CreatedAtUtc),
-            (DocumentSortField.Status, false) => query.OrderBy(d => d.Status).ThenByDescending(d => d.CreatedAtUtc),
-            (DocumentSortField.ModifiedAt, true) => query.OrderByDescending(d => d.ModifiedAtUtc ?? d.CreatedAtUtc),
-            (DocumentSortField.ModifiedAt, false) => query.OrderBy(d => d.ModifiedAtUtc ?? d.CreatedAtUtc),
-            (_, false) => query.OrderBy(d => d.CreatedAtUtc),
-            _ => query.OrderByDescending(d => d.CreatedAtUtc)
-        };
 
     private static byte[] DecodeToken(string token)
     {

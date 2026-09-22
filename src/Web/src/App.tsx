@@ -13,6 +13,7 @@ import { WorkflowsPage } from '@/pages/WorkflowsPage'
 import { WorkflowDefinitionPage } from '@/pages/WorkflowDefinitionPage'
 import { WorkflowInstancePage } from '@/pages/WorkflowInstancePage'
 import { AiCenterPage } from '@/pages/AiCenterPage'
+import { SearchPage } from '@/pages/SearchPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { LoadingState } from '@/components/ui/Surface'
 
@@ -35,6 +36,7 @@ export function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="documents/:id" element={<DocumentDetailPage />} />
+          <Route path="search" element={<SearchPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="workflows" element={<WorkflowsPage />} />
           <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />

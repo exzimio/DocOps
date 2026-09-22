@@ -2,6 +2,7 @@ using DocOps.Application.Common;
 using DocOps.Application.Documents;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
+using DocOps.Domain.Search;
 using DocOps.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -192,6 +193,8 @@ public sealed record DocumentSearchQuery
     public Guid? OwnerUserId { get; init; }
     public DateTimeOffset? CreatedFromUtc { get; init; }
     public DateTimeOffset? CreatedToUtc { get; init; }
+    public DocumentWorkflowState[]? WorkflowStates { get; init; }
+    public DocumentApprovalState[]? ApprovalStates { get; init; }
     public bool IncludeArchived { get; init; } = true;
     public bool OnlyMine { get; init; }
     public DocumentSortField SortBy { get; init; } = DocumentSortField.CreatedAt;
@@ -210,6 +213,8 @@ public sealed record DocumentSearchQuery
         OwnerUserId = OwnerUserId,
         CreatedFromUtc = CreatedFromUtc,
         CreatedToUtc = CreatedToUtc,
+        WorkflowStates = WorkflowStates ?? [],
+        ApprovalStates = ApprovalStates ?? [],
         IncludeArchived = IncludeArchived,
         OnlyMine = OnlyMine,
         SortBy = SortBy,

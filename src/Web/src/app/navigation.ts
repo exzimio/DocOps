@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CheckSquare, FileText, GitBranch, LayoutDashboard, Sparkles } from 'lucide-react'
+import { CheckSquare, FileText, GitBranch, LayoutDashboard, Search, Sparkles } from 'lucide-react'
 import { Permission } from '@/lib/types'
 
 export interface NavItem {
@@ -30,6 +30,12 @@ export const navigationSections: NavSection[] = [
         to: '/app/documents',
         icon: FileText,
         permission: Permission.documentsView,
+      },
+      {
+        labelKey: 'nav.search',
+        to: '/app/search',
+        icon: Search,
+        permission: Permission.searchUse,
       },
       {
         labelKey: 'nav.tasks',

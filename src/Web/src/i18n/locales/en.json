@@ -280,6 +280,92 @@
     "unclassifiedHint": "This document has no type yet. The analysis reads the content and suggests the type and metadata for you to review.",
     "openIntelligence": "Review with AI"
   },
+  "search": {
+    "title": "Search",
+    "subtitle": "Full text, filters and questions in plain language, over what you may see.",
+    "placeholder": "Type what you are looking for — words, a reference, an amount…",
+    "showFilters": "Show filters",
+    "hideFilters": "Hide filters",
+    "createdFrom": "From",
+    "createdTo": "To",
+    "sortBy": "Sort",
+    "sortValues": {
+      "Relevance": "Relevance",
+      "CreatedAt": "Created",
+      "ModifiedAt": "Last changed",
+      "Title": "Title",
+      "Reference": "Reference",
+      "Status": "Status"
+    },
+    "workflowState": "Workflow",
+    "workflowValues": {
+      "None": "No workflow",
+      "InProgress": "In progress",
+      "Completed": "Completed",
+      "Rejected": "Rejected",
+      "Cancelled": "Cancelled",
+      "Failed": "Failed"
+    },
+    "approvalState": "Approval",
+    "approvalValues": {
+      "NotRequested": "Never requested",
+      "Awaiting": "Awaiting",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "InformationRequested": "Information requested"
+    },
+    "matchedIn": "Found in",
+    "matched": {
+      "title": "title",
+      "reference": "reference",
+      "summary": "summary",
+      "content": "text",
+      "metadata": "metadata",
+      "tag": "tag"
+    },
+    "score": "{{value}}% relevance",
+    "scoreHint": "Weight of where the terms were found: the title counts for more than the body text.",
+    "startTitle": "Type what you are looking for",
+    "startBody": "The search only runs once there is something to look for. Type words, choose filters, or ask a question in plain language.",
+    "noResults": "No results",
+    "noResultsBody": "No document you have access to matches this search.",
+    "engine": {
+      "index": "Answered by the SQL Server full-text index.",
+      "noTerms": "Filters only: with no text there is nothing for the index to look for.",
+      "fallback": "This server has no full-text search installed; matching was done by substring, without relevance ranking.",
+      "terms": "terms: {{terms}}",
+      "elapsed": "{{ms}} ms"
+    },
+    "interpreted": {
+      "type": "Type",
+      "department": "Department",
+      "tag": "Tag",
+      "status": "Status",
+      "approvalState": "Approval",
+      "workflowState": "Workflow",
+      "classification": "Classification",
+      "onlyMine": "Scope",
+      "onlyMineValue": "mine only",
+      "createdFrom": "Created from",
+      "createdTo": "Created to",
+      "text": "Text"
+    },
+    "natural": {
+      "label": "Question in plain language",
+      "placeholder": "For example: invoices awaiting approval",
+      "ask": "Ask",
+      "asking": "Reading…",
+      "clear": "Clear question",
+      "tryIt": "Try:",
+      "example1": "invoices awaiting approval",
+      "example2": "approved contracts from the Legal department",
+      "example3": "confidential documents from the last 30 days",
+      "understood": "The question was read as the filters below. Those filters are what ran — the same ones the form produces, with the same authorization.",
+      "notUnderstood": "No filter was recognised in this question. The words were searched as free text.",
+      "readingLabel": "Filters read from the question"
+    },
+    "resultsLabel": "Search results"
+  },
   "tasks": {
     "title": "Tasks",
     "subtitle": "The work waiting for you and your team.",

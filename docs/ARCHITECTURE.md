@@ -308,6 +308,39 @@ instância. Chamar um modelo dentro da travessia manteria uma transação de bas
 durante toda a resposta. O worker processa a fila fora de qualquer transação e retoma a instância,
 que na segunda visita ao nó lê o resultado para variáveis `ai.*`.
 
+## 10.2 Pesquisa
+
+A pesquisa é **uma consulta**. O predicado de autorização, os filtros, a correspondência de texto, o
+peso de relevância e a página resolvem-se todos no SQL Server, dentro do conjunto de documentos que
+quem pergunta pode ver. Daí que o total apresentado seja o total que essa pessoa pode conhecer, e
+não o que existe: contar primeiro e filtrar depois transformaria a contagem numa fuga.
+
+Os filtros vivem num sítio só — `DocumentFilters` —, partilhado entre a lista de documentos e o ecrã
+de pesquisa, para que um filtro não signifique uma coisa num ecrã e outra no outro. Dois deles são
+**derivados** e não guardados: o estado do processo lê-se da instância de workflow mais recente do
+documento, e o estado de aprovação lê-se das tarefas de decisão levantadas para ele. Uma cópia no
+documento seria mais uma coisa capaz de discordar dos factos.
+
+O texto integral depende de um componente **opcional** do SQL Server. A aplicação não o pressupõe:
+
+- `FullTextAvailability` pergunta uma vez ao servidor se o componente existe e se os índices da
+  migração existem, e guarda a resposta.
+- Com índice, `CONTAINS` responde sobre título, referência, resumo, texto extraído e valores de
+  metadados; sem índice, as mesmas colunas são comparadas por subcadeia.
+- Cada resposta declara qual dos dois caminhos correu, e a interface mostra-o. Uma pesquisa
+  degradada em silêncio pareceria uma pesquisa que encontrou menos.
+
+O que a interface realça num excerto vem do servidor, que encontrou as palavras no texto guardado —
+a mesma disciplina das citações da Fase 5: o ecrã não volta a procurar, e por isso não pode realçar
+algo que o documento não diga.
+
+As perguntas em linguagem natural passam por `IAiSearchService`, que devolve **filtros** e nunca
+resultados. O leitor de demonstração é uma tabela de expressões mais uma consulta ao catálogo da
+própria organização; o leitor por modelo recebe a pergunta e os nomes do catálogo, e cada nome que
+devolve é reconferido contra esse catálogo. Um leitor capaz de alcançar os dados poderia ser
+convencido a alcançar dados que quem pergunta não pode ver. Detalhes e alternativas rejeitadas em
+[ADR-005](adr/ADR-005-search-architecture.md).
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores e escalonamento

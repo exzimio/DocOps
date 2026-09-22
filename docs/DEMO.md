@@ -317,6 +317,65 @@ valor se puder reler a partir delas.
 
 ---
 
+## Demonstração disponível na Fase 6 — Pesquisa (≈4 minutos)
+
+Entre como `ana.ferreira@asteria.example` — uma colaboradora sem privilégios especiais, para que se
+veja que a pesquisa devolve o que *ela* pode ver.
+
+### 1. Texto livre, com prova de onde veio (1 min)
+
+Abra **Pesquisa** e escreva `atlas tecnologia`.
+
+Repare, por esta ordem:
+
+- Os resultados vêm ordenados por relevância, e o primeiro é aquele que tem os termos no **título**.
+  A percentagem ao lado explica-se ao passar o rato: é o peso do sítio onde os termos foram
+  encontrados, não um número inventado.
+- Por baixo de cada resultado está um **excerto do próprio documento**, com a palavra encontrada
+  realçada. A posição do realce vem do servidor; o ecrã não volta a procurar.
+- As etiquetas **Encontrado em** dizem em que partes do documento os termos estavam.
+- Ao fundo da página, uma linha diz que motor respondeu — «Respondido pelo índice de texto integral
+  do SQL Server» — e quais os termos em que a frase foi separada.
+
+Experimente `"prestação de serviços"` entre aspas: a frase é procurada inteira, e a linha de
+diagnóstico mostra-a como um único termo.
+
+### 2. Filtros que o resto da aplicação não tem (1 min)
+
+Carregue em **Mostrar filtros**. Além dos habituais, repare em dois:
+
+- **Processo** — de onde está o documento no circuito: sem processo, em curso, concluído, rejeitado.
+- **Aprovação** — se aguarda decisão, se já foi aprovado, se foi rejeitado.
+
+Escolha **A aguardar**. Todos os documentos que restam mostram o estado «Aguarda aprovação» — os
+dois estados são lidos dos workflows e das tarefas, não de uma cópia guardada no documento.
+
+### 3. Perguntar por palavras (1 min)
+
+Limpe a caixa de pesquisa e escreva na **pergunta em linguagem natural**:
+
+> faturas que aguardam aprovação
+
+Antes dos resultados, a aplicação mostra **como leu a pergunta**: `Aprovação: A aguardar` e
+`Tipo: Fatura de fornecedor`. São esses filtros que correram — os mesmos que o formulário produz,
+com a mesma autorização. A etiqueta **Demonstração** ao lado diz que quem leu a pergunta foi a
+tabela de regras e não um modelo de linguagem.
+
+Experimente agora uma pergunta que ninguém ensinou:
+
+> qualquer coisa que ninguém ensinou
+
+A aplicação diz que **não reconheceu nenhum filtro** e que procurou as palavras como texto livre.
+Não inventa uma leitura.
+
+### 4. A pesquisa não vê mais do que quem pesquisa (1 min)
+
+Sem sair, abra uma janela anónima e entre como `admin@asteria.example`. Faça a mesma pesquisa
+`atlas tecnologia` nas duas janelas e compare o número de resultados.
+
+O administrador vê mais. Não é a interface a esconder linhas: o predicado de permissões faz parte da
+consulta, pelo que os documentos que a Ana não pode ver nunca chegam a ser contados.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

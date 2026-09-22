@@ -57,4 +57,18 @@ public sealed class TenantDirectory(DocOpsDbContext dbContext, ITenantContext te
                 d.Members.Count(m => m.User!.IsActive),
                 d.IsActive))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<TenantMemberDto>> GetMembersAsync(CancellationToken cancellationToken = default) =>
+        await dbContext.Users
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.FirstName)
+            .ThenBy(u => u.LastName)
+            .Select(u => new TenantMemberDto(
+                u.Id,
+                u.FirstName + " " + u.LastName,
+                u.Departments
+                    .Where(m => m.Department!.IsActive)
+                    .Select(m => m.Department!.Code)
+                    .FirstOrDefault()))
+            .ToListAsync(cancellationToken);
 }

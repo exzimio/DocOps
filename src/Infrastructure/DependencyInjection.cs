@@ -2,6 +2,7 @@ using DocOps.Application.Abstractions;
 using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Intelligence;
+using DocOps.Application.Search;
 using DocOps.Application.Tenancy;
 using DocOps.Application.Workflows;
 using DocOps.Domain.Identity;
@@ -13,6 +14,7 @@ using DocOps.Infrastructure.Intelligence;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Interceptors;
 using DocOps.Infrastructure.Persistence.Seed;
+using DocOps.Infrastructure.Search;
 using DocOps.Infrastructure.Storage;
 using DocOps.Infrastructure.Tenancy;
 using DocOps.Infrastructure.Workflows;
@@ -62,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentPermissionService, DocumentPermissionService>();
         services.AddScoped<IDocumentCatalogue, DocumentCatalogue>();
 
+        AddSearch(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -92,6 +95,18 @@ public static class DependencyInjection
         {
             // Stateless and deterministic, so one instance serves every request.
             services.AddSingleton<IAiDocumentService, DemoAiProvider>();
+        }
+
+        if (ai.UsesModel)
+        {
+            services.AddHttpClient<ModelSearchInterpreter>(client =>
+                client.Timeout = TimeSpan.FromSeconds(Math.Clamp(ai.TimeoutSeconds, 5, 300)));
+
+            services.AddScoped<IAiSearchService>(provider => provider.GetRequiredService<ModelSearchInterpreter>());
+        }
+        else
+        {
+            services.AddScoped<IAiSearchService>(provider => provider.GetRequiredService<DemoSearchInterpreter>());
         }
 
         services.AddScoped<AiDocumentAnalyzer>();
@@ -132,6 +147,19 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<ITaskService, TaskService>();
         services.AddScoped<INotificationService, NotificationService>();
+    }
+
+    private static void AddSearch(IServiceCollection services)
+    {
+        // The probe is a singleton because the answer is a property of the server, not of a request,
+        // and asking it once per search would be a round trip for something that never changes.
+        services.AddSingleton<FullTextAvailability>();
+        services.AddScoped<ISearchService, SearchService>();
+
+        // The rule reader is always registered, even where a model is configured: the model path
+        // falls back to it, and a question the model cannot answer is better answered by rules than
+        // not at all.
+        services.AddScoped<DemoSearchInterpreter>();
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration, bool isDevelopment)

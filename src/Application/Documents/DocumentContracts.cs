@@ -1,5 +1,6 @@
 using DocOps.Application.Common;
 using DocOps.Domain.Documents;
+using DocOps.Domain.Search;
 
 namespace DocOps.Application.Documents;
 
@@ -191,7 +192,13 @@ public enum DocumentSortField
     ModifiedAt = 1,
     Title = 2,
     Reference = 3,
-    Status = 4
+    Status = 4,
+
+    /// <summary>
+    /// How well the document answers the text that was typed. Only the search endpoint can order by
+    /// it — the document list has no score to order by, and falls back to the newest first.
+    /// </summary>
+    Relevance = 5
 }
 
 public sealed record DocumentSearchRequest
@@ -206,6 +213,12 @@ public sealed record DocumentSearchRequest
     public DateTimeOffset? CreatedFromUtc { get; init; }
     public DateTimeOffset? CreatedToUtc { get; init; }
     public bool IncludeArchived { get; init; } = true;
+
+    /// <summary>Where the document stands in its process, derived from the workflows that ran on it.</summary>
+    public IReadOnlyList<DocumentWorkflowState> WorkflowStates { get; init; } = [];
+
+    /// <summary>Where the document stands in its approvals, derived from the decision tasks raised for it.</summary>
+    public IReadOnlyList<DocumentApprovalState> ApprovalStates { get; init; } = [];
 
     /// <summary>Restricts the result to documents the caller owns — the "my documents" view.</summary>
     public bool OnlyMine { get; init; }

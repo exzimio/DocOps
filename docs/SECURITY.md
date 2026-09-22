@@ -168,6 +168,12 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | IA a escrever no documento sem supervisão | Nenhuma sugestão é aplicada sem decisão humana; cada decisão é auditada e a escrita passa pela mesma validação da edição manual |
 | Conteúdo confidencial enviado para um modelo | O fornecedor de modelo é opcional e desligado por omissão; a chave vem só do ambiente, o corpo do pedido leva apenas o texto do documento, e o texto enviado é limitado por configuração |
 | Fuga de informação por contagens | A fila e as estatísticas de IA contam apenas análises de documentos que o utilizador pode abrir |
+| Gramática de texto integral usada como entrada | O texto escrito nunca chega à condição como sintaxe: é separado em termos e a condição é reconstruída com cada termo entre aspas, pelo que `OR`, `NEAR` ou uma aspa solta viajam como palavras |
+| Pergunta em linguagem natural a alcançar mais do que o formulário | O leitor devolve filtros, não resultados; quem executa é o mesmo serviço de pesquisa, com o mesmo predicado de autorização |
+| Modelo a nomear dados que não viu | Os nomes que o modelo devolve são reconferidos contra o catálogo da própria organização; o que lá não está é descartado, e identificadores nunca lhe são enviados |
+| Fuga de informação pela contagem de resultados | O predicado de permissões faz parte da consulta: o total é o total que quem pergunta pode conhecer, não o que existe |
+| Excerto a realçar o que o documento não diz | A posição do realce vem do servidor, que a encontrou no texto guardado; a interface não volta a procurar e recusa um intervalo que não caiba no excerto |
+| Exposição da lista de pessoas da organização | `/api/tenants/current/users` devolve nome e departamento, nada mais, só a quem já pode ver documentos, e apenas da própria organização |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

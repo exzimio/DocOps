@@ -1,6 +1,10 @@
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    # Built rather than pulled: the official image ships without full-text search, which the
+    # document search relies on (ADR-005). The first build takes a few minutes; later ones are cached.
+    build:
+      context: ./docker/sql-server
+    image: docops-sqlserver-fts:2022
     container_name: docops-sqlserver
     environment:
       ACCEPT_EULA: "Y"

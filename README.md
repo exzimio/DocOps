@@ -159,6 +159,24 @@ vem da base de dados através da API.
 - **Centro de inteligência** em `/app/ai`: documentos por classificar, análises à espera de revisão e
   a taxa de aceitação das sugestões — tudo limitado, no servidor, ao que o utilizador pode ver.
 
+### Entregue na Fase 6 (em curso)
+
+**Pesquisa**
+
+- Ecrã de pesquisa em `/app/search` com texto livre, excerto do sítio onde o termo foi encontrado e
+  realce da palavra, ordenação por relevância e paginação no servidor.
+- Filtros: tipo, departamento, responsável, etiqueta, estado, classificação, intervalo de datas,
+  **estado do processo** e **estado de aprovação** — estes dois derivados dos workflows e das
+  tarefas de decisão, não guardados no documento.
+- Índice de texto integral do SQL Server, criado por migração protegida. Onde o componente não
+  existe, a pesquisa compara por subcadeia e **diz na resposta e no ecrã qual dos dois caminhos
+  correu** (ADR-005).
+- Perguntas em linguagem natural (`POST /api/search/natural-language`): a pergunta é lida para os
+  mesmos filtros que o formulário produz, a leitura é mostrada antes dos resultados, e a origem da
+  leitura (demonstração ou modelo) é identificada onde quer que apareça.
+- A autorização faz parte da consulta: um documento que o utilizador não pode ver não é contado,
+  não é ordenado e não é paginado.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
@@ -496,6 +514,17 @@ A aplicação depende de abstrações (`IAiDocumentService`, `IAiSearchService`,
 nunca de um fornecedor concreto. O fornecedor de demonstração é determinístico e identificado como
 tal na interface — respostas de demonstração nunca são apresentadas como geradas por um modelo real.
 Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md). *Implementação prevista para a Fase 5.*
+
+## 12.1 Pesquisa
+
+`ISearchService` corre filtros, texto e ordenação numa única consulta, dentro do predicado de
+autorização. `IAiSearchService` lê perguntas em linguagem natural e devolve **filtros**, nunca
+resultados — a execução, e portanto a autorização, é sempre do `ISearchService`.
+
+O texto integral depende de um componente opcional do SQL Server: a imagem em
+`docker/sql-server/Dockerfile` instala-o, a migração que cria os índices está protegida por
+`SERVERPROPERTY('IsFullTextInstalled')`, e a pesquisa deteta o que o servidor sabe fazer e declara-o
+em cada resposta. Ver [ADR-005](docs/adr/ADR-005-search-architecture.md).
 
 ## 13. Estratégia de integrações
 

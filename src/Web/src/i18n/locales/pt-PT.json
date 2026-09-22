@@ -280,6 +280,92 @@
     "unclassifiedHint": "Este documento ainda não tem tipo. A análise lê o conteúdo e sugere o tipo e os metadados para rever.",
     "openIntelligence": "Rever com IA"
   },
+  "search": {
+    "title": "Pesquisa",
+    "subtitle": "Texto integral, filtros e perguntas em linguagem natural, sobre o que pode ver.",
+    "placeholder": "Escreva o que procura — palavras, uma referência, um valor…",
+    "showFilters": "Mostrar filtros",
+    "hideFilters": "Ocultar filtros",
+    "createdFrom": "De",
+    "createdTo": "Até",
+    "sortBy": "Ordenar",
+    "sortValues": {
+      "Relevance": "Relevância",
+      "CreatedAt": "Data de criação",
+      "ModifiedAt": "Última alteração",
+      "Title": "Título",
+      "Reference": "Referência",
+      "Status": "Estado"
+    },
+    "workflowState": "Processo",
+    "workflowValues": {
+      "None": "Sem processo",
+      "InProgress": "Em curso",
+      "Completed": "Concluído",
+      "Rejected": "Rejeitado",
+      "Cancelled": "Cancelado",
+      "Failed": "Com erro"
+    },
+    "approvalState": "Aprovação",
+    "approvalValues": {
+      "NotRequested": "Nunca pedida",
+      "Awaiting": "A aguardar",
+      "Approved": "Aprovado",
+      "Rejected": "Rejeitado",
+      "InformationRequested": "Pedido de informação"
+    },
+    "matchedIn": "Encontrado em",
+    "matched": {
+      "title": "título",
+      "reference": "referência",
+      "summary": "resumo",
+      "content": "texto",
+      "metadata": "metadados",
+      "tag": "etiqueta"
+    },
+    "score": "{{value}}% de relevância",
+    "scoreHint": "Peso do sítio onde os termos foram encontrados: o título vale mais do que o corpo do documento.",
+    "startTitle": "Escreva o que procura",
+    "startBody": "A pesquisa só corre quando há alguma coisa para procurar. Pode escrever palavras, escolher filtros ou fazer uma pergunta em linguagem natural.",
+    "noResults": "Sem resultados",
+    "noResultsBody": "Nenhum documento a que tenha acesso corresponde a esta pesquisa.",
+    "engine": {
+      "index": "Respondido pelo índice de texto integral do SQL Server.",
+      "noTerms": "Só filtros: sem texto, não há nada para o índice procurar.",
+      "fallback": "Este servidor não tem pesquisa de texto integral instalada; a procura foi feita por correspondência de subcadeia, sem ordenação por relevância.",
+      "terms": "termos: {{terms}}",
+      "elapsed": "{{ms}} ms"
+    },
+    "interpreted": {
+      "type": "Tipo",
+      "department": "Departamento",
+      "tag": "Etiqueta",
+      "status": "Estado",
+      "approvalState": "Aprovação",
+      "workflowState": "Processo",
+      "classification": "Classificação",
+      "onlyMine": "Âmbito",
+      "onlyMineValue": "só os meus",
+      "createdFrom": "Criado de",
+      "createdTo": "Criado até",
+      "text": "Texto"
+    },
+    "natural": {
+      "label": "Pergunta em linguagem natural",
+      "placeholder": "Por exemplo: faturas que aguardam aprovação",
+      "ask": "Perguntar",
+      "asking": "A interpretar…",
+      "clear": "Limpar pergunta",
+      "tryIt": "Experimente:",
+      "example1": "faturas que aguardam aprovação",
+      "example2": "contratos do departamento Legal aprovados",
+      "example3": "documentos confidenciais dos últimos 30 dias",
+      "understood": "A pergunta foi lida como os filtros abaixo. São esses filtros que correram — os mesmos que o formulário produz, com a mesma autorização.",
+      "notUnderstood": "Nenhum filtro foi reconhecido nesta pergunta. As palavras foram procuradas como texto livre.",
+      "readingLabel": "Filtros lidos na pergunta"
+    },
+    "resultsLabel": "Resultados da pesquisa"
+  },
   "tasks": {
     "title": "Tarefas",
     "subtitle": "O trabalho que espera por si e pela sua equipa.",
