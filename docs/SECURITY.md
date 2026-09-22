@@ -174,6 +174,13 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Fuga de informação pela contagem de resultados | O predicado de permissões faz parte da consulta: o total é o total que quem pergunta pode conhecer, não o que existe |
 | Excerto a realçar o que o documento não diz | A posição do realce vem do servidor, que a encontrou no texto guardado; a interface não volta a procurar e recusa um intervalo que não caiba no excerto |
 | Exposição da lista de pessoas da organização | `/api/tenants/current/users` devolve nome e departamento, nada mais, só a quem já pode ver documentos, e apenas da própria organização |
+| Correio de uma organização visível noutra | Filtro de consulta por organização em `EmailMessage` e `EmailAttachment` — e um teste que enumera todas as entidades com `TenantId` e falha se alguma ficar sem filtro |
+| Entrada de documentos por porta lateral | O que a caixa de entrada produz passa pelo `IDocumentService` e pelo `IWorkflowService`, com a validação, as permissões e a auditoria de sempre |
+| Associar uma mensagem a um documento que o utilizador não pode ver | O documento é carregado e verificado com `DocumentAccessLevel.View` antes de a ligação ser gravada; caso contrário a referência e o título apareceriam no ecrã de quem não lhes pode aceder |
+| Simulação de correio confundida com uma caixa ligada | A origem (`Demo`/`Microsoft365`) faz parte do contrato da API e é mostrada onde quer que as mensagens apareçam |
+| Integração a alterar o sistema de origem | O conetor só lê: não escreve na caixa, não envia e não apaga |
+| Mensagens duplicadas por sincronizações repetidas | Índice único `(TenantId, Mailbox, ExternalId)`; sincronizar de novo reconhece o que já existe em vez de o acrescentar |
+| Ação oferecida a quem o servidor vai recusar | As ações da caixa de entrada só aparecem com `inbox.process`, e o estado da própria mensagem (`canAct`, `canArchive`, `canReopen`) viaja no contrato para a interface espelhar as regras que o servidor aplica |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

@@ -177,6 +177,22 @@ vem da base de dados através da API.
 - A autorização faz parte da consulta: um documento que o utilizador não pode ver não é contado,
   não é ordenado e não é paginado.
 
+**Caixa de entrada documental**
+
+- Caixa de entrada em `/app/inbox`: lista e leitura lado a lado, filtros por estado, por anexo e por
+  texto, e contagens do que está por tratar.
+- As ações que o briefing enumera, todas contra a base de dados real: arquivar, reabrir, marcar como
+  processada, **guardar um anexo como documento**, **criar documento a partir da mensagem**,
+  **associar a um documento existente** e **iniciar um processo** sobre o documento que a mensagem
+  produziu.
+- Um anexo que se torna documento passa pelo `IDocumentService`, com a mesma validação, referência,
+  permissões e auditoria de um carregamento manual. Não há porta lateral para o repositório.
+- `IMailConnector` abstrai o sistema de correio com a forma do Microsoft Graph; a implementação de
+  demonstração **não precisa de credenciais** e está identificada como simulação onde quer que as
+  mensagens apareçam (ADR-007).
+- Sincronizar é reconciliar: o identificador da mensagem tem índice único por organização e caixa,
+  por isso sincronizar duas vezes não acrescenta nada.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
@@ -525,6 +541,16 @@ O texto integral depende de um componente opcional do SQL Server: a imagem em
 `docker/sql-server/Dockerfile` instala-o, a migração que cria os índices está protegida por
 `SERVERPROPERTY('IsFullTextInstalled')`, e a pesquisa deteta o que o servidor sabe fazer e declara-o
 em cada resposta. Ver [ADR-005](docs/adr/ADR-005-search-architecture.md).
+
+## 12.2 Caixa de entrada
+
+`IMailConnector` é a única porta por onde entra correio, com a forma que o Microsoft Graph tem
+(listar mensagens de uma caixa, buscar o conteúdo de um anexo por identificador). `DemoMailConnector`
+serve um catálogo fixo de correspondência realista sem rede nem credenciais, e declara-se como
+demonstração em cada mensagem que devolve.
+
+O que a caixa de entrada produz — documentos, processos — é produzido pelos serviços que já existem,
+nunca por escrita direta. Ver [ADR-007](docs/adr/ADR-007-external-connectors.md).
 
 ## 13. Estratégia de integrações
 

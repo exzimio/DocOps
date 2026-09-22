@@ -1,6 +1,7 @@
 using DocOps.Application.Abstractions;
 using DocOps.Application.Documents;
 using DocOps.Application.Identity;
+using DocOps.Application.Inbox;
 using DocOps.Application.Intelligence;
 using DocOps.Application.Search;
 using DocOps.Application.Tenancy;
@@ -10,6 +11,7 @@ using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Auditing;
 using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
+using DocOps.Infrastructure.Inbox;
 using DocOps.Infrastructure.Intelligence;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Interceptors;
@@ -53,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<DocumentDemoSeeder>();
         services.AddScoped<WorkflowCatalogueSeeder>();
         services.AddScoped<WorkflowInstanceSeeder>();
+        services.AddScoped<InboxSeeder>();
 
         services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
@@ -65,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentCatalogue, DocumentCatalogue>();
 
         AddSearch(services);
+        AddInbox(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -160,6 +164,15 @@ public static class DependencyInjection
         // falls back to it, and a question the model cannot answer is better answered by rules than
         // not at all.
         services.AddScoped<DemoSearchInterpreter>();
+    }
+
+    private static void AddInbox(IServiceCollection services)
+    {
+        // One connector is registered, and the interface is what the inbox depends on. Replacing the
+        // demonstration mailbox with Microsoft Graph is this line plus a class — which is the whole
+        // point of the abstraction, and the reason the demonstration one needs no credentials.
+        services.AddScoped<IMailConnector, DemoMailConnector>();
+        services.AddScoped<IInboxService, InboxService>();
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration, bool isDevelopment)

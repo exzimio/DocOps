@@ -366,6 +366,68 @@
     },
     "resultsLabel": "Search results"
   },
+  "inbox": {
+    "title": "Inbox",
+    "subtitle": "What arrived by mail, waiting to become a document.",
+    "sync": "Synchronise",
+    "syncResult": "{{added}} new of {{fetched}} message(s) — {{date}}",
+    "searchPlaceholder": "Search by subject, sender or text…",
+    "onlyWithAttachments": "Only with attachments",
+    "empty": "No messages",
+    "emptyBody": "No message matches the chosen filters.",
+    "selectTitle": "Choose a message",
+    "selectBody": "Select a message from the list on the left to see its content and act on it.",
+    "readOnlyTitle": "No permission to act",
+    "readOnlyBody": "You can see this message, but you don't have the \"inbox.process\" permission to act on it.",
+    "statusValues": {
+      "0": "Unread",
+      "1": "Read",
+      "2": "Processed",
+      "3": "Archived"
+    },
+    "importanceValues": {
+      "0": "Low",
+      "2": "High"
+    },
+    "summary": {
+      "unread_one": "{{count}} unread",
+      "unread_other": "{{count}} unread",
+      "open_one": "{{count}} open",
+      "open_other": "{{count}} open",
+      "processed_one": "{{count}} processed",
+      "processed_other": "{{count}} processed",
+      "archived_one": "{{count}} archived",
+      "archived_other": "{{count}} archived"
+    },
+    "attachments": "Attachments",
+    "linkedTo": "Linked to document",
+    "processedBy": "Processed by {{name}} on {{date}}",
+    "actions": {
+      "saveAttachment": "Save as document",
+      "saveAttachmentTitle": "Save attachment as document",
+      "savingAttachment": "Saving the attachment \"{{fileName}}\".",
+      "createDocument": "Create document from message",
+      "createDocumentTitle": "Create document from message",
+      "save": "Save",
+      "link": "Link to existing document",
+      "linkTitle": "Link to an existing document",
+      "startWorkflow": "Start workflow",
+      "workflowTitle": "Start workflow",
+      "markProcessed": "Mark as processed",
+      "archive": "Archive",
+      "reopen": "Reopen"
+    },
+    "errors": {
+      "email_archived": "The message is archived. Reopen it before acting on it.",
+      "email_already_archived": "The message is already archived.",
+      "email_not_archived": "The message is not archived.",
+      "email_already_processed": "The message is already processed.",
+      "email_without_document": "Save the message or its attachment as a document first: a workflow runs on a document.",
+      "attachment_already_saved": "This attachment was already saved as a document.",
+      "forbidden": "You don't have permission for this operation."
+    },
+    "messagesLabel": "Messages"
+  },
   "tasks": {
     "title": "Tasks",
     "subtitle": "The work waiting for you and your team.",

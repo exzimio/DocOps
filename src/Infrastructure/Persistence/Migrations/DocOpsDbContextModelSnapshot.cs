@@ -898,6 +898,169 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.ToTable("UserDepartments", (string)null);
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Inbox.EmailAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmailMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SavedAsDocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SavedAsDocumentId");
+
+                    b.HasIndex("EmailMessageId", "ExternalId")
+                        .IsUnique();
+
+                    b.ToTable("EmailAttachments", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Inbox.EmailMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConversationId")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FromAddress")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FromName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Importance")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("LinkedDocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Mailbox")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ProcessedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ProcessedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ReceivedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Recipients")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("StartedWorkflowInstanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LinkedDocumentId");
+
+                    b.HasIndex("TenantId", "ReceivedAtUtc")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("TenantId", "Mailbox", "ExternalId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status", "ReceivedAtUtc")
+                        .IsDescending(false, false, true);
+
+                    b.ToTable("EmailMessages", (string)null);
+                });
+
             modelBuilder.Entity("DocOps.Domain.Intelligence.AiFieldSuggestion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1977,6 +2140,34 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Inbox.EmailAttachment", b =>
+                {
+                    b.HasOne("DocOps.Domain.Inbox.EmailMessage", "Message")
+                        .WithMany("Attachments")
+                        .HasForeignKey("EmailMessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocOps.Domain.Documents.Document", "SavedAsDocument")
+                        .WithMany()
+                        .HasForeignKey("SavedAsDocumentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Message");
+
+                    b.Navigation("SavedAsDocument");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Inbox.EmailMessage", b =>
+                {
+                    b.HasOne("DocOps.Domain.Documents.Document", "LinkedDocument")
+                        .WithMany()
+                        .HasForeignKey("LinkedDocumentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("LinkedDocument");
+                });
+
             modelBuilder.Entity("DocOps.Domain.Intelligence.AiFieldSuggestion", b =>
                 {
                     b.HasOne("DocOps.Domain.Intelligence.AiProcessingRun", "Run")
@@ -2171,6 +2362,11 @@ namespace DocOps.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("DocOps.Domain.Identity.ApplicationUser", b =>
                 {
                     b.Navigation("Departments");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Inbox.EmailMessage", b =>
+                {
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("DocOps.Domain.Intelligence.AiProcessingRun", b =>

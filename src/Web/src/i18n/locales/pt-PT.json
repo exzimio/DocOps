@@ -366,6 +366,68 @@
     },
     "resultsLabel": "Resultados da pesquisa"
   },
+  "inbox": {
+    "title": "Caixa de entrada",
+    "subtitle": "O que chegou por correio, à espera de se tornar documento.",
+    "sync": "Sincronizar",
+    "syncResult": "{{added}} nova(s) de {{fetched}} mensagem(ns) — {{date}}",
+    "searchPlaceholder": "Procurar por assunto, remetente ou texto…",
+    "onlyWithAttachments": "Só com anexos",
+    "empty": "Sem mensagens",
+    "emptyBody": "Nenhuma mensagem corresponde aos filtros escolhidos.",
+    "selectTitle": "Escolha uma mensagem",
+    "selectBody": "Selecione uma mensagem na lista à esquerda para ver o conteúdo e agir sobre ela.",
+    "readOnlyTitle": "Sem permissão para agir",
+    "readOnlyBody": "Pode ver esta mensagem, mas não tem a permissão \"inbox.process\" para agir sobre ela.",
+    "statusValues": {
+      "0": "Não lida",
+      "1": "Lida",
+      "2": "Processada",
+      "3": "Arquivada"
+    },
+    "importanceValues": {
+      "0": "Baixa",
+      "2": "Alta"
+    },
+    "summary": {
+      "unread_one": "{{count}} não lida",
+      "unread_other": "{{count}} não lidas",
+      "open_one": "{{count}} em aberto",
+      "open_other": "{{count}} em aberto",
+      "processed_one": "{{count}} processada",
+      "processed_other": "{{count}} processadas",
+      "archived_one": "{{count}} arquivada",
+      "archived_other": "{{count}} arquivadas"
+    },
+    "attachments": "Anexos",
+    "linkedTo": "Associada ao documento",
+    "processedBy": "Processada por {{name}} em {{date}}",
+    "actions": {
+      "saveAttachment": "Guardar como documento",
+      "saveAttachmentTitle": "Guardar anexo como documento",
+      "savingAttachment": "A guardar o anexo \"{{fileName}}\".",
+      "createDocument": "Criar documento a partir da mensagem",
+      "createDocumentTitle": "Criar documento a partir da mensagem",
+      "save": "Guardar",
+      "link": "Associar a documento existente",
+      "linkTitle": "Associar a um documento existente",
+      "startWorkflow": "Iniciar processo",
+      "workflowTitle": "Iniciar processo",
+      "markProcessed": "Marcar como processada",
+      "archive": "Arquivar",
+      "reopen": "Reabrir"
+    },
+    "errors": {
+      "email_archived": "A mensagem está arquivada. Reabra-a antes de agir sobre ela.",
+      "email_already_archived": "A mensagem já está arquivada.",
+      "email_not_archived": "A mensagem não está arquivada.",
+      "email_already_processed": "A mensagem já está processada.",
+      "email_without_document": "Guarde primeiro a mensagem ou o anexo como documento: um processo corre sobre um documento.",
+      "attachment_already_saved": "Este anexo já foi guardado como documento.",
+      "forbidden": "Não tem permissão para esta operação."
+    },
+    "messagesLabel": "Mensagens"
+  },
   "tasks": {
     "title": "Tarefas",
     "subtitle": "O trabalho que espera por si e pela sua equipa.",

@@ -59,6 +59,16 @@ public static class AuditActions
     public const string AiSuggestionEdited = "ai.suggestion.edited";
     public const string AiSuggestionRejected = "ai.suggestion.rejected";
 
+    public const string MailSynchronised = "inbox.synchronised";
+    public const string EmailRead = "inbox.email.read";
+    public const string EmailArchived = "inbox.email.archived";
+    public const string EmailReopened = "inbox.email.reopened";
+    public const string EmailProcessed = "inbox.email.processed";
+    public const string EmailLinkedToDocument = "inbox.email.linked";
+    public const string EmailAttachmentSaved = "inbox.attachment.saved";
+    public const string EmailDocumentCreated = "inbox.document.created";
+    public const string EmailWorkflowStarted = "inbox.workflow.started";
+
     public const string AuthorizationDenied = "security.authorization.denied";
     public const string TenantIsolationViolationBlocked = "security.tenant_isolation.blocked";
 }
@@ -77,4 +87,5 @@ public static class AuditEntityTypes
     public const string WorkflowDefinition = "WorkflowDefinition";
     public const string WorkflowInstance = "WorkflowInstance";
     public const string WorkflowTask = "WorkflowTask";
+    public const string EmailMessage = "EmailMessage";
 }

@@ -4,6 +4,7 @@ using DocOps.Domain.Common;
 using DocOps.Domain.Compliance;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
+using DocOps.Domain.Inbox;
 using DocOps.Domain.Intelligence;
 using DocOps.Domain.Notifications;
 using DocOps.Domain.Tenancy;
@@ -48,6 +49,9 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<WorkflowTask> WorkflowTasks => Set<WorkflowTask>();
     public DbSet<WorkflowEvent> WorkflowEvents => Set<WorkflowEvent>();
     public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
+    public DbSet<EmailAttachment> EmailAttachments => Set<EmailAttachment>();
 
     public DbSet<AiProcessingRun> AiProcessingRuns => Set<AiProcessingRun>();
     public DbSet<AiFieldSuggestion> AiFieldSuggestions => Set<AiFieldSuggestion>();
@@ -142,5 +146,10 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
 
         builder.Entity<AiFieldSuggestion>().HasQueryFilter(f =>
             !f.Run!.Document!.IsDeleted && (CurrentTenantId == null || f.TenantId == CurrentTenantId));
+
+        // A message is evidence of what arrived and does not disappear with the document it produced,
+        // so it carries the tenant filter alone rather than the document's.
+        builder.Entity<EmailMessage>().HasQueryFilter(m => CurrentTenantId == null || m.TenantId == CurrentTenantId);
+        builder.Entity<EmailAttachment>().HasQueryFilter(a => CurrentTenantId == null || a.TenantId == CurrentTenantId);
     }
 }

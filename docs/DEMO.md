@@ -376,6 +376,76 @@ Sem sair, abra uma janela anónima e entre como `admin@asteria.example`. Faça a
 O administrador vê mais. Não é a interface a esconder linhas: o predicado de permissões faz parte da
 consulta, pelo que os documentos que a Ana não pode ver nunca chegam a ser contados.
 
+## Demonstração disponível na Fase 6 — Caixa de entrada (≈4 minutos)
+
+Entre como `sofia.martins@asteria.example`, que tem `inbox.process` e pode agir sobre as mensagens.
+
+### 1. O que chegou, e de onde (1 min)
+
+Abra **Caixa de entrada**. Repare, antes de tudo, na faixa âmbar no topo: diz que esta é uma **caixa
+de correio de demonstração**, gerada localmente, sem ligação a servidor nenhum e sem credenciais.
+Não é letra pequena — é a mesma regra da IA na Fase 5, aplicada ao correio: uma simulação diz que é
+uma simulação, onde quer que apareça.
+
+A lista tem correspondência realista: uma fatura da Atlas Tecnologia com anexo, uma minuta de
+contrato do jurídico da Nordhavn, uma cobrança em atraso marcada como **Alta**, um catálogo de
+papelaria já arquivado. À direita, a mensagem selecionada abre-se para leitura.
+
+Carregue em **Sincronizar**. A linha por baixo diz quantas mensagens foram obtidas e quantas eram
+novas: **zero**. Sincronizar de novo não acrescenta nada, porque o identificador que o sistema de
+correio dá a cada mensagem tem índice único por organização e caixa. O botão vai ser carregado duas
+vezes por alguém — e a segunda vez não pode duplicar a caixa de entrada.
+
+### 2. Uma fatura que chega por correio torna-se um documento (1,5 min)
+
+Escolha a mensagem de **Mariana Quadros** — a fatura FT 2026/0815, com o anexo `FT-2026-0815.txt`.
+
+Carregue em **Guardar como documento**, ao lado do anexo. No diálogo, escolha o tipo
+**«Por classificar»** e guarde.
+
+Três coisas acontecem de uma vez:
+
+- O anexo passa a ser um **documento a sério**, com referência própria, permissões e entrada de
+  auditoria — criado pelo mesmo serviço que um carregamento manual usa. Não há porta lateral para o
+  repositório.
+- A mensagem passa a **Processada** e mostra a ligação ao documento que produziu. A ligação fica
+  registada dos dois lados: meses depois ainda se responde a «de onde veio esta fatura».
+- O painel **não salta** para outra mensagem, mesmo que ela tenha deixado de corresponder ao filtro
+  «Não lida»/«Lida» que está ativo. O que se estava a ler continua no ecrã.
+
+Siga a ligação para o documento. Repare que ele entrou **por classificar** — que é o estado correto,
+porque ninguém o leu ainda. É exatamente onde a inteligência documental da Fase 5 pega: abra o
+separador de IA e o percurso continua, agora com um documento que chegou por correio em vez de ter
+sido carregado à mão.
+
+### 3. As ações que uma caixa de entrada precisa de ter (1 min)
+
+Volte à caixa de entrada e escolha uma mensagem **sem anexo** — a renovação da parceria Nordvik, por
+exemplo. As ações disponíveis mudam com o que a mensagem é:
+
+- **Criar documento a partir da mensagem** — para as mensagens em que o corpo *é* o conteúdo. O
+  documento guarda a mensagem com os seus cabeçalhos: quem enviou, quando, para que caixa. Um corpo
+  sem isso não é prova de nada.
+- **Associar a documento existente** — quando o assunto já tem documento e a mensagem é mais um
+  episódio dele. A lista de documentos é a mesma, com as mesmas permissões: não se pode associar uma
+  mensagem a um documento que não se pode abrir.
+- **Iniciar processo** — só aparece depois de a mensagem ter documento, porque um processo corre
+  sobre um documento. O servidor recusa na mesma se for pedido sem ele.
+
+Experimente **Arquivar** e depois **Reabrir**: uma mensagem arquivada sai da lista de trabalho mas
+fica no registo, e reabri-la devolve-a ao ponto onde estava — se já tinha produzido um documento,
+volta a **Processada**, não a **Por ler**. O trabalho feito não se desfaz por se ter arquivado.
+
+### 4. A caixa de uma organização é só dela (30 s)
+
+Entre numa janela anónima como `admin@vertice.example`, o administrador da segunda organização.
+
+A caixa de entrada está **vazia**. Não é a interface a esconder: o filtro de organização faz parte da
+consulta. Vale a pena dizer em voz alta numa entrevista que **esta funcionalidade falhou exatamente
+aqui na primeira versão** — os filtros são declarados entidade a entidade e faltou declarar os da
+caixa de entrada. Foi apanhado antes do *commit* por um teste que enumera todas as entidades com
+organização e falha se alguma ficar sem filtro. É o tipo de erro que só se evita com uma rede.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

@@ -70,6 +70,7 @@ export const Permission = {
   aiUse: 'ai.use',
   searchUse: 'search.use',
   inboxView: 'inbox.view',
+  inboxProcess: 'inbox.process',
   integrationsView: 'integrations.view',
   auditView: 'audit.view',
   reportsView: 'reports.view',

@@ -341,6 +341,33 @@ devolve é reconferido contra esse catálogo. Um leitor capaz de alcançar os da
 convencido a alcançar dados que quem pergunta não pode ver. Detalhes e alternativas rejeitadas em
 [ADR-005](adr/ADR-005-search-architecture.md).
 
+## 10.3 Caixa de entrada
+
+O correio entra por um adaptador e sai como documento pelos serviços que já existiam.
+
+`IMailConnector` tem a forma do Microsoft Graph de propósito — listar mensagens de uma caixa, depois
+buscar o conteúdo de **um** anexo por identificador. Daí decorre uma escolha que parece pequena e não
+é: os bytes de um anexo **não** são copiados na sincronização, só quando alguém decide que o ficheiro
+vale a pena. Copiar tudo encheria o repositório com os anexos que ninguém quis, e obrigaria a uma
+forma de armazenamento que o Graph não tem.
+
+A mensagem é **prova**, não documento. O corpo e a lista de anexos ficam como o servidor de correio
+os entregou; processá-la *produz* documentos a partir dela e regista a ligação dos dois lados, para
+que meses depois ainda seja possível responder a «de onde veio esta fatura». Por isso a mensagem
+também não desaparece com o documento que produziu: a chave estrangeira é `NoAction` e o filtro da
+mensagem é só o da organização, não o do documento.
+
+Nada aqui escreve no repositório por atalho. Um anexo guardado como documento é criado pelo
+`IDocumentService`; um processo iniciado a partir de uma mensagem é iniciado pelo `IWorkflowService`.
+Cada um aplica a sua própria permissão por cima da permissão de processar a caixa — guardar um anexo
+exige também `documents.create`, e iniciar um processo exige `workflows.start`.
+
+O ciclo de vida da mensagem é deliberadamente curto: por ler, lida, processada, arquivada.
+`EmailLifecycle` diz o que o estado permite, tal como `DocumentLifecycle` faz para documentos, e o
+que a interface esconde é conveniência — o servidor recusa na mesma.
+
+Detalhes e alternativas rejeitadas em [ADR-007](adr/ADR-007-external-connectors.md).
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores e escalonamento
