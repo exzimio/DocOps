@@ -265,6 +265,49 @@ ramos) para dar resposta imediata; o servidor é quem decide se um processo pode
 sua validação que aparece na lista de problemas. Um processo por acabar **pode** ser guardado: estar
 meio desenhado é um estado normal de trabalho.
 
+## 10.1 Inteligência documental
+
+```mermaid
+flowchart TB
+    D["Documento<br/>versão atual"] --> T["DocumentText<br/>linhas numeradas"]
+    T --> P{"Fornecedor"}
+    P -->|"Demo"| R["Regras sobre o texto"]
+    P -->|"Modelo"| M["API compatível com OpenAI"]
+    R --> G["Guarda de citações<br/>a citação está no texto?"]
+    M --> G
+    G -->|"não confere"| X["Descartado e contado"]
+    G -->|"confere"| S["Sugestões numa análise<br/>AiProcessingRun"]
+    S --> H["Pessoa decide<br/>aceitar · corrigir · rejeitar"]
+    H --> W["DocumentMetadataWriter<br/>a mesma escrita da edição manual"]
+```
+
+Três invariantes sustentam esta fase, e estão no código, não na interface.
+
+**A origem viaja com o resultado.** `AiSource` (`Demo` ou `Model`) faz parte de cada contrato que
+carrega saída de IA. Nenhum cliente consegue mostrar uma resposta de demonstração como sendo de um
+modelo, porque não lhe chega nada sem essa etiqueta.
+
+**Uma citação é um sítio onde ir ver, não uma afirmação.** `DocumentText` numera as linhas do
+documento — a mesma numeração que o endpoint `/text` serve à interface — e `Verifies` confirma que
+as palavras citadas estão mesmo na linha indicada. O `AiDocumentAnalyzer` aplica essa guarda a tudo
+o que um fornecedor devolve, seja ele qual for. Ao fornecedor de modelo exige-se mais: o valor tem
+de se poder reler a partir da citação, porque um modelo pode citar bem e inventar o número ao lado.
+
+**Nada chega ao documento sem decisão.** A análise é uma entidade com estado (`AiProcessingRun`) e
+cada sugestão tem a sua decisão, o seu autor e o seu momento. Aplicar escreve pelo
+`DocumentMetadataWriter`, o mesmo componente que a edição manual usa: a IA não tem porta lateral,
+e por isso herda a tipagem, a validação e a regra de campos obrigatórios sem as duplicar.
+
+O tipo **«Por classificar»** existe para que o resto seja possível: sem campos obrigatórios, um
+ficheiro pode ser guardado antes de alguém o ler. Reclassificar nunca baixa a sensibilidade — o
+documento fica com a classificação mais restritiva entre a sua e a do tipo novo — e a política de
+retenção acompanha o tipo apenas quando era a do tipo anterior.
+
+Nos workflows, um passo de IA **não chama o fornecedor**: cria uma análise em fila e estaciona a
+instância. Chamar um modelo dentro da travessia manteria uma transação de base de dados aberta
+durante toda a resposta. O worker processa a fila fora de qualquer transação e retoma a instância,
+que na segunda visita ao nó lê o resultado para variáveis `ai.*`.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores e escalonamento

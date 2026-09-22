@@ -63,3 +63,30 @@ implementações honestas.
 - Trocar de fornecedor é uma alteração de configuração e de uma implementação, não do domínio.
 - O modo de demonstração é limitado por construção: reconhece os documentos semeados e os formatos
   previstos, e é isso que declara.
+
+## Como ficou, na prática
+
+- **A interface chama-se `IAiDocumentService`** e tem três operações separadas, como previsto. A
+  classificação recebe os tipos candidatos do catálogo da própria organização, em vez de os ter
+  fixados no código: um tipo criado por um administrador é reconhecível pelos seus próprios rótulos.
+- **O fornecedor de demonstração é uma tabela de regras, não um modelo.** Lê o texto real do
+  documento — os exemplos em `samples/` têm a disposição de faturas e contratos verdadeiros, não os
+  metadados escritos ao contrário — e devolve, para cada valor, a linha de onde o leu. O mesmo
+  documento dá sempre o mesmo resultado.
+- **«Nunca inventar citações» virou código.** `DocumentText` numera as linhas e verifica cada
+  citação; o `AiDocumentAnalyzer` aplica a guarda a qualquer fornecedor. Uma resposta cujas citações
+  caem todas é retida, e o número de citações descartadas vai na resposta.
+- **Ao modelo exige-se mais do que às regras**, não menos: pede-se-lhe as palavras exatas de onde
+  leu cada valor, e o valor só sobrevive se essas palavras estiverem no documento **e** o valor se
+  puder reler a partir delas. Uma citação verdadeira ao lado de um número diferente é descartada.
+- **A revisão é a unidade de trabalho.** Uma análise (`AiProcessingRun`) guarda o que foi sugerido e
+  o que cada pessoa decidiu sobre cada campo. Aplicar escreve numa só transação, pelo mesmo
+  componente que a edição manual usa, e é recusado enquanto a classificação sugerida não for
+  explicitamente aceite ou rejeitada: mudar o tipo de um documento nunca é o comportamento por
+  omissão.
+- **Dentro de um processo, a IA não é chamada pelo motor.** O passo põe a análise em fila e o worker
+  processa-a fora da transação. O passo escreve variáveis `ai.*` para uma condição poder decidir,
+  mas nunca aplica nada — as sugestões esperam por uma pessoa, como em qualquer outra análise.
+- **Perguntas sobre aprovações não são respondidas pelo texto.** «Quem aprovou este documento?» é
+  respondida a partir das tarefas de aprovação concluídas, citando esse registo. É a resposta
+  correta e é verificável; procurá-la no texto do documento seria inventá-la.

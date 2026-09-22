@@ -162,6 +162,12 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Configuração de nó arbitrária vinda do cliente | O JSON é analisado no servidor contra o modelo de configuração conhecido e regravado normalizado; o que não pertence ao tipo do nó não sobrevive à gravação |
 | Escrita perdida em edição concorrente | O `rowversion` da definição é sempre verificado ao guardar, mesmo quando só o grafo mudou |
 | Processo em curso alterado debaixo dos pés | Guardar uma definição com execuções cria uma versão nova; as instâncias continuam a resolver os nós na versão com que arrancaram |
+| Resposta inventada apresentada como facto | Toda a citação é confirmada contra o texto do documento; o que não confere é descartado e contado, e uma resposta sem suporte não é apresentada |
+| Valor inventado por um modelo | Além da citação, o valor tem de se poder reler a partir das palavras citadas; caso contrário não chega a ser sugerido |
+| Demonstração confundida com um modelo real | A origem (`Demo`/`Model`) faz parte do contrato da API e é mostrada onde quer que o resultado apareça |
+| IA a escrever no documento sem supervisão | Nenhuma sugestão é aplicada sem decisão humana; cada decisão é auditada e a escrita passa pela mesma validação da edição manual |
+| Conteúdo confidencial enviado para um modelo | O fornecedor de modelo é opcional e desligado por omissão; a chave vem só do ambiente, o corpo do pedido leva apenas o texto do documento, e o texto enviado é limitado por configuração |
+| Fuga de informação por contagens | A fila e as estatísticas de IA contam apenas análises de documentos que o utilizador pode abrir |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

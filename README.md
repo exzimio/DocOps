@@ -42,7 +42,7 @@ vem da base de dados através da API.
 | 2 | Documentos, versões, permissões, auditoria documental | **Concluída** |
 | 3 | Tarefas e motor de workflow | **Concluída** |
 | 4 | Designer visual de workflow | **Concluída** |
-| 5 | Abstração de IA e inteligência documental | Planeada |
+| 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e integrações | Planeada |
 | 7 | Portal externo e assinatura eletrónica | Planeada |
 | 8 | Relatórios e administração | Planeada |
@@ -135,14 +135,38 @@ vem da base de dados através da API.
 - O desenhador é carregado à parte (`React.lazy`): quem nunca o abre não descarrega a biblioteca de
   diagramas.
 
+### Entregue na Fase 5
+
+- **Abstração de IA** (`IAiDocumentService`: classificar, extrair, responder) com dois fornecedores:
+  um **de demonstração**, determinista e baseado em regras visíveis, e um **opcional compatível com
+  OpenAI / Azure OpenAI**, escolhido por configuração e com a chave lida só do ambiente.
+- **A origem faz parte do contrato.** Toda a resposta de IA diz se veio do modo de demonstração ou
+  de um modelo, e a interface mostra-o onde quer que o resultado apareça. O fornecedor de
+  demonstração **não é um modelo de linguagem** e nunca é apresentado como tal.
+- **Citações verificadas em código.** O texto do documento é numerado no servidor e cada citação é
+  confirmada contra ele. O que não confere é descartado e contado; uma resposta cujas citações caem
+  todas não é apresentada. A um modelo exige-se ainda que o valor se possa reler a partir das
+  palavras citadas — uma citação verdadeira não abona por um valor diferente ao lado.
+- **Classificação e extração com revisão obrigatória**: o tipo sugerido e cada campo são aceites,
+  corrigidos ou rejeitados por uma pessoa; **cada decisão é auditada** no momento em que é tomada, e
+  aplicar escreve pela mesma validação que uma pessoa a editar o formulário atravessa.
+- **Tipo «Por classificar»**: a porta de entrada que permite guardar um ficheiro antes de alguém o
+  ter lido — sem ele, o cenário «carregar → classificar → extrair → validar» seria impossível.
+- **Perguntar ao documento**, com a linha, a página e a secção de onde vem a resposta; perguntas
+  sobre aprovações são respondidas a partir dos registos do sistema, não do texto.
+- **Passos de IA executáveis no workflow**: põem a análise em fila e o worker processa-a fora da
+  transação do motor, retomando a instância. O passo nunca aplica nada ao documento.
+- **Centro de inteligência** em `/app/ai`: documentos por classificar, análises à espera de revisão e
+  a taxa de aceitação das sugestões — tudo limitado, no servidor, ao que o utilizador pode ver.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 143 |
-| Integração com SQL Server real (Testcontainers) | 58 |
-| Componente e unidade no frontend (Vitest + Testing Library) | 24 |
-| End-to-end (Playwright, desktop e móvel) | 36 |
+| Unitários (xUnit) | 228 |
+| Integração com SQL Server real (Testcontainers) | 70 |
+| Componente e unidade no frontend (Vitest + Testing Library) | 36 |
+| End-to-end (Playwright, desktop e móvel) | 42 |
 
 ## 4. Arquitetura
 
@@ -406,6 +430,13 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET/POST/DELETE /api/documents/{id}/permissions` | Permissões do documento |
 | `GET /api/documents/{id}/effective-access` | Acesso efetivo, com a razão de cada regra |
 | `GET /api/document-catalogue/types` · `/tags` · `/retention-policies` | Dados de referência dos formulários |
+| `GET /api/documents/{id}/text` | Texto da versão atual, numerado como as citações o numeram |
+| `POST /api/documents/{id}/process-ai` | Analisa o documento e produz sugestões para revisão |
+| `GET /api/documents/{id}/ai-runs/latest` | A análise mais recente de um documento |
+| `GET /api/ai/provider` · `/statistics` · `/runs` | Fornecedor ativo, indicadores e fila de revisão |
+| `POST /api/ai/runs/{id}/classification` · `/fields/{id}/decision` · `/accept-all` | Decisões sobre as sugestões |
+| `POST /api/ai/runs/{id}/apply` · `/discard` | Aplicar ao documento ou rejeitar a análise |
+| `POST /api/ai/document-question` | Pergunta sobre um documento, com citações verificadas |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow

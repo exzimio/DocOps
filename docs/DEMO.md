@@ -80,7 +80,7 @@ a auditoria é imutável por construção.
 
 ### 1. Lista de documentos (60 s)
 
-Entre como `ricardo.lopes@asteria.example` e abra **Documentos**. São 37 documentos de demonstração
+Entre como `ricardo.lopes@asteria.example` e abra **Documentos**. São 41 documentos de demonstração
 em 8 tipos, com estados, classificações, versões e etiquetas coerentes.
 
 - Escreva `Northstar` na pesquisa: a lista reduz-se aos documentos desse fornecedor. A pesquisa corre
@@ -239,6 +239,81 @@ com que arrancou.
 - Guardar a partir de um separador desatualizado: `409 concurrency_conflict`.
 - Entrar como `ana.ferreira@asteria.example` (sem `workflows.design`): os botões de desenho não
   aparecem, e um `POST /api/workflows` feito à mão responde `403`.
+
+---
+
+## Demonstração disponível na Fase 5 — Inteligência documental (≈6 minutos)
+
+O ponto desta fase não é que a IA acerte. É que **se possa verificar se acertou**, e que nada chegue
+ao documento sem alguém decidir.
+
+### 1. O que chegou e ninguém leu (40 s)
+
+Entre como `ana.ferreira@asteria.example` e abra **Centro de IA**. A primeira coisa visível é o aviso
+de que o fornecedor ativo é o **de demonstração**: regras determinísticas sobre o texto, não um
+modelo de linguagem. Em **Por classificar** estão os ficheiros recebidos cujo tipo ninguém
+identificou ainda — repare que a Ana só vê os dela: o contrato do Jurídico e a fatura britânica das
+Finanças são confidenciais e não aparecem aqui.
+
+### 2. Ler o documento (90 s)
+
+Use **Analisar documento** na `fatura-atlas-tecnologia`. Do lado esquerdo fica o **texto real do
+documento, numerado**; do lado direito, o que a análise propõe.
+
+A classificação sugere *Fatura de fornecedor* com a confiança e a linha que a suporta. Cada campo
+mostra o valor, o grau de confiança e a linha de onde foi lido. **Clique na linha 21** («Total a
+pagar: 1 906,50 €»): o texto à esquerda salta para essa linha e realça-a. É isto que distingue uma
+citação de uma afirmação — é um sítio onde ir ver.
+
+Repare no que **não** foi encontrado: campos sem valor dizem-no, em vez de adivinhar.
+
+### 3. Nada é aplicado sem decisão (60 s)
+
+Tente **Aplicar ao documento** antes de decidir a classificação: está desativado, e o servidor
+recusa com `409 ai_classification_undecided` se for chamado à mão. Mudar o tipo de um documento
+nunca é o comportamento por omissão.
+
+Aceite a classificação, use **Aceitar tudo o que foi encontrado**, corrija um valor à mão e rejeite
+outro. Só então **Aplicar ao documento**.
+
+### 4. O que ficou registado (60 s)
+
+Em **Visão geral**, o documento passou a *Fatura de fornecedor*, a política de retenção acompanhou o
+tipo, e cada valor escrito a partir de uma sugestão aceite tem o selo **IA** com a confiança. O valor
+que corrigiu não tem selo — foi escrito por si.
+
+Em **Auditoria** está tudo, decisão a decisão: `ai.run.created`, `ai.classification.accepted`, um
+`ai.suggestion.accepted` por campo, `ai.suggestion.edited`, `ai.suggestion.rejected`,
+`document.reclassified` e `ai.run.applied`.
+
+### 5. Perguntar ao documento (60 s)
+
+No separador **Inteligência**, use **Qual é o total?**. A resposta vem com a linha que a sustenta, e
+clicar nela leva-o lá. Pergunte agora algo que o documento não diz — «Qual é a cor do logótipo?» — e
+a resposta é que não foi encontrado, sem citações inventadas.
+
+Entre como `ricardo.lopes@asteria.example`, abra uma fatura já aprovada e pergunte **«Quem aprovou
+este documento?»**. A resposta vem dos registos de aprovação do sistema, citando-os — não do texto
+do documento, onde essa informação não existe.
+
+### 6. IA dentro de um processo (45 s)
+
+No desenhador de workflows, os nós **Classificação por IA** e **Extração por IA** já são executáveis.
+Um passo de IA não chama o fornecedor dentro da travessia: põe a análise em fila, e o worker
+(`dotnet run --project src/Worker/DocOps.Worker.csproj`) processa-a e retoma o processo, que escreve
+o resultado em variáveis `ai.*` — uma condição a seguir pode encaminhar por elas. O passo **nunca**
+aplica nada: as sugestões continuam à espera de uma pessoa.
+
+Um documento sem texto (uma digitalização, por exemplo) faz o processo seguir pelo ramo **Sem
+resultado**, em vez de inventar conteúdo: o reconhecimento ótico de caracteres não faz parte desta
+demonstração, e o sistema di-lo.
+
+### 7. Com um modelo a sério (30 s, opcional)
+
+`Ai__Provider=OpenAiCompatible` com `Ai__Endpoint`, `Ai__Model` e `Ai__ApiKey` (só do ambiente) troca
+o fornecedor. O modelo é tratado com **mais** desconfiança do que as regras: pede-se-lhe as palavras
+exatas de onde leu cada valor, e o valor só é sugerido se essas palavras estiverem no documento e o
+valor se puder reler a partir delas.
 
 ---
 
