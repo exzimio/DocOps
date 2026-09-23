@@ -119,17 +119,17 @@ test.describe('Inteligência documental', () => {
     }
   })
 
-  test('sem a permissão de IA não há centro de inteligência nem separador', async ({ page }) => {
-    await signIn(page, externalPartner)
+  test('um parceiro externo não alcança a inteligência documental de todo', async ({ page }) => {
+    // Desde o portal externo, um parceiro nem sequer entra na aplicação interna: é levado para
+    // /portal. É uma garantia mais forte do que a anterior, que só verificava a ausência do link.
+    await page.goto('/login')
+    await page.getByLabel('Endereço de e-mail').fill(externalPartner.email)
+    await page.getByLabel('Palavra-passe').fill(externalPartner.password)
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await page.waitForURL(/\/portal$/)
 
+    await page.goto('/app/ai')
+    await page.waitForURL(/\/portal$/)
     await expect(page.getByRole('link', { name: 'Centro de IA' })).toHaveCount(0)
-
-    // The partner can open the document shared with them, but not its intelligence tab.
-    await page.goto('/app/documents')
-    await page.getByRole('main').locator('table tbody tr a').first().click()
-    await page.waitForURL(/\/app\/documents\/[0-9a-f-]+$/)
-
-    await expect(page.getByRole('tab', { name: 'Visão geral' })).toBeVisible()
-    await expect(page.getByRole('tab', { name: 'Inteligência' })).toHaveCount(0)
   })
 })

@@ -878,5 +878,49 @@
       "metadata_locked": "O estado do documento não permite alterar metadados.",
       "forbidden": "Não tem permissão para esta operação."
     }
+  },
+  "portal": {
+    "title": "Portal de fornecedores",
+    "heading": "As suas submissões",
+    "subtitle": "Documentos que enviou a esta organização e o ponto em que estão.",
+    "nav": {
+      "submissions": "Submissões"
+    },
+    "footer": "Demonstração técnica independente. Não constitui um produto comercial nem está associada a qualquer fornecedor.",
+    "back": "Voltar às submissões",
+    "submittedAt": "Submetido em",
+    "file": "Ficheiro",
+    "download": "Descarregar",
+    "awaitingResponse": "Aguarda a sua resposta",
+    "progress": {
+      "0": "Recebido",
+      "1": "Em análise",
+      "2": "Aceite",
+      "3": "Recusado"
+    },
+    "empty": {
+      "title": "Ainda não submeteu nada",
+      "body": "Use o formulário acima para enviar a sua primeira fatura ou documento."
+    },
+    "submit": {
+      "title": "Submeter um documento",
+      "description": "O documento entra como «por classificar» e é a organização que decide o que ele é.",
+      "documentTitle": "Assunto",
+      "titlePlaceholder": "Fatura FT 2026/0815",
+      "note": "Nota (opcional)",
+      "noteHint": "Qualquer contexto que ajude quem vai receber — número de encomenda, período a que respeita.",
+      "file": "Ficheiro",
+      "action": "Submeter"
+    },
+    "messages": {
+      "title": "Perguntas e respostas",
+      "description": "Só o que lhe foi perguntado e o que respondeu. As notas internas ficam do lado de dentro.",
+      "empty": "Ainda não há nada a perguntar sobre esta submissão.",
+      "fromOrganisation": "Da organização",
+      "fromYou": "Sua resposta",
+      "answer": "A sua resposta",
+      "answerPlaceholder": "Escreva aqui a informação pedida.",
+      "send": "Enviar resposta"
+    }
   }
 }

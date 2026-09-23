@@ -2,6 +2,7 @@ using DocOps.Application.Abstractions;
 using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Inbox;
+using DocOps.Application.Portal;
 using DocOps.Application.Integrations;
 using DocOps.Application.Intelligence;
 using DocOps.Application.Search;
@@ -13,6 +14,7 @@ using DocOps.Infrastructure.Auditing;
 using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
 using DocOps.Infrastructure.Inbox;
+using DocOps.Infrastructure.Portal;
 using DocOps.Infrastructure.Integrations;
 using DocOps.Infrastructure.Intelligence;
 using DocOps.Infrastructure.Persistence;
@@ -73,6 +75,7 @@ public static class DependencyInjection
         AddSearch(services);
         AddInbox(services);
         AddIntegrations(services);
+        AddPortal(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -197,6 +200,14 @@ public static class DependencyInjection
         services.AddScoped<IIntegrationService, IntegrationService>();
         services.AddScoped<IIntegrationRunner, IntegrationRunner>();
         services.AddScoped<IntegrationQueueProcessor>();
+    }
+
+    private static void AddPortal(IServiceCollection services)
+    {
+        // The portal reuses the document service and the access resolver rather than reaching into
+        // the database on its own terms: an external user must meet exactly the rules an internal
+        // one meets, and the only way to be sure of that is to run the same code.
+        services.AddScoped<IPortalService, PortalService>();
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration, bool isDevelopment)

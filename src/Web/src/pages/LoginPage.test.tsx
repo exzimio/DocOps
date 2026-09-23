@@ -16,6 +16,7 @@ const financeUser: CurrentUser = {
   tenantId: 'c0ffee00-0000-4000-8000-0000000000ff',
   tenantName: 'Asteria Group',
   userType: 0,
+  externalOrganisation: null,
   preferredCulture: 'pt-PT',
   isPlatformAdministrator: false,
   lastLoginAtUtc: null,

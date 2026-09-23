@@ -2,7 +2,9 @@ import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppShell } from '@/app/AppShell'
+import { PortalShell } from '@/app/PortalShell'
 import { RequireAuth } from '@/features/auth/RequireAuth'
+import { RequirePortal } from '@/features/auth/RequirePortal'
 import { LandingPage } from '@/pages/LandingPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
@@ -16,6 +18,8 @@ import { AiCenterPage } from '@/pages/AiCenterPage'
 import { InboxPage } from '@/pages/InboxPage'
 import { IntegrationsPage } from '@/pages/IntegrationsPage'
 import { SearchPage } from '@/pages/SearchPage'
+import { PortalPage } from '@/pages/PortalPage'
+import { PortalSubmissionPage } from '@/pages/PortalSubmissionPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { LoadingState } from '@/components/ui/Surface'
 
@@ -33,27 +37,38 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
 
       <Route element={<RequireAuth />}>
-        <Route path="/app" element={<AppShell />}>
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="documents" element={<DocumentsPage />} />
-          <Route path="documents/:id" element={<DocumentDetailPage />} />
-          <Route path="search" element={<SearchPage />} />
-          <Route path="inbox" element={<InboxPage />} />
-          <Route path="integrations" element={<IntegrationsPage />} />
-          <Route path="tasks" element={<TasksPage />} />
-          <Route path="workflows" element={<WorkflowsPage />} />
-          <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />
-          <Route path="ai" element={<AiCenterPage />} />
-          <Route path="workflows/:id" element={<WorkflowDefinitionPage />} />
-          <Route
-            path="workflows/:id/designer"
-            element={
-              <Suspense fallback={<LoadingState label={t('common.loading')} />}>
-                <WorkflowDesignerPage />
-              </Suspense>
-            }
-          />
+        {/* The external portal is a separate experience on purpose, with its own shell and nothing
+            of the internal navigation in it. */}
+        <Route element={<RequirePortal external />}>
+          <Route path="/portal" element={<PortalShell />}>
+            <Route index element={<PortalPage />} />
+            <Route path="submissions/:id" element={<PortalSubmissionPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<RequirePortal external={false} />}>
+          <Route path="/app" element={<AppShell />}>
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="documents" element={<DocumentsPage />} />
+            <Route path="documents/:id" element={<DocumentDetailPage />} />
+            <Route path="search" element={<SearchPage />} />
+            <Route path="inbox" element={<InboxPage />} />
+            <Route path="integrations" element={<IntegrationsPage />} />
+            <Route path="tasks" element={<TasksPage />} />
+            <Route path="workflows" element={<WorkflowsPage />} />
+            <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />
+            <Route path="ai" element={<AiCenterPage />} />
+            <Route path="workflows/:id" element={<WorkflowDefinitionPage />} />
+            <Route
+              path="workflows/:id/designer"
+              element={
+                <Suspense fallback={<LoadingState label={t('common.loading')} />}>
+                  <WorkflowDesignerPage />
+                </Suspense>
+              }
+            />
+          </Route>
         </Route>
       </Route>
 

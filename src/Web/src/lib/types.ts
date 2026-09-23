@@ -21,6 +21,8 @@ export interface CurrentUser {
   tenantId: string
   tenantName: string
   userType: UserTypeValue
+  /** For an external user, the organisation it represents. Null for everyone inside. */
+  externalOrganisation: string | null
   preferredCulture: string
   isPlatformAdministrator: boolean
   lastLoginAtUtc: string | null
@@ -77,4 +79,5 @@ export const Permission = {
   reportsView: 'reports.view',
   adminUsers: 'admin.users',
   portalAccess: 'portal.access',
+  portalSubmit: 'portal.submit',
 } as const

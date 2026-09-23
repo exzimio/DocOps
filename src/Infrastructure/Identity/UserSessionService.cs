@@ -174,6 +174,7 @@ public sealed class UserSessionService(
             TenantId = user.TenantId,
             TenantName = tenantName,
             UserType = user.UserType,
+            ExternalOrganisation = user.ExternalOrganisation,
             PreferredCulture = user.PreferredCulture,
             IsPlatformAdministrator = user.IsPlatformAdministrator,
             LastLoginAtUtc = user.LastLoginAtUtc,

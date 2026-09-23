@@ -878,5 +878,49 @@
       "metadata_locked": "The document's status does not allow metadata changes.",
       "forbidden": "You do not have permission for this operation."
     }
+  },
+  "portal": {
+    "title": "Supplier portal",
+    "heading": "Your submissions",
+    "subtitle": "Documents you sent to this organisation, and where they have got to.",
+    "nav": {
+      "submissions": "Submissions"
+    },
+    "footer": "Independent technical demonstration. Not a commercial product and not affiliated with any vendor.",
+    "back": "Back to submissions",
+    "submittedAt": "Submitted",
+    "file": "File",
+    "download": "Download",
+    "awaitingResponse": "Awaiting your reply",
+    "progress": {
+      "0": "Received",
+      "1": "In review",
+      "2": "Accepted",
+      "3": "Declined"
+    },
+    "empty": {
+      "title": "Nothing submitted yet",
+      "body": "Use the form above to send your first invoice or document."
+    },
+    "submit": {
+      "title": "Submit a document",
+      "description": "It arrives as “unclassified”; the organisation decides what it is.",
+      "documentTitle": "Subject",
+      "titlePlaceholder": "Invoice FT 2026/0815",
+      "note": "Note (optional)",
+      "noteHint": "Any context that helps whoever receives it — an order number, the period it covers.",
+      "file": "File",
+      "action": "Submit"
+    },
+    "messages": {
+      "title": "Questions and answers",
+      "description": "Only what you were asked and what you answered. Internal notes stay inside.",
+      "empty": "Nothing has been asked about this submission yet.",
+      "fromOrganisation": "From the organisation",
+      "fromYou": "Your reply",
+      "answer": "Your reply",
+      "answerPlaceholder": "Write the information you were asked for.",
+      "send": "Send reply"
+    }
   }
 }

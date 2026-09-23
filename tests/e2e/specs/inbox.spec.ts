@@ -173,9 +173,17 @@ test.describe('Caixa de entrada', () => {
     await expect(archiveButton).toBeVisible()
   })
 
-  test('sem inbox.view a hiperligação da caixa de entrada não aparece', async ({ page }) => {
-    await signIn(page, externalPartner)
+  test('um parceiro externo não alcança a caixa de entrada de todo', async ({ page }) => {
+    // O parceiro é levado para o portal externo e não entra na aplicação interna nem escrevendo o
+    // endereço à mão — mais forte do que apenas não ver a hiperligação.
+    await page.goto('/login')
+    await page.getByLabel('Endereço de e-mail').fill(externalPartner.email)
+    await page.getByLabel('Palavra-passe').fill(externalPartner.password)
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await page.waitForURL(/\/portal$/)
 
+    await page.goto('/app/inbox')
+    await page.waitForURL(/\/portal$/)
     await expect(page.getByRole('link', { name: 'Caixa de entrada' })).toHaveCount(0)
   })
 })

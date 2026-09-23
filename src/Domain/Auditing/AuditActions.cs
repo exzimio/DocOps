@@ -72,6 +72,9 @@ public static class AuditActions
     public const string IntegrationRun = "integration.run";
     public const string IntegrationConfigured = "integration.configured";
 
+    public const string PortalDocumentSubmitted = "portal.document.submitted";
+    public const string PortalInformationProvided = "portal.information.provided";
+
     public const string AuthorizationDenied = "security.authorization.denied";
     public const string TenantIsolationViolationBlocked = "security.tenant_isolation.blocked";
 }

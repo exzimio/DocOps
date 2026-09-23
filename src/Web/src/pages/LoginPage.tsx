@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
-import { useLogin, useSession } from '@/features/auth/session'
+import { hasPermission, useLogin, useSession } from '@/features/auth/session'
+import { Permission } from '@/lib/types'
 import { demoAccounts, demoPassword } from '@/features/auth/demoAccounts'
 import { Button } from '@/components/ui/Button'
 import { Checkbox, TextField } from '@/components/ui/Field'
@@ -27,7 +28,7 @@ export function LoginPage() {
   const { data: user, isLoading } = useSession()
   const login = useLogin()
 
-  const redirectTo = (location.state as { from?: string } | null)?.from ?? '/app/dashboard'
+  const requested = (location.state as { from?: string } | null)?.from
 
   const {
     register,
@@ -47,13 +48,21 @@ export function LoginPage() {
   }
 
   if (user) {
-    return <Navigate to={redirectTo} replace />
+    // A supplier signs in to the portal, not to the application. Honouring "where they were going"
+    // only makes sense when they belong on that side of the door.
+    const home = hasPermission(user, Permission.portalAccess) ? '/portal' : '/app/dashboard'
+
+    return <Navigate to={requested ?? home} replace />
   }
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await login.mutateAsync(values)
-      navigate(redirectTo, { replace: true })
+      const signedIn = await login.mutateAsync(values)
+
+      navigate(
+        requested ?? (hasPermission(signedIn, Permission.portalAccess) ? '/portal' : '/app/dashboard'),
+        { replace: true },
+      )
     } catch {
       // Rendered from `login.error` below; the rejection itself needs no further handling.
     }

@@ -32,6 +32,13 @@ public sealed record CurrentUserDto
     public required Guid TenantId { get; init; }
     public required string TenantName { get; init; }
     public required UserType UserType { get; init; }
+
+    /// <summary>
+    /// For an external user, the organisation it represents — "Northstar Supplies". The portal is
+    /// signed in the supplier's own name rather than the client organisation's, so a contact who
+    /// works with several clients can tell at a glance whose portal this is.
+    /// </summary>
+    public string? ExternalOrganisation { get; init; }
     public required string PreferredCulture { get; init; }
     public bool IsPlatformAdministrator { get; init; }
     public DateTimeOffset? LastLoginAtUtc { get; init; }

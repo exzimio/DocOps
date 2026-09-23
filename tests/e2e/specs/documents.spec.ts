@@ -101,12 +101,19 @@ test.describe('Repositório documental', () => {
     }
   })
 
-  test('um parceiro externo vê apenas o documento que lhe foi partilhado', async ({ page }) => {
-    await signIn(page, externalPartner)
-    await page.goto('/app/documents')
+  test('um parceiro externo vê apenas o documento que lhe foi partilhado, e vê-o no portal', async ({
+    page,
+  }) => {
+    await page.goto('/login')
+    await page.getByLabel('Endereço de e-mail').fill(externalPartner.email)
+    await page.getByLabel('Palavra-passe').fill(externalPartner.password)
+    await page.getByRole('button', { name: 'Entrar' }).click()
 
-    await expect(page.locator('table tbody tr')).toHaveCount(1)
-    await expect(page.getByText('1 documento · Página 1 de 1')).toBeVisible()
-    await expect(page.getByRole('link', { name: /Fatura Northstar Supplies/ })).toBeVisible()
+    // O parceiro aterra no portal, não no repositório interno.
+    await page.waitForURL(/\/portal$/)
+
+    const submissions = page.getByRole('list', { name: 'Submissões' })
+    await expect(submissions.getByRole('listitem')).toHaveCount(1)
+    await expect(page.getByText(/Fatura Northstar Supplies/)).toBeVisible()
   })
 })

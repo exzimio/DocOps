@@ -152,4 +152,18 @@ public static class WorkflowEventTypes
     public const string IntegrationRequested = "integration.requested";
     public const string IntegrationCompleted = "integration.completed";
     public const string IntegrationFailed = "integration.failed";
+
+    /// <summary>
+    /// An approver asked for something before deciding. It has its own event type rather than being
+    /// read back out of the task's decision comment, which the next question overwrites — and it is
+    /// what the external portal shows a supplier, so it has to survive as a record, not a field.
+    /// </summary>
+    public const string InformationRequested = "information.requested";
+
+    /// <summary>
+    /// A supplier answered a question asked through the external portal. It sits on the instance
+    /// timeline beside the question that provoked it, so the approver reads both in one place
+    /// instead of being told elsewhere that an answer exists.
+    /// </summary>
+    public const string InformationProvided = "information.provided";
 }

@@ -152,6 +152,16 @@ public sealed class WorkflowEngine(
         {
             tracked.Status = WorkflowTaskStatus.InProgress;
             tracked.CompletedAtUtc = null;
+
+            // The question gets its own timeline entry. The task's decision comment only ever holds
+            // the latest one, and the external portal has to be able to show what was asked even
+            // after a second question replaces it.
+            context.AddEvent(
+                WorkflowEventTypes.InformationRequested,
+                $"Informação solicitada em '{tracked.Title}'",
+                tracked.NodeKey,
+                comment);
+
             await PersistAsync(context, cancellationToken);
             await AuditTaskAsync(tracked, instance, decision, comment, cancellationToken);
 
