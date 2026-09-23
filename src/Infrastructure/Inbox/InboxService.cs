@@ -133,9 +133,20 @@ public sealed class InboxService(
     // Synchronisation
     // -----------------------------------------------------------------------------------------
 
-    public async Task<MailSyncResultDto> SyncAsync(CancellationToken cancellationToken = default)
+    public Task<MailSyncResultDto> SyncAsync(CancellationToken cancellationToken = default) =>
+        SyncAsync(tenantContext.TenantId, cancellationToken);
+
+    /// <summary>
+    /// Synchronises one organisation's mailboxes, named explicitly.
+    ///
+    /// The organisation is a parameter rather than something read from the request because this
+    /// also runs from the worker — where there is no request, no user, and no tenant filter
+    /// narrowing the queries. Every query below therefore states the organisation itself; the
+    /// global filter is belt and braces, not the thing being relied on.
+    /// </summary>
+    public async Task<MailSyncResultDto> SyncAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        string domain = await MailDomainAsync(cancellationToken);
+        string domain = await MailDomainAsync(tenantId, cancellationToken);
         List<string> mailboxes = [.. DemoMailbox.Folders.Select(folder => $"{folder}@{domain}")];
 
         int fetched = 0;
@@ -147,7 +158,8 @@ public sealed class InboxService(
             // duplicated. Synchronising twice must be a no-op — the button is going to be pressed
             // twice, and the second press must not double the inbox.
             HashSet<string> known = await dbContext.EmailMessages
-                .Where(message => message.Mailbox == mailbox)
+                .IgnoreQueryFilters()
+                .Where(message => message.TenantId == tenantId && message.Mailbox == mailbox)
                 .Select(message => message.ExternalId)
                 .ToHashSetAsync(cancellationToken);
 
@@ -156,7 +168,7 @@ public sealed class InboxService(
 
             foreach (IncomingMail mail in incoming.Where(mail => !known.Contains(mail.MessageId)))
             {
-                dbContext.EmailMessages.Add(ToEntity(mail));
+                dbContext.EmailMessages.Add(ToEntity(tenantId, mail));
                 added++;
             }
         }
@@ -172,6 +184,8 @@ public sealed class InboxService(
                 EntityType = AuditEntityTypes.EmailMessage,
                 EntityDisplayName = connector.Info.Name,
                 Summary = $"Sincronização da caixa de entrada: {added} nova(s) de {fetched} mensagem(ns).",
+                // Stated, because the worker's own context has no tenant to infer it from.
+                TenantIdOverride = tenantId,
                 Metadata = new Dictionary<string, object?>
                 {
                     ["source"] = connector.Info.Source.ToString(),
@@ -198,9 +212,9 @@ public sealed class InboxService(
         };
     }
 
-    private EmailMessage ToEntity(IncomingMail mail) => new()
+    private EmailMessage ToEntity(Guid tenantId, IncomingMail mail) => new()
     {
-        TenantId = tenantContext.TenantId,
+        TenantId = tenantId,
         ExternalId = mail.MessageId,
         ConversationId = mail.ConversationId,
         Mailbox = mail.Mailbox,
@@ -217,7 +231,7 @@ public sealed class InboxService(
         [
             .. mail.Attachments.Select(attachment => new EmailAttachment
             {
-                TenantId = tenantContext.TenantId,
+                TenantId = tenantId,
                 ExternalId = attachment.AttachmentId,
                 FileName = attachment.FileName,
                 ContentType = attachment.ContentType,
@@ -503,11 +517,10 @@ public sealed class InboxService(
             .FirstOrDefaultAsync(message => message.Id == emailId, cancellationToken)
         ?? throw new EntityNotFoundException(nameof(EmailMessage), emailId);
 
-    private async Task<string> MailDomainAsync(CancellationToken cancellationToken)
+    private async Task<string> MailDomainAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        Guid tenantId = tenantContext.TenantId;
-
         string? slug = await dbContext.Tenants
+            .IgnoreQueryFilters()
             .Where(tenant => tenant.Id == tenantId)
             .Select(tenant => tenant.Slug)
             .FirstOrDefaultAsync(cancellationToken);

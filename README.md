@@ -43,7 +43,7 @@ vem da base de dados através da API.
 | 3 | Tarefas e motor de workflow | **Concluída** |
 | 4 | Designer visual de workflow | **Concluída** |
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
-| 6 | Pesquisa, caixa de entrada e integrações | Planeada |
+| 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | Planeada |
 | 8 | Relatórios e administração | Planeada |
 | 9 | Testes, segurança e observabilidade | Planeada |
@@ -96,8 +96,9 @@ vem da base de dados através da API.
 - **Motor de workflow próprio**, orientado a dados: definições com nós e ligações persistidas,
   executadas como instâncias com estado, variáveis e cronologia.
 - Tipos de nó executáveis: início, tarefa humana, aprovação, condição, notificação, ramificação
-  paralela, junção, temporizador e fim. Os tipos ainda não implementados (IA, integrações) **falham
-  de forma explícita** em vez de serem ignorados, e a validação impede ativar uma definição que os use.
+  paralela, junção, temporizador e fim. Os tipos que na Fase 3 ainda não estavam implementados
+  **falhavam de forma explícita** em vez de serem ignorados, e a validação impedia ativar uma
+  definição que os usasse; as Fases 5 e 6 implementaram-nos todos (IA e integrações).
 - **Uma travessia é uma transação**: o motor percorre os nós até cada ramo ficar parado ou terminado
   e só então persiste — instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
 - **Centro de tarefas** com âmbitos (minhas / organização / delegadas), indicadores de SLA, prazos,
@@ -159,7 +160,7 @@ vem da base de dados através da API.
 - **Centro de inteligência** em `/app/ai`: documentos por classificar, análises à espera de revisão e
   a taxa de aceitação das sugestões — tudo limitado, no servidor, ao que o utilizador pode ver.
 
-### Entregue na Fase 6 (em curso)
+### Entregue na Fase 6
 
 **Pesquisa**
 
@@ -193,14 +194,36 @@ vem da base de dados através da API.
 - Sincronizar é reconciliar: o identificador da mensagem tem índice único por organização e caixa,
   por isso sincronizar duas vezes não acrescenta nada.
 
+**Centro de integrações**
+
+- Seis cartões em `/app/integrations` — Microsoft Outlook, ERP, CRM, assinatura eletrónica, webhooks
+  e importação de ficheiros — cada um com estado, última execução, última atividade, registos
+  processados e erros, todos lidos da linha que o servidor escreve depois de uma execução real.
+- Cada cartão tem um adaptador por trás, e o trabalho é verdadeiro: o ERP e o CRM reconciliam os
+  fornecedores e as contrapartes que estão mesmo nos documentos desta organização contra a lista do
+  sistema externo; a importação lê e move ficheiros reais do disco; os webhooks entregam eventos de
+  auditoria por HTTPS; a assinatura conta os documentos que aguardam assinatura.
+- **Só é dito «simulado» o que é simulado.** O lado de lá do ERP, do CRM e do correio é fixo e
+  local, e esses três dizem-no no cartão; os outros três não se rotulam de demonstração por estarem
+  atrás de um adaptador (ADR-007).
+- Registo por integração, consultável e filtrável por nível, com a divergência concreta e os
+  documentos afetados em cada linha.
+- Ver e gerir são permissões distintas: `integrations.view` mostra cartões e registos,
+  `integrations.manage` é que executa, ativa, desativa e configura.
+- O destino dos webhooks é validado **no servidor** — HTTPS obrigatório, *loopback* e gamas privadas
+  recusados — porque um endereço que este servidor vai chamar é uma superfície de SSRF.
+- O nó **`Integration`** do workflow passou a ser executável: enfileira o pedido, larga a transação
+  do motor e o worker retoma a instância quando a execução termina. Com ele, **nenhum tipo de nó do
+  desenhador falha já por não estar implementado**.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 228 |
-| Integração com SQL Server real (Testcontainers) | 70 |
-| Componente e unidade no frontend (Vitest + Testing Library) | 36 |
-| End-to-end (Playwright, desktop e móvel) | 42 |
+| Unitários (xUnit) | 306 |
+| Integração com SQL Server real (Testcontainers) | 117 |
+| Componente e unidade no frontend (Vitest + Testing Library) | 57 |
+| End-to-end (Playwright, desktop e móvel) | 80 |
 
 ## 4. Arquitetura
 
@@ -471,6 +494,15 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/ai/runs/{id}/classification` · `/fields/{id}/decision` · `/accept-all` | Decisões sobre as sugestões |
 | `POST /api/ai/runs/{id}/apply` · `/discard` | Aplicar ao documento ou rejeitar a análise |
 | `POST /api/ai/document-question` | Pergunta sobre um documento, com citações verificadas |
+| `GET /api/search` | Pesquisa facetada, com excerto e relevância; diz se usou o índice de texto integral |
+| `POST /api/search/natural-language` | Lê uma pergunta para os mesmos filtros do formulário |
+| `GET /api/inbox` · `/summary` · `/connector` · `/{id}` | Caixa de entrada, contagens, origem do correio e leitura de uma mensagem |
+| `POST /api/inbox/sync` | Sincroniza pelo conetor de correio (idempotente) |
+| `POST /api/inbox/{id}/read` · `/archive` · `/reopen` · `/processed` | Estado de uma mensagem |
+| `POST /api/inbox/{id}/attachments/save` · `/document` · `/link` · `/workflow` | Anexo como documento, documento a partir da mensagem, associação e início de processo |
+| `GET /api/integrations` · `/{id}` · `/{id}/log` | Cartões das integrações e o registo de cada uma |
+| `POST /api/integrations/{id}/run` | Executa uma integração agora (exige `integrations.manage`) |
+| `PUT /api/integrations/{id}` | Ativa, desativa e configura (destino do webhook validado no servidor) |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow
@@ -529,7 +561,7 @@ organizações. É uma exceção deliberada e confinada: nada disto é alcançá
 A aplicação depende de abstrações (`IAiDocumentService`, `IAiSearchService`, `IAiWorkflowService`) e
 nunca de um fornecedor concreto. O fornecedor de demonstração é determinístico e identificado como
 tal na interface — respostas de demonstração nunca são apresentadas como geradas por um modelo real.
-Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md). *Implementação prevista para a Fase 5.*
+Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md).
 
 ## 12.1 Pesquisa
 
@@ -554,9 +586,19 @@ nunca por escrita direta. Ver [ADR-007](docs/adr/ADR-007-external-connectors.md)
 
 ## 13. Estratégia de integrações
 
-Cada integração externa (correio eletrónico, ERP, CRM, assinatura, webhooks) é representada por um
-adaptador atrás de uma interface, com registo de sincronizações e erros. O desenvolvimento local
-nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
+Cada sistema externo é representado por um **adaptador atrás de uma interface** (`IIntegrationAdapter`,
+e `IMailConnector` para o correio), com registo de execuções e erros por organização. O
+desenvolvimento local **nunca exige credenciais de terceiros**: nenhum adaptador as pede, e nenhuma
+é guardada — as definições de uma integração são explicitamente não secretas.
+
+Seis adaptadores estão escritos: Microsoft Outlook, ERP, CRM, assinatura eletrónica, webhooks e
+importação de ficheiros. Três deles têm o lado de lá simulado (o ERP e o CRM reconciliam contra
+listas locais fixas, o Outlook corre sobre o conetor de demonstração) e **dizem-no no cartão**; os
+outros três fazem trabalho verdadeiro de ponta a ponta e por isso não se rotulam de demonstração.
+
+Quem escreve o estado e os contadores de uma integração é o executor, a partir do resultado que o
+adaptador devolveu — nunca o próprio adaptador, para que o cartão seja o registo do que aconteceu e
+não a opinião do adaptador sobre si mesmo. Ver [ADR-007](docs/adr/ADR-007-external-connectors.md).
 
 ## 14. Observabilidade
 
@@ -573,7 +615,7 @@ nunca exige credenciais de terceiros. *Implementação prevista para a Fase 6.*
 | Nível | Ferramenta | O que garante |
 | --- | --- | --- |
 | Unitário | xUnit | Avaliação de permissões, catálogo de perfis, leitura de identidade, paginação, validação |
-| Integração | xUnit + Testcontainers (SQL Server real) | Autenticação, auditoria, isolamento de tenant, *soft delete*, imutabilidade da auditoria, cabeçalhos de segurança |
+| Integração | xUnit + Testcontainers (SQL Server real) | Autenticação, auditoria, isolamento de tenant, *soft delete*, imutabilidade da auditoria, cabeçalhos de segurança, pesquisa, caixa de entrada e integrações |
 | Componente | Vitest + Testing Library | Formulários, estados de erro, contrato do cliente HTTP |
 | End-to-end | Playwright (desktop e móvel) | Percursos reais no browser, incluindo cookie `HttpOnly` e troca de idioma |
 
@@ -609,7 +651,8 @@ necessário para correr o projeto localmente.
 ## 18. Melhorias futuras
 
 - Extração de módulo de IA para processo próprio caso o volume o justifique.
-- Pesquisa por texto integral com índices de SQL Server e ranking por relevância.
+- Conetores reais por trás dos adaptadores que hoje simulam o lado de lá (Microsoft Graph para o
+  correio, APIs de ERP e CRM) — a interface não muda, só a implementação registada.
 - Adesão de um utilizador a várias organizações, com seletor de contexto auditado.
 - Aplicação instalável (PWA) com trabalho offline para consulta documental.
 - Exportação de auditoria assinada criptograficamente.

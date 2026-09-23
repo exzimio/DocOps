@@ -428,6 +428,56 @@
     },
     "messagesLabel": "Messages"
   },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "Systems connected to this organisation — every card is backed by real code, not a promise.",
+    "kindValues": {
+      "0": "Microsoft Outlook",
+      "1": "ERP",
+      "2": "CRM",
+      "3": "Electronic signature",
+      "4": "Webhooks",
+      "5": "File import"
+    },
+    "statusValues": {
+      "0": "Not configured",
+      "1": "Connected",
+      "2": "Degraded",
+      "3": "Failing",
+      "4": "Disabled"
+    },
+    "logLevels": {
+      "0": "Information",
+      "1": "Warning",
+      "2": "Error"
+    },
+    "simulated": "Simulated.",
+    "noAdapter": "No adapter is registered for this integration.",
+    "lastRun": "Last run",
+    "lastActivity": "Last activity",
+    "recordsProcessed": "Records processed",
+    "errorCount": "Errors",
+    "runNow": "Run now",
+    "viewLog": "View log",
+    "configure": "Configure",
+    "enabled": "Enabled",
+    "manual": "manual",
+    "recordsShort_one": "{{count}} record",
+    "recordsShort_other": "{{count}} records",
+    "logTitle": "Log — {{name}}",
+    "logEmpty": "No log entries",
+    "logEmptyBody": "This integration has not written any entry matching the chosen filters yet.",
+    "webhookSettingsTitle": "Webhook settings",
+    "webhookEndpoint": "Destination (HTTPS)",
+    "webhookEndpointHint": "Only external HTTPS addresses are accepted; the server refuses internal or loopback addresses.",
+    "save": "Save",
+    "errors": {
+      "integration_disabled": "The integration is disabled. Enable it before running it.",
+      "invalid_settings": "The settings are not valid JSON.",
+      "invalid_webhook_endpoint": "The webhook destination is not acceptable.",
+      "forbidden": "You don't have permission for this operation."
+    }
+  },
   "tasks": {
     "title": "Tasks",
     "subtitle": "The work waiting for you and your team.",
@@ -699,7 +749,9 @@
       },
       "aiClassificationHelp": "Requests an analysis of the process's document and writes the suggested type and its confidence to variables. A condition after it can decide on them.",
       "aiExtractionHelp": "Requests an analysis of the process's document and writes the suggested values to variables (for example, ai.totalAmount) along with how many required fields were not found.",
-      "aiNeverApplies": "The step never changes the document: its suggestions wait for review like any other analysis. With no text to read, the process continues on the \"No result\" branch."
+      "aiNeverApplies": "The step never changes the document: its suggestions wait for review like any other analysis. With no text to read, the process continues on the \"No result\" branch.",
+      "integrationKind": "Integration",
+      "integrationKindHint": "Which of this organisation's integrations the step runs."
     }
   },
   "notifications": {

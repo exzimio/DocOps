@@ -22,6 +22,7 @@ builder.Services.Configure<BackgroundJobOptions>(
 builder.Services.AddScoped<WorkflowTimerJob>();
 builder.Services.AddScoped<OverdueTaskEscalationJob>();
 builder.Services.AddScoped<AiProcessingJob>();
+builder.Services.AddScoped<IntegrationJob>();
 builder.Services.AddHostedService<BackgroundJobRunner>();
 
 IHost host = builder.Build();

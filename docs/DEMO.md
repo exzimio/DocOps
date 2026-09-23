@@ -440,11 +440,104 @@ volta a **Processada**, não a **Por ler**. O trabalho feito não se desfaz por 
 
 Entre numa janela anónima como `admin@vertice.example`, o administrador da segunda organização.
 
-A caixa de entrada está **vazia**. Não é a interface a esconder: o filtro de organização faz parte da
-consulta. Vale a pena dizer em voz alta numa entrevista que **esta funcionalidade falhou exatamente
-aqui na primeira versão** — os filtros são declarados entidade a entidade e faltou declarar os da
+A caixa de entrada está **vazia** — ou, se alguém já executou a integração de correio desta segunda
+organização, tem as mensagens **dela**, nunca as da Asteria. Não é a interface a esconder: o filtro
+de organização faz parte da consulta. Vale a pena dizer em voz alta numa entrevista que **esta
+funcionalidade falhou exatamente aqui na primeira versão** — os filtros são declarados entidade a entidade e faltou declarar os da
 caixa de entrada. Foi apanhado antes do *commit* por um teste que enumera todas as entidades com
 organização e falha se alguma ficar sem filtro. É o tipo de erro que só se evita com uma rede.
+
+## Demonstração disponível na Fase 6 — Centro de integrações (≈5 minutos)
+
+Entre como `admin@asteria.example`, que tem `integrations.manage`. Abra **Integrações**.
+
+### 1. Seis cartões, e o que cada um admite sobre si (1 min)
+
+Seis sistemas: Microsoft Outlook, ERP, CRM, assinatura eletrónica, webhooks e importação de
+ficheiros. Todos começam **«Por configurar»**, com tudo a zero — porque nenhum correu ainda, e um
+ecrã que abrisse com números já lá postos estaria a inventá-los.
+
+Repare em **quais** têm a faixa âmbar de simulação: o Outlook, o ERP e o CRM. Os outros três não.
+
+Vale a pena parar aqui, porque é o ponto que distingue este ecrã de um mural de logótipos: **só é
+dito simulado o que é simulado**. O lado de lá do ERP e do CRM é uma lista local fixa, e o correio
+corre no conetor de demonstração — esses dizem-no, e dizem exatamente *o quê*. Os outros três fazem
+trabalho verdadeiro de ponta a ponta: a importação lê e move ficheiros reais do disco, os webhooks
+entregam HTTP a um destino externo, a assinatura conta os documentos que estão mesmo à espera de
+assinatura. Rotulá-los de demonstração faria parecer teatro o que é código a funcionar.
+
+### 2. Executar o ERP encontra uma divergência verdadeira (1,5 min)
+
+No cartão do **ERP**, carregue em **Executar agora**.
+
+O cartão passa a **Ligada** e diz quantos registos reconciliou e quantos fornecedores estão por
+registar. Abra **Ver registo**. A primeira linha é informativa — quantos valores foram conferidos,
+em quantos documentos. As seguintes são **avisos**, uma por fornecedor que o ERP não conhece, com os
+documentos afetados nomeados.
+
+Um deles é **«Nordvik Systems»**: é o fornecedor de uma fatura que está mesmo no repositório, e está
+deliberadamente ausente da lista do ERP simulado. Uma reconciliação que voltasse sempre limpa não
+provaria nada e não ensinaria ninguém a ler o ecrã.
+
+Note também que a divergência é um **aviso**, não um erro, e o contador de erros continua a zero. A
+execução fez exatamente o que lhe foi pedido; o que ela encontrou é um achado, não uma falha. Use os
+filtros de nível no topo do registo para ver só os avisos.
+
+O mesmo vale para o **CRM**, sobre as contrapartes dos contratos em vez dos fornecedores das faturas.
+
+### 3. A importação recusa-se a correr sem dono (45 s)
+
+Execute o cartão da **Importação de ficheiros**. Sem nada na pasta vigiada, ele diz «nada por
+importar» e qual é a pasta — informação, não erro.
+
+O pormenor que vale a pena contar: o varrimento agendado do worker **salta** este cartão de
+propósito, e diz porquê no registo. Um documento tem dono, e o trabalho agendado não tem sessão. As
+alternativas eram inventar uma conta de sistema, que poria um nome fictício em cada documento
+importado, ou atribuir tudo a um administrador qualquer. Recusar e explicar é mais honesto do que
+qualquer das duas.
+
+Para ver a importação a funcionar, ponha um ficheiro `.txt` em `src/Api/storage/import/<id da
+organização>/` e execute de novo a partir do ecrã: o ficheiro entra como documento «Por classificar»
+e o original é movido para `importados/`, para que uma segunda execução não o volte a importar.
+
+### 4. O destino do webhook é verificado no servidor (1 min)
+
+No cartão dos **Webhooks**, carregue em **Configurar** e escreva `http://exemplo.com/hook`. Guarde.
+
+É recusado. Experimente agora `https://127.0.0.1/hook` — também é recusado, e por outra razão.
+
+Aqui está a parte que interessa numa entrevista: um administrador a escrever um endereço que **este
+servidor** vai depois chamar é a definição de um pedido forjado do lado do servidor (SSRF). Por isso
+a verificação — HTTPS obrigatório, *loopback* e gamas privadas recusados — corre **no servidor e
+antes de o endereço ser guardado**, não só no momento da entrega. O formulário valida também, mas só
+para a mensagem chegar depressa; a verificação que conta é a que o cliente não pode contornar.
+
+Guarde um endereço HTTPS externo e reabra o diálogo: o endereço está lá, lido da base de dados. Pode
+mostrá-lo porque as definições de uma integração são **explicitamente não secretas** — nenhuma
+credencial é guardada aqui, e é essa decisão que torna seguro mostrar o que lá está.
+
+### 5. Ver e mudar são permissões diferentes (30 s)
+
+Numa janela anónima, entre como `sofia.martins@asteria.example`, que tem `integrations.view` mas não
+`integrations.manage`.
+
+Os cartões estão todos lá, com os números e o registo — mas sem **Executar agora**, sem
+**Configurar** e sem o interruptor de **Ativa**. Um gestor pode querer saber se o correio está a
+chegar sem poder desligar nada. E não é a interface a decidir: as ações que ela esconde são recusadas
+pelo servidor na mesma, com `403`.
+
+### 6. Um processo que espera por um sistema externo (45 s)
+
+Abra o **desenhador de workflows** e a paleta de nós. O nó **Integração** já não está marcado como
+não executável — com ele, **nenhum tipo de nó do desenhador falha por não estar implementado**, que
+era o último sítio do produto onde isso ainda acontecia.
+
+Ponha um nó de integração num processo e escolha qual integração ele corre. O que acontece quando o
+processo lá chega vale a pena explicar: o nó **não** chama o sistema externo ali. Enfileira o pedido,
+larga a transação do motor e a instância fica à espera; o worker corre a integração e retoma o
+processo quando ela termina. Uma chamada de rede dentro da travessia do grafo manteria uma transação
+de base de dados aberta à espera da Internet — e uma integração lenta passaria a ser um problema de
+base de dados.
 
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 

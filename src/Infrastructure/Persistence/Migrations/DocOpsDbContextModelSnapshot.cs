@@ -1061,6 +1061,214 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.ToTable("EmailMessages", (string)null);
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Integrations.Integration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(600)
+                        .HasColumnType("nvarchar(600)");
+
+                    b.Property<int>("ErrorCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("LastActivityAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("LastRunAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("LastRunSummary")
+                        .HasMaxLength(600)
+                        .HasColumnType("nvarchar(600)");
+
+                    b.Property<DateTimeOffset?>("LastSuccessAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<long>("RecordsProcessed")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SettingsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Kind")
+                        .IsUnique();
+
+                    b.ToTable("Integrations", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Integrations.IntegrationLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("IntegrationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Manual")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("RecordsProcessed")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("nvarchar(600)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IntegrationId", "OccurredAtUtc")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("TenantId", "Level", "OccurredAtUtc")
+                        .IsDescending(false, false, true);
+
+                    b.ToTable("IntegrationLogs", (string)null);
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Integrations.IntegrationRunRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("IntegrationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RecordsProcessed")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("RequestedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ResultSummary")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WorkflowInstanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("WorkflowNodeKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IntegrationId");
+
+                    b.HasIndex("WorkflowInstanceId");
+
+                    b.ToTable("IntegrationRunRequests");
+                });
+
             modelBuilder.Entity("DocOps.Domain.Intelligence.AiFieldSuggestion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2168,6 +2376,36 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.Navigation("LinkedDocument");
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Integrations.IntegrationLog", b =>
+                {
+                    b.HasOne("DocOps.Domain.Integrations.Integration", "Integration")
+                        .WithMany("Logs")
+                        .HasForeignKey("IntegrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Integration");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Integrations.IntegrationRunRequest", b =>
+                {
+                    b.HasOne("DocOps.Domain.Integrations.Integration", "Integration")
+                        .WithMany()
+                        .HasForeignKey("IntegrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocOps.Domain.Workflows.WorkflowInstance", "WorkflowInstance")
+                        .WithMany()
+                        .HasForeignKey("WorkflowInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Integration");
+
+                    b.Navigation("WorkflowInstance");
+                });
+
             modelBuilder.Entity("DocOps.Domain.Intelligence.AiFieldSuggestion", b =>
                 {
                     b.HasOne("DocOps.Domain.Intelligence.AiProcessingRun", "Run")
@@ -2367,6 +2605,11 @@ namespace DocOps.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("DocOps.Domain.Inbox.EmailMessage", b =>
                 {
                     b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("DocOps.Domain.Integrations.Integration", b =>
+                {
+                    b.Navigation("Logs");
                 });
 
             modelBuilder.Entity("DocOps.Domain.Intelligence.AiProcessingRun", b =>

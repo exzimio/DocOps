@@ -21,6 +21,7 @@ public sealed class DemoDataSeeder(
     WorkflowCatalogueSeeder workflowCatalogueSeeder,
     WorkflowInstanceSeeder workflowInstanceSeeder,
     InboxSeeder inboxSeeder,
+    IntegrationCatalogueSeeder integrationSeeder,
     IOptions<SeedOptions> options,
     ILogger<DemoDataSeeder> logger)
 {
@@ -102,6 +103,8 @@ public sealed class DemoDataSeeder(
         await workflowCatalogueSeeder.SeedAsync(vertice, cancellationToken);
         await workflowInstanceSeeder.SeedAsync(asteria, DateTimeOffset.UtcNow, cancellationToken);
         await inboxSeeder.SeedAsync(asteria, DateTimeOffset.UtcNow, cancellationToken);
+        await integrationSeeder.SeedAsync(asteria, cancellationToken);
+        await integrationSeeder.SeedAsync(vertice, cancellationToken);
 
         logger.LogInformation("Demo seed completed for tenants {Asteria} and {Vertice}", asteria.Name, vertice.Name);
     }

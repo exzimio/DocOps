@@ -6,7 +6,7 @@ export function NotFoundPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="grid min-h-dvh place-items-center bg-canvas px-4">
+    <div className="grid min-h-screen place-items-center bg-canvas px-4">
       <div className="max-w-md text-center">
         <p className="font-mono text-xs text-ink-muted">404</p>
         <h1 className="mt-2 text-lg font-semibold text-ink">{t('errors.notFoundTitle')}</h1>

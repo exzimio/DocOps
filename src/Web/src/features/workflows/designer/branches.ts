@@ -14,6 +14,8 @@ export function branchOptions(type: number | undefined): string[] {
     // An AI step continues on its unconditional exit, or on "failed" when there was nothing to read.
     case WorkflowNodeType.AiClassification:
     case WorkflowNodeType.AiExtraction:
+    // An integration step continues on its unconditional exit, or on "failed" when the run failed.
+    case WorkflowNodeType.Integration:
       return ['failed']
     default:
       return []

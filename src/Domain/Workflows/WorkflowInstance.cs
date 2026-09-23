@@ -148,4 +148,8 @@ public static class WorkflowEventTypes
     public const string AiRequested = "ai.requested";
     public const string AiCompleted = "ai.completed";
     public const string AiFailed = "ai.failed";
+
+    public const string IntegrationRequested = "integration.requested";
+    public const string IntegrationCompleted = "integration.completed";
+    public const string IntegrationFailed = "integration.failed";
 }

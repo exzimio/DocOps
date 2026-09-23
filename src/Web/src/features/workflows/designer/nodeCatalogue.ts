@@ -39,7 +39,7 @@ export const nodeCatalogue: NodeKind[] = [
   { type: WorkflowNodeType.End, icon: Flag, accent: 'graphite', executable: true },
   { type: WorkflowNodeType.AiClassification, icon: Bot, accent: 'teal', executable: true },
   { type: WorkflowNodeType.AiExtraction, icon: ScanText, accent: 'teal', executable: true },
-  { type: WorkflowNodeType.Integration, icon: Plug, accent: 'red', executable: false },
+  { type: WorkflowNodeType.Integration, icon: Plug, accent: 'red', executable: true },
 ]
 
 export function nodeKind(type: WorkflowNodeTypeValue): NodeKind {

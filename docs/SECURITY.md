@@ -181,6 +181,13 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Integração a alterar o sistema de origem | O conetor só lê: não escreve na caixa, não envia e não apaga |
 | Mensagens duplicadas por sincronizações repetidas | Índice único `(TenantId, Mailbox, ExternalId)`; sincronizar de novo reconhece o que já existe em vez de o acrescentar |
 | Ação oferecida a quem o servidor vai recusar | As ações da caixa de entrada só aparecem com `inbox.process`, e o estado da própria mensagem (`canAct`, `canArchive`, `canReopen`) viaja no contrato para a interface espelhar as regras que o servidor aplica |
+| **Pedido forjado do lado do servidor (SSRF) pelo destino de um webhook** | O destino é validado **no servidor e antes de ser guardado**: só HTTPS, e recusam-se *loopback* e as gamas privadas. O diálogo do browser valida também, mas só para a mensagem — a verificação que conta é a que o cliente não pode contornar |
+| Credencial de terceiros exposta pelo ecrã de integrações | As definições de uma integração são explicitamente **não secretas**: nenhuma credencial é guardada em `SettingsJson`, e é isso que torna seguro mostrar o que lá está |
+| Quem só pode observar a alterar uma integração | Ver e mudar são permissões distintas: `integrations.view` mostra cartões e registos, `integrations.manage` é exigida para executar, ativar, desativar e configurar — no servidor, em cada ação |
+| Integração de uma organização alcançada por outra | O serviço do pedido usa o `DbContext` filtrado pela organização: uma integração de outra organização não é encontrada, e um pedido por identificador devolve `404` em vez de admitir que existe |
+| Estado de integração inventado pelo próprio adaptador | Os contadores e o estado são escritos pelo executor a partir do resultado devolvido, nunca pelo adaptador — um adaptador não se pode declarar «Ligada» sem ter feito nada |
+| Interior do servidor exposto pela falha de uma integração | A exceção de um adaptador vira uma linha de registo com a **mensagem**, nunca a pilha |
+| Trabalho simulado apresentado como real, ou trabalho real apresentado como simulação | `IsSimulated` é declarado adaptador a adaptador e o aviso diz **o que** é simulado; os três adaptadores que fazem trabalho verdadeiro não se rotulam de demonstração |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |
@@ -190,8 +197,13 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 
 O worker corre sem organização no contexto ambiente, o que lhe permite processar todas as
 organizações. É uma exceção deliberada: o processo não expõe superfície HTTP, os seus trabalhos são
-apenas escalonamento de prazos e retoma de temporizadores, e cada escrita continua a passar pelos
-mesmos intercetores de auditoria e de isolamento.
+escalonamento de prazos, retoma de temporizadores, fila de IA e varrimento das integrações, e cada
+escrita continua a passar pelos mesmos intercetores de auditoria e de isolamento.
+
+O caminho que ignora os filtros de organização está confinado a esses serviços de worker
+(`IntegrationRunner`, e não `IntegrationService`, que é o que corre no pedido do utilizador). A
+distinção é o que impede que um pedido HTTP alcance, por via de uma integração, dados que a sua
+sessão não alcançaria diretamente.
 
 ## 14. Limitações conhecidas
 

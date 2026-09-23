@@ -69,7 +69,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(0,28rem)]">
+    <div className="grid min-h-screen lg:grid-cols-[1fr_minmax(0,28rem)]">
       <section className="hidden flex-col justify-between bg-graphite-900 p-10 text-graphite-100 lg:flex">
         <Link to="/" className="flex items-center gap-2 text-sm text-graphite-300 hover:text-white">
           <ArrowLeft aria-hidden className="size-4" />

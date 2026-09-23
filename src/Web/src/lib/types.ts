@@ -72,6 +72,7 @@ export const Permission = {
   inboxView: 'inbox.view',
   inboxProcess: 'inbox.process',
   integrationsView: 'integrations.view',
+  integrationsManage: 'integrations.manage',
   auditView: 'audit.view',
   reportsView: 'reports.view',
   adminUsers: 'admin.users',

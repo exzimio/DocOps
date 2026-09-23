@@ -2,6 +2,7 @@ using DocOps.Application.Abstractions;
 using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Inbox;
+using DocOps.Application.Integrations;
 using DocOps.Application.Intelligence;
 using DocOps.Application.Search;
 using DocOps.Application.Tenancy;
@@ -12,6 +13,7 @@ using DocOps.Infrastructure.Auditing;
 using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
 using DocOps.Infrastructure.Inbox;
+using DocOps.Infrastructure.Integrations;
 using DocOps.Infrastructure.Intelligence;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Interceptors;
@@ -56,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<WorkflowCatalogueSeeder>();
         services.AddScoped<WorkflowInstanceSeeder>();
         services.AddScoped<InboxSeeder>();
+        services.AddScoped<IntegrationCatalogueSeeder>();
 
         services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
@@ -69,6 +72,7 @@ public static class DependencyInjection
 
         AddSearch(services);
         AddInbox(services);
+        AddIntegrations(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -145,8 +149,7 @@ public static class DependencyInjection
             provider.GetRequiredService<DocOpsDbContext>(), WorkflowNodeType.AiClassification));
         services.AddScoped<INodeExecutor>(provider => new AiNodeExecutor(
             provider.GetRequiredService<DocOpsDbContext>(), WorkflowNodeType.AiExtraction));
-        services.AddScoped<INodeExecutor>(_ => new UnimplementedNodeExecutor(
-            WorkflowNodeType.Integration, "fase de integrações"));
+        services.AddScoped<INodeExecutor, IntegrationNodeExecutor>();
 
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<ITaskService, TaskService>();
@@ -173,6 +176,27 @@ public static class DependencyInjection
         // point of the abstraction, and the reason the demonstration one needs no credentials.
         services.AddScoped<IMailConnector, DemoMailConnector>();
         services.AddScoped<IInboxService, InboxService>();
+    }
+
+    private static void AddIntegrations(IServiceCollection services)
+    {
+        // One adapter per connected system, all behind the same interface. The catalogue on screen
+        // is built from these registrations, so a card cannot exist without code behind it.
+        services.AddScoped<IIntegrationAdapter, OutlookIntegrationAdapter>();
+        services.AddScoped<IIntegrationAdapter, ErpIntegrationAdapter>();
+        services.AddScoped<IIntegrationAdapter, CrmIntegrationAdapter>();
+        services.AddScoped<IIntegrationAdapter, SignatureIntegrationAdapter>();
+        services.AddScoped<IIntegrationAdapter, FileImportIntegrationAdapter>();
+
+        // The webhook adapter really makes outbound calls, so it gets a client with a short timeout:
+        // an unresponsive far end must not hold a run open while the other integrations wait.
+        services.AddHttpClient<WebhookIntegrationAdapter>(client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddScoped<IIntegrationAdapter>(provider => provider.GetRequiredService<WebhookIntegrationAdapter>());
+
+        services.AddScoped<IntegrationExecutor>();
+        services.AddScoped<IIntegrationService, IntegrationService>();
+        services.AddScoped<IIntegrationRunner, IntegrationRunner>();
+        services.AddScoped<IntegrationQueueProcessor>();
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration, bool isDevelopment)

@@ -428,6 +428,56 @@
     },
     "messagesLabel": "Mensagens"
   },
+  "integrations": {
+    "title": "Integrações",
+    "subtitle": "Sistemas ligados a esta organização — cada cartão corresponde a código real, não a uma promessa.",
+    "kindValues": {
+      "0": "Microsoft Outlook",
+      "1": "ERP",
+      "2": "CRM",
+      "3": "Assinatura eletrónica",
+      "4": "Webhooks",
+      "5": "Importação de ficheiros"
+    },
+    "statusValues": {
+      "0": "Por configurar",
+      "1": "Ligada",
+      "2": "Degradada",
+      "3": "Com falha",
+      "4": "Desativada"
+    },
+    "logLevels": {
+      "0": "Informação",
+      "1": "Aviso",
+      "2": "Erro"
+    },
+    "simulated": "Simulada.",
+    "noAdapter": "Não há adaptador registado para esta integração.",
+    "lastRun": "Última execução",
+    "lastActivity": "Última atividade",
+    "recordsProcessed": "Registos processados",
+    "errorCount": "Erros",
+    "runNow": "Executar agora",
+    "viewLog": "Ver registo",
+    "configure": "Configurar",
+    "enabled": "Ativa",
+    "manual": "manual",
+    "recordsShort_one": "{{count}} registo",
+    "recordsShort_other": "{{count}} registos",
+    "logTitle": "Registo — {{name}}",
+    "logEmpty": "Sem registos",
+    "logEmptyBody": "Esta integração ainda não escreveu nenhuma entrada com os filtros escolhidos.",
+    "webhookSettingsTitle": "Definições do webhook",
+    "webhookEndpoint": "Destino (HTTPS)",
+    "webhookEndpointHint": "Só endereços HTTPS externos são aceites; o servidor recusa endereços internos ou da própria máquina.",
+    "save": "Guardar",
+    "errors": {
+      "integration_disabled": "A integração está desativada. Ative-a antes de a executar.",
+      "invalid_settings": "As definições não são JSON válido.",
+      "invalid_webhook_endpoint": "O destino do webhook não é aceitável.",
+      "forbidden": "Não tem permissão para esta operação."
+    }
+  },
   "tasks": {
     "title": "Tarefas",
     "subtitle": "O trabalho que espera por si e pela sua equipa.",
@@ -699,7 +749,9 @@
       },
       "aiClassificationHelp": "Pede uma análise do documento do processo e escreve nas variáveis o tipo sugerido e o grau de confiança. Uma condição a seguir pode decidir com base nelas.",
       "aiExtractionHelp": "Pede uma análise do documento do processo e escreve nas variáveis os valores sugeridos (por exemplo, ai.totalAmount) e quantos campos obrigatórios não foram encontrados.",
-      "aiNeverApplies": "O passo nunca altera o documento: as sugestões ficam à espera de revisão, como qualquer outra análise. Sem texto para ler, o processo segue pelo ramo «Sem resultado»."
+      "aiNeverApplies": "O passo nunca altera o documento: as sugestões ficam à espera de revisão, como qualquer outra análise. Sem texto para ler, o processo segue pelo ramo «Sem resultado».",
+      "integrationKind": "Integração",
+      "integrationKindHint": "Qual das integrações desta organização o passo executa."
     }
   },
   "notifications": {

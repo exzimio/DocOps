@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DocOps.Domain.Documents;
+using DocOps.Domain.Integrations;
 
 namespace DocOps.Domain.Workflows;
 
@@ -62,6 +63,9 @@ public sealed record NodeConfiguration
 
     /// <summary>Status applied to the linked document when the node runs. Null leaves the document alone.</summary>
     public DocumentStatus? DocumentStatus { get; init; }
+
+    /// <summary>Which integration an integration step runs. Required by that node type.</summary>
+    public IntegrationKind? IntegrationKind { get; init; }
 
     /// <summary>Outcome recorded on the instance when an end node is reached.</summary>
     public string? Outcome { get; init; }

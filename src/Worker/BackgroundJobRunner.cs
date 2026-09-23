@@ -15,6 +15,16 @@ public sealed class BackgroundJobOptions
 
     /// <summary>Runs the AI analyses queued by workflow steps and resumes their instances.</summary>
     public bool ProcessAiQueue { get; set; } = true;
+
+    /// <summary>Runs the enabled integrations of every organisation.</summary>
+    public bool RunIntegrations { get; set; } = true;
+
+    /// <summary>
+    /// How often integrations run, as a multiple of the cycle. They talk to systems outside
+    /// this one, so they run far less often than a timer check: a mailbox polled every minute
+    /// is a mailbox annoyed every minute.
+    /// </summary>
+    public int IntegrationEveryNCycles { get; set; } = 5;
 }
 
 /// <summary>
@@ -30,6 +40,9 @@ public sealed class BackgroundJobRunner(
     ILogger<BackgroundJobRunner> logger) : BackgroundService
 {
     private readonly BackgroundJobOptions _options = options.Value;
+
+    /// <summary>Counts cycles, so the slower jobs can run on every n-th one.</summary>
+    private long _cycle;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -75,5 +88,16 @@ public sealed class BackgroundJobRunner(
             await using AsyncServiceScope aiScope = scopeFactory.CreateAsyncScope();
             await aiScope.ServiceProvider.GetRequiredService<AiProcessingJob>().RunAsync(cancellationToken);
         }
+
+        if (_options.RunIntegrations && _cycle % Math.Max(1, _options.IntegrationEveryNCycles) == 0)
+        {
+            // Its own scope as well, and for a stronger reason: an integration reaches outside
+            // this application, and whatever it drags in stays out of the tracker the local work
+            // above is using.
+            await using AsyncServiceScope integrationScope = scopeFactory.CreateAsyncScope();
+            await integrationScope.ServiceProvider.GetRequiredService<IntegrationJob>().RunAsync(cancellationToken);
+        }
+
+        _cycle++;
     }
 }

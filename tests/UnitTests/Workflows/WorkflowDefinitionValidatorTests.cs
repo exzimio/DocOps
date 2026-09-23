@@ -1,3 +1,4 @@
+using DocOps.Domain.Integrations;
 using DocOps.Domain.Workflows;
 
 namespace DocOps.UnitTests.Workflows;
@@ -170,19 +171,57 @@ public class WorkflowDefinitionValidatorTests
             issue => issue.Code == "condition_branch_missing");
     }
 
+    /// <summary>
+    /// Every node type has an executor since the integrations phase, so nothing is refused for being
+    /// unimplemented any more. The rule itself is still worth a test: a later phase that adds a node
+    /// type before its executor lists it, and this is what would catch a definition activated onto a
+    /// step that would stop the process.
+    /// </summary>
     [Fact]
-    public void Refuses_to_activate_a_definition_that_uses_a_node_type_without_an_executor()
+    public void No_node_type_is_refused_for_lacking_an_executor()
+    {
+        foreach (WorkflowNodeType type in Enum.GetValues<WorkflowNodeType>())
+        {
+            WorkflowDefinition definition = ValidDefinition();
+            definition.Nodes.Add(Node("step", type, "Passo"));
+            definition.Edges.Add(Edge("review", "step"));
+            definition.Edges.Add(Edge("step", "end"));
+
+            Assert.DoesNotContain(
+                WorkflowDefinitionValidator.Validate(definition),
+                issue => issue.Code == "node_type_not_implemented");
+        }
+    }
+
+    [Fact]
+    public void Refuses_an_integration_step_that_does_not_say_which_integration_to_run()
     {
         WorkflowDefinition definition = ValidDefinition();
-        definition.Nodes.Add(Node("erp", WorkflowNodeType.Integration, "Enviar para o ERP"));
+        definition.Nodes.Add(Node("erp", WorkflowNodeType.Integration, "Notificar o ERP"));
         definition.Edges.Add(Edge("review", "erp"));
         definition.Edges.Add(Edge("erp", "end"));
 
         WorkflowValidationIssue issue = Assert.Single(
-            WorkflowDefinitionValidator.Validate(definition), i => i.Code == "node_type_not_implemented");
+            WorkflowDefinitionValidator.Validate(definition), i => i.Code == "integration_missing");
 
         Assert.Equal(ValidationSeverity.Error, issue.Severity);
         Assert.False(WorkflowDefinitionValidator.CanActivate(definition));
+    }
+
+    [Fact]
+    public void Accepts_an_integration_step_that_names_its_integration()
+    {
+        WorkflowDefinition definition = ValidDefinition();
+        WorkflowNode node = Node("erp", WorkflowNodeType.Integration, "Notificar o ERP");
+        node.ConfigJson = new NodeConfiguration { IntegrationKind = IntegrationKind.Erp }.ToJson();
+
+        definition.Nodes.Add(node);
+        definition.Edges.Add(Edge("review", "erp"));
+        definition.Edges.Add(Edge("erp", "end"));
+
+        Assert.DoesNotContain(
+            WorkflowDefinitionValidator.Validate(definition), issue => issue.Code == "integration_missing");
+        Assert.True(WorkflowDefinitionValidator.CanActivate(definition));
     }
 
     [Theory]

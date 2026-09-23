@@ -45,10 +45,10 @@ benefício teórico. Ver [ADR-002](adr/ADR-002-authentication.md).
 | Document Classification | Tipos de documento e campos de metadados | 2 ✅ |
 | Workflow Management / Execution | Definições, instâncias, estados, prazos | 3 ✅ (designer visual na 4) |
 | Tasks & Approvals | Tarefas humanas, aprovações, delegação, SLA | 3 ✅ |
-| AI Intelligence | Classificação, extração, perguntas sobre documentos | 5 |
-| Search | Pesquisa por metadados, texto integral e linguagem natural | 6 |
-| Email / Inbox | Caixa de entrada e processamento de anexos | 6 |
-| Integrations | Adaptadores externos e registo de sincronização | 6 |
+| AI Intelligence | Classificação, extração, perguntas sobre documentos | 5 ✅ |
+| Search | Pesquisa por metadados, texto integral e linguagem natural | 6 ✅ |
+| Email / Inbox | Caixa de entrada e processamento de anexos | 6 ✅ |
+| Integrations | Adaptadores externos, execução e registo por organização | 6 ✅ |
 | Electronic Signature | Pedidos e estados de assinatura | 7 |
 | Reporting & Analytics | Indicadores e gráficos a partir de dados reais | 8 |
 | Notifications | Notificações e escalonamentos | 3 ✅ |
@@ -368,14 +368,47 @@ que a interface esconde é conveniência — o servidor recusa na mesma.
 
 Detalhes e alternativas rejeitadas em [ADR-007](adr/ADR-007-external-connectors.md).
 
+## 10.4 Centro de integrações
+
+`IIntegrationAdapter` é o `IMailConnector` generalizado: um adaptador recebe um contexto com a
+organização e devolve um resultado com o que fez, quantos registos tocou, que estado deixa a
+integração e as linhas que quer ver no registo. Seis estão escritos — correio, ERP, CRM, assinatura
+eletrónica, webhooks e importação de ficheiros.
+
+**Quem escreve o estado é o executor, não o adaptador.** `IntegrationExecutor` recebe o resultado e
+é ele que grava `Status`, `RecordsProcessed`, `ErrorCount` e `LastRunAtUtc`, e que converte uma
+exceção do adaptador em estado «Com falha» com a mensagem — nunca a pilha. Se cada adaptador
+escrevesse o seu próprio estado, o cartão passaria a ser a opinião do adaptador sobre si mesmo em
+vez do registo do que aconteceu.
+
+**Dois caminhos de execução, um executor.** `IntegrationService` corre no pedido do utilizador e usa
+o `DbContext` filtrado pela organização, pelo que só alcança a integração de quem a pediu;
+`IntegrationRunner` corre no worker, sem utilizador, e passa por `IgnoreQueryFilters` para varrer
+todas as organizações — a mesma exceção consciente que o resto do trabalho periódico já tinha. Os
+dois terminam no mesmo `IntegrationExecutor`, para que não haja duas formas de uma integração correr.
+
+**O nó de workflow não chama nada dentro da transação do motor.** Uma travessia do grafo é uma
+transação; uma chamada externa lá dentro manteria-a aberta à espera da rede.
+`IntegrationNodeExecutor` enfileira um `IntegrationRunRequest` e devolve `Wait()`; o processador da
+fila corre o pedido e retoma a instância. É a mesma forma dos nós de IA — de propósito.
+
+**O registo de uma integração não é auditoria.** `IntegrationLog` é operacional: pode ser truncado,
+não faz parte do trilho imutável. O que vai para a auditoria é o facto de alguém ter executado ou
+reconfigurado a integração, não cada linha do que o adaptador relatou.
+
+Detalhes e alternativas rejeitadas em [ADR-007](adr/ADR-007-external-connectors.md).
+
 ## 11. Processamento em segundo plano
 
-O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores e escalonamento
-de prazos. Nenhum pedido de utilizador espera por trabalho periódico, e o worker vê todas as
-organizações — uma exceção deliberada, confinada a trabalho que nenhum pedido HTTP alcança.
+O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento
+de prazos, fila de processamento de IA e varrimento periódico das integrações. Nenhum pedido de
+utilizador espera por trabalho periódico, e o worker vê todas as organizações — uma exceção
+deliberada, confinada a trabalho que nenhum pedido HTTP alcança.
 
-Verificação de retenção e fila de processamento de IA juntam-se a estes trabalhos nas fases
-respetivas.
+As integrações não correm a cada ciclo: `IntegrationEveryNCycles` espaça-as, porque sincronizar
+correio e reconciliar catálogos não tem a urgência de um prazo a expirar.
+
+A verificação de retenção junta-se a estes trabalhos na fase respetiva.
 
 ## 12. Preparação para a nuvem
 
@@ -384,6 +417,8 @@ respetivas.
 | `IFileStorage` | Sistema de ficheiros | Azure Blob Storage |
 | Base de dados | SQL Server em container | Azure SQL |
 | `IAi*Service` | Fornecedor de demonstração determinístico | Azure OpenAI |
+| `IMailConnector` | Conetor de demonstração, sem credenciais | Microsoft Graph |
+| `IIntegrationAdapter` | Adaptadores locais, sem credenciais | APIs de ERP, CRM e assinatura |
 | Autenticação | Cookie + Identity | OpenID Connect / Microsoft Entra ID |
 | Telemetria | Consola + OTLP | Application Insights |
 

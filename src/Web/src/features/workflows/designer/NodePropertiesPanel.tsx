@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import { WorkflowNodeType, type WorkflowNodeTypeValue } from '../types'
 import {
   documentStatusOptions,
+  integrationKindOptions,
   operatorOptions,
   priorityOptions,
   roleOptions,
@@ -11,6 +12,7 @@ import {
   type AssignmentStrategy,
   type ConditionOperator,
   type DocumentStatusName,
+  type IntegrationKindValue,
   type NodeConfiguration,
   type TaskPriority,
 } from './nodeConfiguration'
@@ -360,6 +362,32 @@ export function NodePropertiesPanel({
               : 'ai.status · ai.fieldsFound · ai.requiredMissing · ai.<campo>'}
           </p>
         </div>
+      )}
+
+      {node.type === WorkflowNodeType.Integration && (
+        <Field
+          label={t('workflows.designer.integrationKind')}
+          hint={t('workflows.designer.integrationKindHint')}
+        >
+          <select
+            value={node.configuration.integrationKind ?? ''}
+            disabled={readOnly}
+            onChange={(event) =>
+              updateConfig({
+                integrationKind:
+                  event.target.value === '' ? null : (Number(event.target.value) as IntegrationKindValue),
+              })
+            }
+            className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
+          >
+            <option value="">—</option>
+            {integrationKindOptions.map((kind) => (
+              <option key={kind} value={kind}>
+                {t(`integrations.kindValues.${kind}`)}
+              </option>
+            ))}
+          </select>
+        </Field>
       )}
 
       {node.type === WorkflowNodeType.Delay && (

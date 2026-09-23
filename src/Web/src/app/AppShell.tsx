@@ -39,7 +39,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div className="min-h-screen bg-canvas">
       <a href="#main-content" className="skip-link">
         {t('common.skipToContent')}
       </a>
@@ -105,9 +105,9 @@ export function AppShell() {
           aria-label={t('nav.sectionWork')}
           className={clsx(
             'w-60 shrink-0 border-r border-subtle bg-raised px-2 py-3',
-            'lg:sticky lg:top-14 lg:block lg:h-[calc(100dvh-3.5rem)]',
+            'lg:sticky lg:top-14 lg:block lg:h-[calc(100vh-3.5rem)]',
             mobileNavOpen
-              ? 'fixed inset-x-0 top-14 z-20 block h-[calc(100dvh-3.5rem)] w-full overflow-y-auto'
+              ? 'fixed inset-x-0 top-14 z-20 block h-[calc(100vh-3.5rem)] w-full overflow-y-auto'
               : 'hidden',
           )}
         >

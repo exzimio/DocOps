@@ -69,6 +69,9 @@ public static class AuditActions
     public const string EmailDocumentCreated = "inbox.document.created";
     public const string EmailWorkflowStarted = "inbox.workflow.started";
 
+    public const string IntegrationRun = "integration.run";
+    public const string IntegrationConfigured = "integration.configured";
+
     public const string AuthorizationDenied = "security.authorization.denied";
     public const string TenantIsolationViolationBlocked = "security.tenant_isolation.blocked";
 }
@@ -88,4 +91,5 @@ public static class AuditEntityTypes
     public const string WorkflowInstance = "WorkflowInstance";
     public const string WorkflowTask = "WorkflowTask";
     public const string EmailMessage = "EmailMessage";
+    public const string Integration = "Integration";
 }

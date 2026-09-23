@@ -19,7 +19,7 @@ export function LandingPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div className="min-h-screen bg-canvas">
       <header className="border-b border-subtle bg-raised">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <span className="grid size-7 place-items-center rounded-md bg-teal-700 text-white">

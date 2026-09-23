@@ -149,6 +149,12 @@ public interface IInboxService
     /// <summary>Pulls the monitored mailboxes. Idempotent: a message already seen is recognised.</summary>
     Task<MailSyncResultDto> SyncAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The same synchronisation for one named organisation, for callers that have no request behind
+    /// them — the worker running the Outlook integration on its schedule.
+    /// </summary>
+    Task<MailSyncResultDto> SyncAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
     Task<EmailDetailDto> MarkReadAsync(Guid emailId, CancellationToken cancellationToken = default);
 
     Task<EmailDetailDto> ArchiveAsync(Guid emailId, CancellationToken cancellationToken = default);

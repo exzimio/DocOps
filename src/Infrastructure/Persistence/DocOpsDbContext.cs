@@ -5,6 +5,7 @@ using DocOps.Domain.Compliance;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
 using DocOps.Domain.Inbox;
+using DocOps.Domain.Integrations;
 using DocOps.Domain.Intelligence;
 using DocOps.Domain.Notifications;
 using DocOps.Domain.Tenancy;
@@ -49,6 +50,10 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<WorkflowTask> WorkflowTasks => Set<WorkflowTask>();
     public DbSet<WorkflowEvent> WorkflowEvents => Set<WorkflowEvent>();
     public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<Integration> Integrations => Set<Integration>();
+    public DbSet<IntegrationLog> IntegrationLogs => Set<IntegrationLog>();
+    public DbSet<IntegrationRunRequest> IntegrationRunRequests => Set<IntegrationRunRequest>();
 
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<EmailAttachment> EmailAttachments => Set<EmailAttachment>();
@@ -151,5 +156,9 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
         // so it carries the tenant filter alone rather than the document's.
         builder.Entity<EmailMessage>().HasQueryFilter(m => CurrentTenantId == null || m.TenantId == CurrentTenantId);
         builder.Entity<EmailAttachment>().HasQueryFilter(a => CurrentTenantId == null || a.TenantId == CurrentTenantId);
+
+        builder.Entity<Integration>().HasQueryFilter(i => CurrentTenantId == null || i.TenantId == CurrentTenantId);
+        builder.Entity<IntegrationLog>().HasQueryFilter(l => CurrentTenantId == null || l.TenantId == CurrentTenantId);
+        builder.Entity<IntegrationRunRequest>().HasQueryFilter(r => CurrentTenantId == null || r.TenantId == CurrentTenantId);
     }
 }

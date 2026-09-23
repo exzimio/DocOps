@@ -15,11 +15,15 @@ public sealed record WorkflowValidationIssue(ValidationSeverity Severity, string
 /// </summary>
 public static class WorkflowDefinitionValidator
 {
-    /// <summary>Node types the engine cannot execute yet. Designing with them is allowed; activating is not.</summary>
-    private static readonly Dictionary<WorkflowNodeType, string> NotYetExecutable = new()
-    {
-        [WorkflowNodeType.Integration] = "fase de integrações"
-    };
+    /// <summary>
+    /// Node types the engine cannot execute yet. Designing with them is allowed; activating is not.
+    ///
+    /// Empty since the integrations phase gave every type an executor. It stays because the rule
+    /// it encodes is the useful part: a later phase that adds a node type before adding its
+    /// executor lists it here, and the designer keeps saying so instead of letting a process be
+    /// activated onto a step that would stop it.
+    /// </summary>
+    private static readonly Dictionary<WorkflowNodeType, string> NotYetExecutable = [];
 
     public static IReadOnlyList<WorkflowValidationIssue> Validate(WorkflowDefinition definition)
     {
@@ -112,6 +116,16 @@ public static class WorkflowDefinitionValidator
         {
             case WorkflowNodeType.Condition:
                 ValidateCondition(definition, node, config, issues);
+                break;
+
+            case WorkflowNodeType.Integration:
+                if (config.IntegrationKind is null)
+                {
+                    issues.Add(new WorkflowValidationIssue(
+                        ValidationSeverity.Error, "integration_missing",
+                        $"O nó '{node.Name}' não indica qual a integração a executar.", node.Key));
+                }
+
                 break;
 
             case WorkflowNodeType.HumanTask or WorkflowNodeType.Approval:

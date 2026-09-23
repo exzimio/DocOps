@@ -134,3 +134,62 @@ A correção pontual não chegava. `TenantFilterCoverageTests` passou a enumerar
 `TenantId` e a falhar, pelo nome, se alguma ficar sem filtro. As Fases 7 a 10 trazem `Integration`,
 `IntegrationLog`, `SignatureRequest` e `LegalHold`, todas com organização — e agora nenhuma delas
 pode chegar a *commit* sem filtro.
+
+## Como ficou, na prática (Fase 6 — centro de integrações)
+
+O centro de integrações estendeu esta decisão a mais cinco famílias de sistema — ERP, CRM,
+assinatura eletrónica, webhooks e importação de ficheiros — através de `IIntegrationAdapter`, que é
+o `IMailConnector` generalizado: um adaptador recebe um contexto com a organização e devolve um
+resultado com o que fez, quantos registos tocou e as linhas que quer ver no registo. Quatro
+pormenores que a decisão original não antecipava.
+
+### «Simulada» é uma afirmação mais fina do que esta ADR supunha
+
+A regra escrita acima — «uma simulação diz que é uma simulação» — pressupõe que os adaptadores se
+dividem em dois campos: reais e fingidos. Com seis adaptadores escritos, não se dividem.
+
+Só três têm um lado de lá inventado: o ERP e o CRM reconciliam contra listas fixas locais, e o
+Outlook corre sobre o `DemoMailConnector`. Os outros três fazem trabalho verdadeiro de ponta a
+ponta — a importação lê e move ficheiros reais do disco, os webhooks entregam HTTP real a um destino
+externo, e a assinatura conta os documentos que estão mesmo à espera de assinatura nesta
+organização. `IntegrationAdapterInfo.IsSimulated` é, por isso, declarado por adaptador e não pela
+família, e a `SimulationNotice` diz **o que** é simulado, não que «isto é uma demonstração».
+
+Marcar os seis como simulados teria sido uma mentira ao contrário: faria parecer teatro o que é
+código a funcionar, que é o defeito que este projeto inteiro existe para não ter. A honestidade
+corta nos dois sentidos — não alegar mais do que se faz, e não alegar menos.
+
+### Os contadores vivem no executor, nunca nos adaptadores
+
+Um adaptador devolve um `IntegrationRunResult`; quem escreve `Status`, `RecordsProcessed`,
+`ErrorCount` e `LastRunAtUtc` na linha da integração é o `IntegrationExecutor`, a partir desse
+resultado. A separação é deliberada: se cada adaptador escrevesse o seu próprio estado, um adaptador
+podia declarar-se «Ligada» sem ter feito nada, e o cartão passaria a ser a opinião do adaptador
+sobre si mesmo em vez do registo do que aconteceu. O executor também é quem apanha a exceção de um
+adaptador e a converte em estado «Com falha» com a mensagem — nunca a pilha, que traria internos
+para o ecrã.
+
+### O nó de integração não chama nada dentro da transação do motor
+
+Uma travessia do grafo é uma transação ([ADR-006](ADR-006-workflow-engine.md)). Uma chamada a um
+sistema externo lá dentro manteria essa transação aberta enquanto se espera pela rede, e uma
+integração lenta passaria a ser um problema de base de dados. `IntegrationNodeExecutor` enfileira um
+`IntegrationRunRequest`, devolve `NodeResult.Wait()` e larga a transação; o worker corre o pedido e
+chama `WorkflowEngine.ResumeAsync`. É a mesma forma que a Fase 5 deu aos nós de IA, replicada de
+propósito: dois mecanismos diferentes para o mesmo problema seriam duas coisas para depurar.
+
+Com isto, o nó `Integration` deixou de ser o último tipo que falhava de forma explícita, e o
+dicionário `NotYetExecutable` do validador ficou vazio — todos os tipos de nó que o desenhador
+oferece são agora executáveis.
+
+### O destino do webhook é validado no servidor porque é uma superfície de SSRF
+
+Um administrador a escrever um endereço que **este** servidor vai depois chamar é exatamente a forma
+de um pedido forjado do lado do servidor. `WebhookEndpoint.IsAcceptable` exige HTTPS e recusa
+*loopback* e as gamas privadas, e corre no `PUT` — antes de o endereço ser guardado, não só na
+entrega. O diálogo do browser valida também, mas só para a mensagem; a verificação que conta é a que
+o cliente não pode contornar.
+
+Em troca, as definições de uma integração são explicitamente **não secretas**: nenhuma credencial é
+guardada em `SettingsJson`. É essa decisão que permite ao cartão mostrar o endereço já configurado
+sem expor nada — e sem ela, o formulário teria de fingir que não sabe o que guardou.

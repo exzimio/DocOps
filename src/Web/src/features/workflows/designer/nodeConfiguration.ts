@@ -15,6 +15,18 @@ export type ConditionOperator =
 
 export type TaskPriority = 'Low' | 'Normal' | 'High' | 'Critical'
 
+/** Mirrors DocOps.Domain.Integrations.IntegrationKind. */
+export const IntegrationKind = {
+  MicrosoftOutlook: 0,
+  Erp: 1,
+  Crm: 2,
+  ElectronicSignature: 3,
+  Webhooks: 4,
+  FileImport: 5,
+} as const
+
+export type IntegrationKindValue = (typeof IntegrationKind)[keyof typeof IntegrationKind]
+
 export type DocumentStatusName =
   | 'Draft'
   | 'InReview'
@@ -58,6 +70,7 @@ export interface NodeConfiguration {
   documentStatus?: DocumentStatusName | null
   outcome?: string | null
   endsAsRejected?: boolean
+  integrationKind?: IntegrationKindValue | null
 }
 
 export function parseConfiguration(configJson: string | null | undefined): NodeConfiguration {
@@ -105,6 +118,15 @@ export const operatorOptions: ConditionOperator[] = [
   'IsNotEmpty',
 ]
 
+export const integrationKindOptions: IntegrationKindValue[] = [
+  IntegrationKind.MicrosoftOutlook,
+  IntegrationKind.Erp,
+  IntegrationKind.Crm,
+  IntegrationKind.ElectronicSignature,
+  IntegrationKind.Webhooks,
+  IntegrationKind.FileImport,
+]
+
 export const documentStatusOptions: DocumentStatusName[] = [
   'InReview',
   'PendingApproval',
@@ -114,6 +136,20 @@ export const documentStatusOptions: DocumentStatusName[] = [
   'Signed',
   'Archived',
 ]
+
+/**
+ * Short, fixed labels for the canvas summary — not translated, like the other hard-coded words this
+ * function already returns ("proprietário", "responsável do departamento"): the summary is a glance
+ * at a node, and the full name lives in the properties panel, which does go through i18next.
+ */
+const integrationKindLabels: Record<IntegrationKindValue, string> = {
+  [IntegrationKind.MicrosoftOutlook]: 'Microsoft Outlook',
+  [IntegrationKind.Erp]: 'ERP',
+  [IntegrationKind.Crm]: 'CRM',
+  [IntegrationKind.ElectronicSignature]: 'Assinatura eletrónica',
+  [IntegrationKind.Webhooks]: 'Webhooks',
+  [IntegrationKind.FileImport]: 'Importação de ficheiros',
+}
 
 /** A one-line description of what a node does, shown under its name on the canvas. */
 export function describeConfiguration(
@@ -155,6 +191,11 @@ export function describeConfiguration(
 
     case WorkflowNodeType.End:
       return configuration.outcome ?? undefined
+
+    case WorkflowNodeType.Integration:
+      return configuration.integrationKind !== undefined && configuration.integrationKind !== null
+        ? integrationKindLabels[configuration.integrationKind]
+        : undefined
 
     default:
       return undefined
