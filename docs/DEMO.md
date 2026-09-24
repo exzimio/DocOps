@@ -620,6 +620,58 @@ interna, que já dizia que um utilizador externo alcança um documento apenas po
 concessão explícita. Dois conjuntos de regras sobre os mesmos documentos acabariam por divergir — e
 quando divergem, é sempre o mais permissivo que ganha.
 
+## Demonstração disponível na Fase 7 — Assinatura eletrónica (≈3 minutos)
+
+> **Diga isto em voz alta antes de mostrar o ecrã:** esta funcionalidade **não tem validade legal**.
+> Não é uma assinatura qualificada nem avançada — não há chave privada sob controlo do signatário,
+> nem certificado, nem carimbo temporal independente. É um registo de que alguém concordou com um
+> conteúdo identificado. O ecrã diz o mesmo, no topo, antes de tudo o resto.
+
+### 1. Pedir (1 min)
+
+Como `admin@asteria.example`, abra um documento aprovado e vá ao separador **Assinaturas**.
+
+A primeira coisa visível é o aviso. É deliberado que ocupe espaço: tudo o que está por baixo
+parece-se exatamente com uma funcionalidade que produz assinaturas juridicamente vinculativas.
+
+Escolha quem assina e peça. Repare no que acontece ao documento: passa a **«Aguarda assinatura»**, e
+o pedido mostra a **versão** e o **resumo SHA-256 completo** do conteúdo.
+
+Experimente escolher alguém que não tenha acesso ao documento. É recusado, com a indicação de que é
+preciso conceder-lhe acesso primeiro — um pedido que a pessoa nunca poderia cumprir ficaria na lista
+dela a devolver recusas para sempre.
+
+### 2. Só quem foi nomeado assina (45 s)
+
+Ainda como administrador — que detém **todas** as permissões da organização — tente assinar. É
+recusado.
+
+Vale a pena parar aqui numa entrevista. Não é uma falha de permissões: é a afirmação de que uma
+assinatura é a declaração de uma pessoa sobre um documento, e não existe sentido útil em que seja
+feita por procuração. Nenhuma antiguidade contorna isto.
+
+Entre com a conta do signatário e assine. O documento passa a **«Assinado»** e o registo ganha a
+data e o resumo do conteúdo assinado.
+
+### 3. O que torna o registo verificável (1 min)
+
+Este é o ponto técnico da funcionalidade.
+
+O pedido **fixou a versão** e copiou o resumo do conteúdo. Se alguém carregar uma versão nova, o
+registo **não é apagado nem re-apontado**: passa a mostrar que já não corresponde ao conteúdo atual.
+
+São três leituras possíveis e só uma é verdadeira — apagar seria perder prova, re-apontar em silêncio
+seria falsificá-la, e dizer «já não corresponde» é o que de facto aconteceu.
+
+E a verificação não depende de confiar na aplicação: descarregue o ficheiro, calcule-lhe o SHA-256 e
+compare com o que está no ecrã.
+
+### 4. O histórico (15 s)
+
+Abra o separador **Auditoria** do mesmo documento. Lá estão `signature.requested` e
+`signature.signed`, com quem, quando e sobre que versão — no sítio onde as pessoas procuram a
+história de um documento, e não escondidas num registo separado de assinaturas.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

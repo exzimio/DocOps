@@ -194,6 +194,12 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Fornecedor a aprovar a sua própria fatura | Responder a um pedido de informação acrescenta informação e não move o processo; a decisão é de quem perguntou |
 | Mensagens não solicitadas de um externo no processo | Só se responde a um pedido de informação em aberto; sem pergunta, o servidor recusa com `409` |
 | Utilizador interno a usar o portal, ou externo a usar a aplicação | Nenhum perfil interno detém `portal.access`, nem o de administrador; a reencaminhação no cliente é conveniência, a recusa é do servidor |
+| **Assinatura apresentada como juridicamente válida** | O aviso de que é uma demonstração sem validade legal aparece no topo do painel de assinatura, não em rodapé; nenhuma resposta da API alega o contrário (ADR-009) |
+| Assinar em nome de outra pessoa | Só o signatário nomeado assina, comparado por identificador no servidor. Nenhuma permissão, nem a de administrador da organização, contorna a regra |
+| Assinatura re-apontada para conteúdo que ninguém consentiu | O pedido fixa a versão e o resumo do conteúdo; assinar é recusado se divergirem, e uma versão posterior faz o registo deixar de corresponder em vez de o reescrever |
+| Direitos de edição distribuídos só para recolher assinaturas | Assinar exige ver o documento, não editá-lo: a transição de estado é validada pelo ciclo de vida, não pelos direitos de quem age |
+| Pedido de assinatura que ninguém pode cumprir | Recusado ao pedir, quer o signatário não veja o documento, quer não tenha permissão para assinar |
+| Dúvida sobre se um documento está assinado | No máximo um pedido em aberto por documento, garantido por índice único filtrado na base de dados |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |
@@ -217,6 +223,10 @@ sessão não alcançaria diretamente.
   adição).
 - Sem rotação automática das chaves de proteção de dados em ambiente distribuído — em produção seria
   necessário um repositório de chaves partilhado.
-- A assinatura eletrónica (Fase 7) é uma demonstração funcional e **não tem qualquer validade legal**.
+- A assinatura eletrónica é uma demonstração funcional e **não tem qualquer validade legal**: não há
+  chave privada sob controlo do signatário, nem certificado, nem carimbo temporal independente — os
+  três elementos que distinguem uma assinatura avançada de um registo. Ver
+  [ADR-009](adr/ADR-009-electronic-signature.md), que explica também porque não se gerou um par de
+  chaves na aplicação: seria mais convincente e igualmente sem valor.
 - O fornecedor de IA de demonstração é determinístico e está identificado como tal: nenhuma resposta
   de demonstração é apresentada como tendo sido gerada por um modelo real.

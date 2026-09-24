@@ -50,7 +50,7 @@ benefício teórico. Ver [ADR-002](adr/ADR-002-authentication.md).
 | Email / Inbox | Caixa de entrada e processamento de anexos | 6 ✅ |
 | Integrations | Adaptadores externos, execução e registo por organização | 6 ✅ |
 | External Portal | Submissões de parceiros e o seu acompanhamento | 7 ✅ |
-| Electronic Signature | Pedidos e estados de assinatura | 7 |
+| Electronic Signature | Pedidos e estados de assinatura | 7 ✅ |
 | Reporting & Analytics | Indicadores e gráficos a partir de dados reais | 8 |
 | Notifications | Notificações e escalonamentos | 3 ✅ |
 | Administration | Gestão de utilizadores, perfis, departamentos e definições | 8 |
@@ -424,6 +424,27 @@ reencaminha quem está do lado errado, e o servidor recusa de qualquer forma, po
 interno detém `portal.access` e nenhum externo detém o que a aplicação interna exige.
 
 Detalhes e alternativas rejeitadas em [ADR-008](adr/ADR-008-external-portal.md).
+
+## 10.6 Assinatura eletrónica
+
+**Demonstração de portefólio, sem validade legal.** Não é uma assinatura qualificada nem avançada: o
+que existe é um registo de que uma pessoa concordou, num momento, com um conteúdo identificado por
+resumo.
+
+**A ligação ao conteúdo é o que torna o registo útil.** O pedido fixa `DocumentVersionId` e copia o
+`ContentHash` dessa versão. Assinar compara; se divergir, recusa. Uma versão posterior não reescreve
+o registo — `ContentStillMatches` passa a falso, que é a única das três leituras possíveis que é
+verdadeira (as outras seriam apagar a prova, ou re-apontá-la em silêncio para conteúdo que ninguém
+consentiu).
+
+**Assinar não é editar.** A transição do documento para «assinado» é aplicada diretamente, validada
+pelo `DocumentLifecycle` e não pelos direitos de quem age — exatamente como o motor de workflow
+aplica estados. Exigir `Edit` obrigaria a distribuir direitos de edição só para recolher assinaturas.
+
+**Assinar é pessoal.** `SignatureLifecycle.CanSign` compara o utilizador com o signatário nomeado, e
+mais nada: nenhuma permissão contorna isso.
+
+Detalhes e alternativas rejeitadas em [ADR-009](adr/ADR-009-electronic-signature.md).
 
 ## 11. Processamento em segundo plano
 

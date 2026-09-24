@@ -44,7 +44,7 @@ vem da base de dados através da API.
 | 4 | Designer visual de workflow | **Concluída** |
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
-| 7 | Portal externo e assinatura eletrónica | Em curso (portal feito) |
+| 7 | Portal externo e assinatura eletrónica | **Concluída** |
 | 8 | Relatórios e administração | Planeada |
 | 9 | Testes, segurança e observabilidade | Planeada |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
@@ -216,7 +216,7 @@ vem da base de dados através da API.
   do motor e o worker retoma a instância quando a execução termina. Com ele, **nenhum tipo de nó do
   desenhador falha já por não estar implementado**.
 
-### Entregue na Fase 7 (em curso)
+### Entregue na Fase 7
 
 **Portal externo**
 
@@ -242,12 +242,35 @@ vem da base de dados através da API.
 - **Responder não faz o processo avançar.** Quem decide é quem perguntou — um fornecedor não aprova
   a sua própria fatura respondendo a uma questão sobre ela. A resposta notifica quem perguntou.
 
+**Assinatura eletrónica**
+
+- **Demonstração de portefólio: não tem validade legal**, e o aviso está no topo do painel, antes de
+  tudo o resto. Não é uma assinatura qualificada nem avançada — nada é assinado com chave privada e
+  não há autoridade de certificação envolvida.
+- O que fica registado é verificável sem confiar na aplicação: o pedido **fixa a versão** e copia o
+  **resumo SHA-256** do conteúdo, e o painel mostra-o por extenso.
+- Assinar é **recusado se o conteúdo mudou** entretanto: consentir um documento é consentir o seu
+  conteúdo. E uma versão nova depois de assinado não apaga nem re-aponta o registo — fá-lo deixar de
+  corresponder, e o ecrã di-lo.
+- **Só a pessoa nomeada assina.** Nem o administrador da organização, que detém todas as permissões,
+  assina em nome de outra. Assinar também **não exige poder editar**: quem é chamado a assinar
+  precisa de ver o documento, não de o alterar.
+- Um pedido que ninguém poderia cumprir é recusado no momento em que se pede — seja porque o
+  signatário não vê o documento, seja porque não tem permissão para assinar.
+- Cada passo fica no **histórico do documento**, que é onde se procura: quem pediu, quem assinou ou
+  recusou, sobre que versão e com que resumo.
+- Nó **`SignatureRequest`** no desenhador de workflows, que espera por uma pessoa como qualquer
+  tarefa humana; um grupo é resolvido para um signatário concreto, porque «o departamento assinou»
+  não é uma afirmação sustentável.
+
+Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signature.md).
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 319 |
-| Integração com SQL Server real (Testcontainers) | 128 |
+| Unitários (xUnit) | 325 |
+| Integração com SQL Server real (Testcontainers) | 136 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 57 |
 | End-to-end (Playwright, desktop e móvel) | 90 |
 
@@ -533,6 +556,9 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/portal/submissions` | Submete um documento (multipart); exige `portal.submit` |
 | `POST /api/portal/submissions/{id}/information` | Responde a um pedido de informação em aberto |
 | `GET /api/portal/submissions/{id}/content` | Descarrega o ficheiro que o próprio parceiro enviou |
+| `GET /api/documents/{id}/signatures` · `POST` | Pedidos de assinatura de um documento, e criar um |
+| `GET /api/signatures/mine` | O que aguarda a assinatura de quem pergunta |
+| `POST /api/signatures/{id}/sign` · `/decline` · `/cancel` | Assinar, recusar com motivo, retirar o pedido |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow
