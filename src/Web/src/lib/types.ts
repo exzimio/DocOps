@@ -77,6 +77,7 @@ export const Permission = {
   integrationsManage: 'integrations.manage',
   auditView: 'audit.view',
   reportsView: 'reports.view',
+  reportsExport: 'reports.export',
   adminUsers: 'admin.users',
   signaturesRequest: 'signatures.request',
   signaturesSign: 'signatures.sign',

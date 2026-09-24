@@ -29,6 +29,11 @@
   --color-teal-500: #1f9f93;
   --color-teal-600: #128078;
   --color-teal-700: #106661;
+
+  /* Cor das marcas dos gráficos. Validada contra a superfície de cada modo: no claro, o teal-500
+     mantém croma suficiente para não ler como cinzento; no escuro sobe um passo para aguentar o
+     contraste. Cada gráfico traz uma série só, por isso não há paleta categórica a separar. */
+  --chart-line: #1f9f93;
   --color-teal-800: #10514e;
   --color-teal-900: #0f4341;
   --color-teal-950: #042726;
@@ -71,6 +76,9 @@
 }
 
 [data-theme='dark'] {
+  /* Um passo mais claro, para aguentar o contraste contra a superfície escura. */
+  --chart-line: #3fbcac;
+
   --surface-canvas: var(--color-graphite-950);
   --surface-raised: var(--color-graphite-900);
   --surface-sunken: #1a1f26;

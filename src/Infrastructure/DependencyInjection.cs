@@ -3,6 +3,7 @@ using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Inbox;
 using DocOps.Application.Portal;
+using DocOps.Application.Reporting;
 using DocOps.Application.Signatures;
 using DocOps.Application.Integrations;
 using DocOps.Application.Intelligence;
@@ -16,6 +17,7 @@ using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
 using DocOps.Infrastructure.Inbox;
 using DocOps.Infrastructure.Portal;
+using DocOps.Infrastructure.Reporting;
 using DocOps.Infrastructure.Signatures;
 using DocOps.Infrastructure.Integrations;
 using DocOps.Infrastructure.Intelligence;
@@ -79,6 +81,7 @@ public static class DependencyInjection
         AddIntegrations(services);
         AddPortal(services);
         AddSignatures(services);
+        AddReporting(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -204,6 +207,13 @@ public static class DependencyInjection
         services.AddScoped<IIntegrationService, IntegrationService>();
         services.AddScoped<IIntegrationRunner, IntegrationRunner>();
         services.AddScoped<IntegrationQueueProcessor>();
+    }
+
+    private static void AddReporting(IServiceCollection services)
+    {
+        // Every dashboard figure is a query, restricted to what the caller may see. There is
+        // deliberately nothing here that stores or caches a number.
+        services.AddScoped<IReportingService, ReportingService>();
     }
 
     private static void AddSignatures(IServiceCollection services)

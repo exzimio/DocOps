@@ -957,5 +957,47 @@
       "reasonHint": "Mostrado a quem vai assinar, antes de decidir.",
       "action": "Pedir assinatura"
     }
+  },
+  "reports": {
+    "title": "Análises",
+    "subtitle": "Indicadores calculados a partir dos dados reais, limitados ao que pode ver.",
+    "range": "Período",
+    "lastDays": "{{count}} dias",
+    "export": "Exportar CSV",
+    "indicators": "Indicadores",
+    "trends": "Tendências",
+    "distribution": "Distribuição",
+    "empty": "Sem dados no período.",
+    "noBasis": "Sem base de cálculo no período.",
+    "versusPrevious": "{{value}} face ao período anterior",
+    "scopedNotice": "Estes números contam apenas o que tem permissão para ver. Quem vê mais documentos vê totais maiores.",
+    "byType": "Documentos por tipo",
+    "byDepartment": "Documentos por departamento",
+    "byStatus": "Documentos por estado",
+    "metrics": {
+      "documents.total": "Documentos criados",
+      "workflows.started": "Processos iniciados",
+      "workflows.active": "Processos em curso",
+      "workflows.completed": "Processos concluídos",
+      "workflows.averageHours": "Tempo médio de processo",
+      "workflows.automationRate": "Concluídos sem decisão humana",
+      "tasks.overdue": "Tarefas em atraso",
+      "tasks.approvalHours": "Tempo médio de aprovação",
+      "ai.acceptanceRate": "Sugestões de IA aceites"
+    },
+    "series": {
+      "documents.created": "Documentos criados por dia",
+      "workflows.started": "Processos iniciados por dia",
+      "workflows.completed": "Processos concluídos por dia"
+    },
+    "bottlenecks": {
+      "title": "Onde os processos param",
+      "description": "Os passos com mais trabalho à espera, e há quanto tempo espera o mais antigo.",
+      "empty": "Nenhum passo com trabalho à espera.",
+      "step": "Passo",
+      "open": "Em aberto",
+      "overdue": "Em atraso",
+      "longest": "Espera mais longa"
+    }
   }
 }

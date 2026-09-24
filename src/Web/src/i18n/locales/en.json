@@ -957,5 +957,47 @@
       "reasonHint": "Shown to the signer before they decide.",
       "action": "Request signature"
     }
+  },
+  "reports": {
+    "title": "Analytics",
+    "subtitle": "Indicators computed from real data, limited to what you may see.",
+    "range": "Period",
+    "lastDays": "{{count}} days",
+    "export": "Export CSV",
+    "indicators": "Indicators",
+    "trends": "Trends",
+    "distribution": "Distribution",
+    "empty": "No data in this period.",
+    "noBasis": "Nothing to measure in this period.",
+    "versusPrevious": "{{value}} against the previous period",
+    "scopedNotice": "These figures count only what you have permission to see. Someone who sees more documents sees larger totals.",
+    "byType": "Documents by type",
+    "byDepartment": "Documents by department",
+    "byStatus": "Documents by status",
+    "metrics": {
+      "documents.total": "Documents created",
+      "workflows.started": "Processes started",
+      "workflows.active": "Processes running",
+      "workflows.completed": "Processes completed",
+      "workflows.averageHours": "Average process time",
+      "workflows.automationRate": "Completed with no human decision",
+      "tasks.overdue": "Overdue tasks",
+      "tasks.approvalHours": "Average approval time",
+      "ai.acceptanceRate": "AI suggestions accepted"
+    },
+    "series": {
+      "documents.created": "Documents created per day",
+      "workflows.started": "Processes started per day",
+      "workflows.completed": "Processes completed per day"
+    },
+    "bottlenecks": {
+      "title": "Where processes stall",
+      "description": "The steps with the most work waiting, and how long the oldest has waited.",
+      "empty": "No step has work waiting.",
+      "step": "Step",
+      "open": "Open",
+      "overdue": "Overdue",
+      "longest": "Longest wait"
+    }
   }
 }

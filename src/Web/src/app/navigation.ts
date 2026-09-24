@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  ChartColumn,
   CheckSquare,
   FileText,
   GitBranch,
@@ -80,6 +81,12 @@ export const navigationSections: NavSection[] = [
   {
     labelKey: 'nav.sectionGovernance',
     items: [
+      {
+        labelKey: 'nav.reports',
+        to: '/app/reports',
+        icon: ChartColumn,
+        permission: Permission.reportsView,
+      },
       {
         labelKey: 'nav.integrations',
         to: '/app/integrations',
