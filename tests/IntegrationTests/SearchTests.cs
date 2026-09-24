@@ -48,8 +48,15 @@ public class SearchTests(DocOpsApiFactory factory)
 
         SearchResultDto result = await SearchAsync(vertice, "query=fatura&pageSize=100");
 
-        Assert.Equal(0, result.Page.TotalCount);
-        Assert.Empty(result.Page.Items);
+        // Identidade, não contagem: a segunda organização pode legitimamente vir a ter faturas
+        // próprias, criadas por outra suite. O que nunca pode acontecer é encontrar as da primeira.
+        HttpClient asteria = await factory.SignInAsync(TenantAdmin);
+        SearchResultDto theirs = await SearchAsync(asteria, "query=fatura&pageSize=100");
+
+        Assert.NotEmpty(theirs.Page.Items);
+        Assert.DoesNotContain(
+            result.Page.Items,
+            item => theirs.Page.Items.Any(other => other.Document.Id == item.Document.Id));
     }
 
     /// <summary>

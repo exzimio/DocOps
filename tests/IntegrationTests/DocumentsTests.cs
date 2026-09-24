@@ -76,7 +76,17 @@ public class DocumentsTests(DocOpsApiFactory factory)
             await vertice.GetFromJsonAsync<PagedResult<DocumentListItemDto>>("/api/documents?pageSize=100", Json);
 
         Assert.NotNull(result);
-        Assert.Equal(0, result.TotalCount);
+
+        // Identidade, não contagem. "Zero documentos" é uma afirmação sobre o que mais ninguém
+        // criou, e parte no dia em que um teste de administração criar algo nesta organização —
+        // já aconteceu duas vezes neste projeto. O que tem de valer é que nenhuma linha atravessa.
+        HttpClient asteria = await factory.SignInAsync(Administrator);
+        PagedResult<DocumentListItemDto>? theirs =
+            await asteria.GetFromJsonAsync<PagedResult<DocumentListItemDto>>("/api/documents?pageSize=200", Json);
+
+        Assert.NotNull(theirs);
+        Assert.NotEmpty(theirs.Items);
+        Assert.DoesNotContain(result.Items, item => theirs.Items.Any(other => other.Id == item.Id));
     }
 
     [Fact]
