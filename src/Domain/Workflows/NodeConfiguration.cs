@@ -67,6 +67,16 @@ public sealed record NodeConfiguration
     /// <summary>Which integration an integration step runs. Required by that node type.</summary>
     public IntegrationKind? IntegrationKind { get; init; }
 
+    /// <summary>
+    /// For a signature step: who is asked to sign. Reuses the same assignment shape as a human task,
+    /// because "who does this" is the same question — but only a single named person can sign, so a
+    /// department or role is resolved to one user when the step runs.
+    /// </summary>
+    public AssignmentConfiguration? Signer { get; init; }
+
+    /// <summary>Shown to the signer before they decide.</summary>
+    public string? SignatureReason { get; init; }
+
     /// <summary>Outcome recorded on the instance when an end node is reached.</summary>
     public string? Outcome { get; init; }
 

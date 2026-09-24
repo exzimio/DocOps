@@ -3,6 +3,7 @@ using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Inbox;
 using DocOps.Application.Portal;
+using DocOps.Application.Signatures;
 using DocOps.Application.Integrations;
 using DocOps.Application.Intelligence;
 using DocOps.Application.Search;
@@ -15,6 +16,7 @@ using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
 using DocOps.Infrastructure.Inbox;
 using DocOps.Infrastructure.Portal;
+using DocOps.Infrastructure.Signatures;
 using DocOps.Infrastructure.Integrations;
 using DocOps.Infrastructure.Intelligence;
 using DocOps.Infrastructure.Persistence;
@@ -76,6 +78,7 @@ public static class DependencyInjection
         AddInbox(services);
         AddIntegrations(services);
         AddPortal(services);
+        AddSignatures(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -140,6 +143,7 @@ public static class DependencyInjection
         services.AddScoped<INodeExecutor, ParallelBranchNodeExecutor>();
         services.AddScoped<INodeExecutor, JoinNodeExecutor>();
         services.AddScoped<INodeExecutor, DelayNodeExecutor>();
+        services.AddScoped<INodeExecutor, SignatureNodeExecutor>();
         services.AddScoped<INodeExecutor, NotificationNodeExecutor>();
 
         services.AddScoped<INodeExecutor>(provider => new HumanTaskNodeExecutor(
@@ -200,6 +204,13 @@ public static class DependencyInjection
         services.AddScoped<IIntegrationService, IntegrationService>();
         services.AddScoped<IIntegrationRunner, IntegrationRunner>();
         services.AddScoped<IntegrationQueueProcessor>();
+    }
+
+    private static void AddSignatures(IServiceCollection services)
+    {
+        // A portfolio demonstration with no legal validity: the service keeps an honest record of
+        // who agreed to what content, and refuses to let that record drift from the document.
+        services.AddScoped<ISignatureService, SignatureService>();
     }
 
     private static void AddPortal(IServiceCollection services)

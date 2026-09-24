@@ -24,7 +24,13 @@ public enum WorkflowNodeType
     AiExtraction = 10,
 
     /// <summary>Implemented in the integrations phase.</summary>
-    Integration = 11
+    Integration = 11,
+
+    /// <summary>
+    /// Asks a named person to sign the document the process is running on, and waits. Implemented in
+    /// the signature phase; the brief's contract-review example ends on one of these.
+    /// </summary>
+    SignatureRequest = 12
 }
 
 public enum WorkflowTriggerType

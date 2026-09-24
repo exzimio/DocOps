@@ -6,6 +6,7 @@ using DocOps.Domain.Documents;
 using DocOps.Domain.Identity;
 using DocOps.Domain.Inbox;
 using DocOps.Domain.Integrations;
+using DocOps.Domain.Signatures;
 using DocOps.Domain.Intelligence;
 using DocOps.Domain.Notifications;
 using DocOps.Domain.Tenancy;
@@ -54,6 +55,8 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<Integration> Integrations => Set<Integration>();
     public DbSet<IntegrationLog> IntegrationLogs => Set<IntegrationLog>();
     public DbSet<IntegrationRunRequest> IntegrationRunRequests => Set<IntegrationRunRequest>();
+
+    public DbSet<SignatureRequest> SignatureRequests => Set<SignatureRequest>();
 
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<EmailAttachment> EmailAttachments => Set<EmailAttachment>();
@@ -160,5 +163,6 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
         builder.Entity<Integration>().HasQueryFilter(i => CurrentTenantId == null || i.TenantId == CurrentTenantId);
         builder.Entity<IntegrationLog>().HasQueryFilter(l => CurrentTenantId == null || l.TenantId == CurrentTenantId);
         builder.Entity<IntegrationRunRequest>().HasQueryFilter(r => CurrentTenantId == null || r.TenantId == CurrentTenantId);
+        builder.Entity<SignatureRequest>().HasQueryFilter(r => CurrentTenantId == null || r.TenantId == CurrentTenantId);
     }
 }

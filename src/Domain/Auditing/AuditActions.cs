@@ -72,6 +72,11 @@ public static class AuditActions
     public const string IntegrationRun = "integration.run";
     public const string IntegrationConfigured = "integration.configured";
 
+    public const string SignatureRequested = "signature.requested";
+    public const string SignatureSigned = "signature.signed";
+    public const string SignatureDeclined = "signature.declined";
+    public const string SignatureCancelled = "signature.cancelled";
+
     public const string PortalDocumentSubmitted = "portal.document.submitted";
     public const string PortalInformationProvided = "portal.information.provided";
 
@@ -95,4 +100,5 @@ public static class AuditEntityTypes
     public const string WorkflowTask = "WorkflowTask";
     public const string EmailMessage = "EmailMessage";
     public const string Integration = "Integration";
+    public const string SignatureRequest = "SignatureRequest";
 }

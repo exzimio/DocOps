@@ -166,4 +166,7 @@ public static class WorkflowEventTypes
     /// instead of being told elsewhere that an answer exists.
     /// </summary>
     public const string InformationProvided = "information.provided";
+
+    public const string SignatureRequested = "signature.requested";
+    public const string SignatureCompleted = "signature.completed";
 }

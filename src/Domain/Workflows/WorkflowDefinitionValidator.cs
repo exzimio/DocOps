@@ -128,6 +128,28 @@ public static class WorkflowDefinitionValidator
 
                 break;
 
+            case WorkflowNodeType.SignatureRequest:
+                if (config.Signer is null && config.Assignment is null)
+                {
+                    issues.Add(new WorkflowValidationIssue(
+                        ValidationSeverity.Error, "signer_missing",
+                        $"O nó '{node.Name}' não indica quem assina.", node.Key));
+                }
+                else if ((config.Signer ?? config.Assignment) is { Strategy: not AssignmentStrategy.User })
+                {
+                    // Resolving a department or a role to one person happens at run time, and may
+                    // fail then. A warning rather than an error: it is a legitimate way to design a
+                    // process, it just cannot be checked before it runs.
+                    issues.Add(new WorkflowValidationIssue(
+                        ValidationSeverity.Warning, "signer_not_a_person",
+                        $"O nó '{node.Name}' aponta para um grupo. Uma assinatura é de uma pessoa: "
+                        + "o grupo será resolvido para um signatário concreto quando o passo correr, "
+                        + "e o processo falha se não resolver.",
+                        node.Key));
+                }
+
+                break;
+
             case WorkflowNodeType.HumanTask or WorkflowNodeType.Approval:
                 if (config.Assignment is null)
                 {
