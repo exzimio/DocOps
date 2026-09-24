@@ -49,6 +49,7 @@ benefício teórico. Ver [ADR-002](adr/ADR-002-authentication.md).
 | Search | Pesquisa por metadados, texto integral e linguagem natural | 6 ✅ |
 | Email / Inbox | Caixa de entrada e processamento de anexos | 6 ✅ |
 | Integrations | Adaptadores externos, execução e registo por organização | 6 ✅ |
+| External Portal | Submissões de parceiros e o seu acompanhamento | 7 ✅ |
 | Electronic Signature | Pedidos e estados de assinatura | 7 |
 | Reporting & Analytics | Indicadores e gráficos a partir de dados reais | 8 |
 | Notifications | Notificações e escalonamentos | 3 ✅ |
@@ -397,6 +398,32 @@ não faz parte do trilho imutável. O que vai para a auditoria é o facto de alg
 reconfigurado a integração, não cada linha do que o adaptador relatou.
 
 Detalhes e alternativas rejeitadas em [ADR-007](adr/ADR-007-external-connectors.md).
+
+## 10.5 Portal externo
+
+A primeira vez que o produto deixa entrar alguém de fora da organização, e a única parte da
+aplicação cuja audiência não é um colaborador.
+
+**Não tem autorização própria.** `PortalService` filtra com
+`DocumentAccessResolver.BuildVisibilityPredicate` — o mesmo predicado da listagem interna, que já
+concede a um utilizador externo apenas o que ele possui ou lhe foi explicitamente concedido, nunca
+por rótulo de sensibilidade. Dois conjuntos de regras sobre os mesmos documentos acabariam por
+divergir, e quando divergem é o mais permissivo que prevalece.
+
+**Os contratos são tipos próprios.** `PortalSubmissionDto` não é o `DocumentListItemDto` com menos
+campos: é um tipo diferente, projetado à mão. A repetição é o preço; o que se compra é que um campo
+acrescentado do lado interno não atravesse sozinho no dia em que alguém o acrescenta.
+
+**A cronologia é construída por seleção, não por exclusão.** O fornecedor vê os eventos
+`information.requested` e `information.provided`, nomeados um a um. Uma lista construída como «tudo
+menos o que é interno» deixaria entrar, por omissão, o tipo de evento que a próxima fase
+acrescentar.
+
+**A separação corre nos dois sentidos**, e é navegação por cima de autorização: `RequirePortal`
+reencaminha quem está do lado errado, e o servidor recusa de qualquer forma, porque nenhum perfil
+interno detém `portal.access` e nenhum externo detém o que a aplicação interna exige.
+
+Detalhes e alternativas rejeitadas em [ADR-008](adr/ADR-008-external-portal.md).
 
 ## 11. Processamento em segundo plano
 

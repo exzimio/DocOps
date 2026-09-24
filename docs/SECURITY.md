@@ -188,6 +188,12 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Estado de integração inventado pelo próprio adaptador | Os contadores e o estado são escritos pelo executor a partir do resultado devolvido, nunca pelo adaptador — um adaptador não se pode declarar «Ligada» sem ter feito nada |
 | Interior do servidor exposto pela falha de uma integração | A exceção de um adaptador vira uma linha de registo com a **mensagem**, nunca a pilha |
 | Trabalho simulado apresentado como real, ou trabalho real apresentado como simulação | `IsSimulated` é declarado adaptador a adaptador e o aviso diz **o que** é simulado; os três adaptadores que fazem trabalho verdadeiro não se rotulam de demonstração |
+| **Utilizador externo a ver documentos que não são seus** | O portal usa o mesmo avaliador de acesso da aplicação interna, que concede a um externo apenas o que ele possui ou lhe foi explicitamente concedido — nunca por classificação. O portal não tem regras próprias que pudessem divergir |
+| Nota interna a chegar a um fornecedor por um DTO partilhado | Os contratos do portal são tipos próprios, escritos à mão. Um campo acrescentado a um DTO interno não é servido ao portal porque não é o mesmo tipo |
+| Evento interno novo a aparecer no portal por omissão | A conversa é construída selecionando dois tipos de evento pelo nome, nunca por exclusão: uma lista por exclusão falha aberta |
+| Fornecedor a aprovar a sua própria fatura | Responder a um pedido de informação acrescenta informação e não move o processo; a decisão é de quem perguntou |
+| Mensagens não solicitadas de um externo no processo | Só se responde a um pedido de informação em aberto; sem pergunta, o servidor recusa com `409` |
+| Utilizador interno a usar o portal, ou externo a usar a aplicação | Nenhum perfil interno detém `portal.access`, nem o de administrador; a reencaminhação no cliente é conveniência, a recusa é do servidor |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

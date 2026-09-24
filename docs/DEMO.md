@@ -539,6 +539,87 @@ processo quando ela termina. Uma chamada de rede dentro da travessia do grafo ma
 de base de dados aberta à espera da Internet — e uma integração lenta passaria a ser um problema de
 base de dados.
 
+## Demonstração disponível na Fase 7 — Portal externo (≈4 minutos)
+
+Entre como `contacto@northstar.example`. É a única conta de demonstração que não é de um colaborador
+da organização: representa a **Northstar Supplies**, um fornecedor.
+
+### 1. Uma porta diferente para quem vem de fora (45 s)
+
+Repare para onde o início de sessão o leva: **`/portal`**, não `/app/dashboard`. E olhe para o que
+não está lá — sem Documentos, sem Tarefas, sem Workflows, sem Caixa de entrada, sem sino de
+notificações. Um convidado não deve conseguir deduzir, só pela moldura, que ecrãs a organização tem
+por dentro.
+
+O cabeçalho diz **Northstar Supplies**, não Asteria Group: um contacto que trabalhe com vários
+clientes precisa de saber de que portal se trata.
+
+Experimente escrever `/app/documents` na barra de endereço. Volta ao portal. Vale a pena dizer numa
+entrevista que isto é **conveniência, não segurança**: o servidor recusa de qualquer forma, porque
+nenhum perfil externo tem as permissões da aplicação interna. E corre nos dois sentidos — entre numa
+janela anónima como `admin@asteria.example`, escreva `/portal`, e é devolvido ao painel. Nem o
+administrador da organização entra no portal do fornecedor.
+
+### 2. Submeter uma fatura (1 min)
+
+Preencha o assunto, uma nota, escolha um ficheiro e submeta. A submissão aparece na lista como
+**«Recebido»**.
+
+O que acabou de acontecer do lado de dentro vale a pena contar:
+
+- O ficheiro tornou-se um **documento a sério**, criado pelo mesmo `IDocumentService` que um
+  carregamento manual usa — com referência própria, permissões e entrada de auditoria. Não há porta
+  lateral para o repositório.
+- Entrou como **«por classificar»**, e não como fatura. O tipo fatura exige fornecedor, número, data
+  e total; um portal que os exigisse antes de aceitar o ficheiro seria uma porta de entrada pior do
+  que o e-mail que veio substituir. É também exatamente onde a inteligência documental da Fase 5 o
+  apanha.
+- Entrou no **departamento financeiro, com acesso de contribuidor**. Sem isso a submissão chegava e
+  ficava intocável: o tipo de receção é confidencial, e um documento confidencial sem departamento
+  é visível só ao dono. O fornecedor teria posto o documento numa vitrina.
+
+### 3. O que o fornecedor vê, e o que não vê (1 min)
+
+Abra a submissão. Tem o que enviou, quando, o ficheiro, o estado — e uma secção de **perguntas e
+respostas** que diz, por extenso, que as notas internas ficam do lado de dentro.
+
+Agora o contraste. Noutra janela, entre como `ricardo.lopes@asteria.example` e inicie um processo
+sobre esse documento. O processo tem cronologia, tarefas, prazos, responsáveis. Volte ao portal: o
+fornecedor continua a ver **nada disso**.
+
+Não é a interface a esconder. A lista que o portal constrói **seleciona dois tipos de evento pelo
+nome** — a pergunta e a resposta — em vez de mostrar tudo menos o que é interno. A diferença importa:
+uma lista construída por exclusão deixaria entrar, por omissão, o tipo de evento que a próxima fase
+acrescentar. Selecionar falha fechado; excluir falha aberto.
+
+### 4. A conversa que o portal existe para ter (1 min)
+
+Como `ana.ferreira@asteria.example` — a tarefa de validação da fatura é de Compras — abra a tarefa e
+carregue em **Pedir informação**, escrevendo uma pergunta ao fornecedor.
+
+De volta ao portal, a submissão mostra **«Aguarda a sua resposta»** e o detalhe traz a pergunta, com
+uma caixa para responder. Responda.
+
+Três coisas a apontar:
+
+- A resposta entra na **cronologia interna do processo** e **notifica quem perguntou** — quem pediu
+  a informação não tem de ir verificar se ela chegou.
+- A resposta **não faz o processo avançar**. Acrescenta informação; a decisão continua de quem
+  perguntou. Um fornecedor não aprova a sua própria fatura respondendo a uma questão sobre ela.
+- A marca «aguarda a sua resposta» **desaparece** assim que responde, embora a tarefa continue aberta
+  do lado de dentro. Ler o estado da tarefa deixaria a marca acesa para sempre; o que interessa ao
+  fornecedor é se a última coisa dita foi uma pergunta.
+
+### 5. E só o que é seu (15 s)
+
+Volte à lista. Estão lá a fatura que a organização lhe partilhou e o que ele próprio submeteu — e
+mais nada do repositório, que tem dezenas de documentos.
+
+O portal **não tem regras de autorização próprias**: usa o mesmo avaliador de acesso da aplicação
+interna, que já dizia que um utilizador externo alcança um documento apenas por propriedade ou por
+concessão explícita. Dois conjuntos de regras sobre os mesmos documentos acabariam por divergir — e
+quando divergem, é sempre o mais permissivo que ganha.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

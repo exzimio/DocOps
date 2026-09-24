@@ -72,7 +72,7 @@ concluídas; a sétima está em curso.**
 
 | Capacidade | O que trará |
 | --- | --- |
-| **Portal externo** *(em curso)* | Fornecedores submetem faturas e acompanham o estado, sem verem nada do que é interno |
+| **Portal externo** *(feito)* | Fornecedores submetem faturas e acompanham o estado, sem verem nada do que é interno |
 | **Assinatura eletrónica** *(em curso)* | Pedido de assinatura, estado, versão assinada e impressão digital do documento |
 | **Relatórios e indicadores** | Tempo médio de aprovação, documentos em atraso, carga por departamento — sobre dados reais |
 | **Administração** | Gestão de utilizadores, perfis, departamentos e tipos de documento pela interface |

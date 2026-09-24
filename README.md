@@ -44,7 +44,7 @@ vem da base de dados através da API.
 | 4 | Designer visual de workflow | **Concluída** |
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
-| 7 | Portal externo e assinatura eletrónica | Planeada |
+| 7 | Portal externo e assinatura eletrónica | Em curso (portal feito) |
 | 8 | Relatórios e administração | Planeada |
 | 9 | Testes, segurança e observabilidade | Planeada |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
@@ -216,14 +216,40 @@ vem da base de dados através da API.
   do motor e o worker retoma a instância quando a execução termina. Com ele, **nenhum tipo de nó do
   desenhador falha já por não estar implementado**.
 
+### Entregue na Fase 7 (em curso)
+
+**Portal externo**
+
+- Experiência separada em `/portal` para parceiros externos, com shell próprio: nenhuma navegação
+  interna, nenhum sino de notificações, nada pelo qual um convidado pudesse deduzir que ecrãs a
+  organização tem. O cabeçalho identifica a organização que o visitante representa.
+- Submeter um documento, acompanhar o estado, descarregar o que enviou e **responder a pedidos de
+  informação** — as capacidades que o briefing enumera.
+- **O portal não tem autorização própria.** Quem vê o quê é decidido pelo mesmo avaliador de acesso
+  da aplicação interna, que já dizia que um utilizador externo alcança um documento apenas por
+  propriedade ou concessão explícita (ADR-008).
+- Os contratos do portal são **tipos próprios, escritos à mão**, e não os internos com menos campos:
+  é isso que impede que um campo acrescentado do lado de dentro atravesse sozinho.
+- A separação corre **nos dois sentidos**: nenhum perfil interno tem `portal.access`, nem o de
+  administrador; um externo que escreva `/app/documents` volta ao portal, e o servidor recusa na
+  mesma.
+- Uma submissão é criada pelo `IDocumentService` — a mesma validação, referência, permissões e
+  auditoria de um carregamento manual — e entra no departamento que a recebe, com acesso de
+  contribuidor, para que alguém lhe possa realmente pegar.
+- O fornecedor vê **as perguntas que lhe foram dirigidas e as respostas que deu**, e nada mais da
+  cronologia. A lista é construída selecionando dois tipos de evento pelo nome, nunca por exclusão:
+  uma lista por exclusão deixaria entrar o tipo de evento que alguém acrescentar amanhã.
+- **Responder não faz o processo avançar.** Quem decide é quem perguntou — um fornecedor não aprova
+  a sua própria fatura respondendo a uma questão sobre ela. A resposta notifica quem perguntou.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 306 |
-| Integração com SQL Server real (Testcontainers) | 117 |
+| Unitários (xUnit) | 319 |
+| Integração com SQL Server real (Testcontainers) | 128 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 57 |
-| End-to-end (Playwright, desktop e móvel) | 80 |
+| End-to-end (Playwright, desktop e móvel) | 90 |
 
 ## 4. Arquitetura
 
@@ -503,6 +529,10 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET /api/integrations` · `/{id}` · `/{id}/log` | Cartões das integrações e o registo de cada uma |
 | `POST /api/integrations/{id}/run` | Executa uma integração agora (exige `integrations.manage`) |
 | `PUT /api/integrations/{id}` | Ativa, desativa e configura (destino do webhook validado no servidor) |
+| `GET /api/portal/submissions` · `/{id}` | O que este parceiro submeteu, e o estado de cada submissão |
+| `POST /api/portal/submissions` | Submete um documento (multipart); exige `portal.submit` |
+| `POST /api/portal/submissions/{id}/information` | Responde a um pedido de informação em aberto |
+| `GET /api/portal/submissions/{id}/content` | Descarrega o ficheiro que o próprio parceiro enviou |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow
