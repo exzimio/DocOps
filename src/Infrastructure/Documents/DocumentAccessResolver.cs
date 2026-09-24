@@ -126,7 +126,12 @@ public sealed class DocumentAccessResolver(DocOpsDbContext dbContext, ICurrentUs
         document.Status,
         document.IsDeleted);
 
-    private async Task<AccessSubject> BuildSubjectForAsync(Guid userId, CancellationToken cancellationToken)
+    /// <summary>
+    /// The access facts of another user — roles, departments and effective tenant permissions.
+    /// Public because asking "could this person do X with this document?" is a legitimate question
+    /// before asking them to: a request that person could never fulfil is worse than no request.
+    /// </summary>
+    public async Task<AccessSubject> BuildSubjectForAsync(Guid userId, CancellationToken cancellationToken)
     {
         ApplicationUser user = await dbContext.Users
             .Include(u => u.Departments)

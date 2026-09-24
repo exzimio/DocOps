@@ -185,7 +185,8 @@
       "versions": "Versions",
       "permissions": "Permissions",
       "audit": "Audit",
-      "intelligence": "Intelligence"
+      "intelligence": "Intelligence",
+      "signatures": "Signatures"
     },
     "overview": {
       "metadata": "Metadata",
@@ -921,6 +922,40 @@
       "answer": "Your reply",
       "answerPlaceholder": "Write the information you were asked for.",
       "send": "Send reply"
+    }
+  },
+  "signatures": {
+    "disclaimerTitle": "Demonstration with no legal validity.",
+    "disclaimerBody": "This record is not a qualified or advanced electronic signature and carries no legal weight. Nothing is signed with a private key and no certificate authority is involved: what is recorded is that a person agreed, at a given moment, to a document whose content had the digest shown.",
+    "listLabel": "Signature requests",
+    "empty": "No signature has been requested on this document yet.",
+    "requestedAt": "Requested",
+    "requestedBy": "Requested by",
+    "version": "Version",
+    "completedAt": "Completed",
+    "contentHash": "Content digest (SHA-256)",
+    "contentChanged": "The document has a newer version than the one signed. The signature still stands for the content it recorded, but no longer matches the current content.",
+    "declinedBecause": "Declined: {{reason}}",
+    "sign": "Sign",
+    "decline": "Decline",
+    "cancel": "Withdraw request",
+    "declineReason": "Reason for declining",
+    "declineReasonHint": "Required: a refusal without a reason tells the asker nothing.",
+    "confirmDecline": "Confirm refusal",
+    "status": {
+      "0": "Pending",
+      "1": "Signed",
+      "2": "Declined",
+      "3": "Withdrawn"
+    },
+    "request": {
+      "title": "Request a signature",
+      "description": "The request pins the document's current version. If the content changes, ask again.",
+      "signer": "Signer",
+      "choose": "Choose a person…",
+      "reason": "Reason (optional)",
+      "reasonHint": "Shown to the signer before they decide.",
+      "action": "Request signature"
     }
   }
 }

@@ -27,10 +27,11 @@ import { StartWorkflowPanel } from '@/features/workflows/StartWorkflowPanel'
 import { DocumentIntelligenceTab } from '@/features/ai/DocumentIntelligenceTab'
 import { hasPermission, useSession } from '@/features/auth/session'
 import { DocumentStatus } from '@/features/documents/types'
+import { SignaturePanel } from '@/features/signatures/SignaturePanel'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
 
-type Tab = 'overview' | 'intelligence' | 'versions' | 'permissions' | 'audit'
+type Tab = 'overview' | 'intelligence' | 'versions' | 'signatures' | 'permissions' | 'audit'
 
 /** The intake type: uploaded, not yet read. Mirrors DocumentTypeCodes.Unclassified on the server. */
 const UnclassifiedTypeCode = 'Unclassified'
@@ -154,6 +155,7 @@ export function DocumentDetailPage() {
     { key: 'overview', label: t('documents.tabs.overview') },
     ...(canUseAi ? [{ key: 'intelligence' as const, label: t('documents.tabs.intelligence') }] : []),
     { key: 'versions', label: `${t('documents.tabs.versions')} (${document.versions.length})` },
+    { key: 'signatures', label: t('documents.tabs.signatures') },
     { key: 'permissions', label: t('documents.tabs.permissions') },
     { key: 'audit', label: t('documents.tabs.audit') },
   ]
@@ -251,7 +253,10 @@ export function DocumentDetailPage() {
             />
           ) : (
             <>
-              <div className="flex gap-1 border-b border-subtle" role="tablist">
+              {/* Seis separadores não cabem num telemóvel: sem deslocamento horizontal, os últimos
+                  ficam fora do ecrã e inalcançáveis. `shrink-0` nos botões impede que o navegador
+                  os comprima até ficarem ilegíveis em vez de deslocar. */}
+              <div className="flex gap-1 overflow-x-auto border-b border-subtle" role="tablist">
                 {tabs.map((entry) => (
                   <button
                     key={entry.key}
@@ -260,7 +265,7 @@ export function DocumentDetailPage() {
                     aria-selected={tab === entry.key}
                     onClick={() => setTab(entry.key)}
                     className={clsx(
-                      '-mb-px border-b-2 px-3 py-2 text-sm transition-colors',
+                      '-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors',
                       tab === entry.key
                         ? 'border-teal-600 font-medium text-ink'
                         : 'border-transparent text-ink-muted hover:text-ink',
@@ -285,6 +290,7 @@ export function DocumentDetailPage() {
                 <DocumentIntelligenceTab document={document} canProcess={canEdit} />
               )}
               {tab === 'versions' && <VersionsPanel document={document} />}
+              {tab === 'signatures' && <SignaturePanel documentId={document.summary.id} />}
               {tab === 'permissions' && (
                 <PermissionsPanel document={document} departments={departmentsQuery.data ?? []} />
               )}

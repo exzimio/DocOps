@@ -185,7 +185,8 @@
       "versions": "Versões",
       "permissions": "Permissões",
       "audit": "Auditoria",
-      "intelligence": "Inteligência"
+      "intelligence": "Inteligência",
+      "signatures": "Assinaturas"
     },
     "overview": {
       "metadata": "Metadados",
@@ -921,6 +922,40 @@
       "answer": "A sua resposta",
       "answerPlaceholder": "Escreva aqui a informação pedida.",
       "send": "Enviar resposta"
+    }
+  },
+  "signatures": {
+    "disclaimerTitle": "Demonstração sem validade legal.",
+    "disclaimerBody": "Este registo não é uma assinatura eletrónica qualificada nem avançada, e não tem qualquer valor jurídico. Nada é assinado com chave privada e não há autoridade de certificação envolvida: o que fica registado é que uma pessoa concordou, num dado momento, com um documento cujo conteúdo tinha o resumo indicado.",
+    "listLabel": "Pedidos de assinatura",
+    "empty": "Ainda não foi pedida nenhuma assinatura sobre este documento.",
+    "requestedAt": "Pedida em",
+    "requestedBy": "Pedida por",
+    "version": "Versão",
+    "completedAt": "Concluída em",
+    "contentHash": "Resumo do conteúdo (SHA-256)",
+    "contentChanged": "O documento tem uma versão mais recente do que a assinada. A assinatura continua a valer para o conteúdo que registou, mas já não corresponde ao conteúdo atual.",
+    "declinedBecause": "Recusada: {{reason}}",
+    "sign": "Assinar",
+    "decline": "Recusar",
+    "cancel": "Retirar pedido",
+    "declineReason": "Motivo da recusa",
+    "declineReasonHint": "Obrigatório: uma recusa sem motivo não diz nada a quem pediu.",
+    "confirmDecline": "Confirmar recusa",
+    "status": {
+      "0": "Pendente",
+      "1": "Assinado",
+      "2": "Recusado",
+      "3": "Retirado"
+    },
+    "request": {
+      "title": "Pedir assinatura",
+      "description": "O pedido fixa a versão atual do documento. Se o conteúdo mudar, é preciso pedir de novo.",
+      "signer": "Quem assina",
+      "choose": "Escolher pessoa…",
+      "reason": "Motivo (opcional)",
+      "reasonHint": "Mostrado a quem vai assinar, antes de decidir.",
+      "action": "Pedir assinatura"
     }
   }
 }

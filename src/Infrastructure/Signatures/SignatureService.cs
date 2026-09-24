@@ -3,6 +3,7 @@ using DocOps.Application.Signatures;
 using DocOps.Domain.Auditing;
 using DocOps.Domain.Common;
 using DocOps.Domain.Documents;
+using DocOps.Domain.Identity;
 using DocOps.Domain.Signatures;
 using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Persistence;
@@ -90,6 +91,18 @@ public sealed class SignatureService(
         // fulfilled: the signer would see it in their list and get a refusal on every attempt. The
         // organisation has to grant sight of the document first — that is a deliberate act, and it
         // is not this service's to perform on someone's behalf.
+        AccessSubject signerSubject = await accessResolver.BuildSubjectForAsync(signer.Id, cancellationToken);
+
+        if (!signerSubject.TenantPermissions.Contains(Permissions.SignaturesSign))
+        {
+            // The other half of the same problem: a person who may see the document but holds no
+            // right to sign would get a refusal on every attempt, and the request would sit in
+            // their list for ever.
+            throw new DomainException(
+                $"{signer.Name} não tem permissão para assinar documentos.",
+                "signer_cannot_sign");
+        }
+
         EffectiveAccess signerAccess = await accessResolver.EvaluateAsync(
             document, clock.UtcNow, signer.Id, cancellationToken);
 

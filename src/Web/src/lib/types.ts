@@ -78,6 +78,8 @@ export const Permission = {
   auditView: 'audit.view',
   reportsView: 'reports.view',
   adminUsers: 'admin.users',
+  signaturesRequest: 'signatures.request',
+  signaturesSign: 'signatures.sign',
   portalAccess: 'portal.access',
   portalSubmit: 'portal.submit',
 } as const
