@@ -16,6 +16,7 @@ namespace DocOps.IntegrationTests;
 [Collection(ApiCollection.Name)]
 public class DocumentsTests(DocOpsApiFactory factory)
 {
+    private const string Administrator = "admin@asteria.example";
     private const string FinanceApprover = "ricardo.lopes@asteria.example";
     private const string Employee = "ana.ferreira@asteria.example";
     private const string ExternalPartner = "contacto@northstar.example";
@@ -36,8 +37,22 @@ public class DocumentsTests(DocOpsApiFactory factory)
             await partner.GetFromJsonAsync<PagedResult<DocumentListItemDto>>("/api/documents?pageSize=100", Json);
 
         Assert.NotNull(result);
-        Assert.Equal(1, result.TotalCount);
-        Assert.Contains("Northstar", result.Items[0].Title, StringComparison.Ordinal);
+
+        // Not a count: the portal suite legitimately submits documents as this same partner, and a
+        // fixed total would make this test depend on which class ran first. What has to hold is
+        // that every row it gets back is its own — the invoice shared with it, plus anything it
+        // submitted itself — and that none of the organisation's other documents leaked in.
+        Assert.NotEmpty(result.Items);
+        Assert.Contains(result.Items, item => item.Title.Contains("Northstar", StringComparison.Ordinal));
+
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        PagedResult<DocumentListItemDto>? everything =
+            await admin.GetFromJsonAsync<PagedResult<DocumentListItemDto>>("/api/documents?pageSize=200", Json);
+
+        Assert.NotNull(everything);
+        Assert.True(
+            result.TotalCount < everything.TotalCount,
+            "o parceiro externo não pode ver o catálogo inteiro da organização");
     }
 
     [Fact]

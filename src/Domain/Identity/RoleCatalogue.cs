@@ -59,7 +59,13 @@ public static class RolePermissionDefaults
 
     private static readonly string[] ExternalPartnerGrants =
     [
-        Permissions.PortalAccess, Permissions.PortalSubmit, Permissions.DocumentsView, Permissions.DocumentsCreate
+        Permissions.PortalAccess, Permissions.PortalSubmit,
+
+        // View and create are what submitting a document needs. Download is what re-reading one
+        // needs, and a supplier that cannot re-read what it sent us has been given a receipt it
+        // cannot open. None of the three widens what it reaches: the document access evaluator
+        // still grants an external user nothing beyond what it owns or was explicitly given.
+        Permissions.DocumentsView, Permissions.DocumentsCreate, Permissions.DocumentsDownload
     ];
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> Map =

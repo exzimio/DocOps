@@ -61,9 +61,12 @@ export function PortalShell() {
             <ThemeToggle />
 
             <div className="flex items-center gap-2 border-l border-subtle pl-2">
-              <div className="hidden leading-tight sm:block">
+              <div className="leading-tight">
+                {/* A organização fica visível em qualquer ecrã: é o que diz ao visitante de que
+                    portal se trata, e um contacto que trabalha com vários clientes precisa disso
+                    tanto no telemóvel como no computador. O nome próprio é que pode esperar. */}
                 <p className="text-xs font-medium text-ink">{user.externalOrganisation ?? user.fullName}</p>
-                <p className="text-[11px] text-ink-muted">{user.fullName}</p>
+                <p className="hidden text-[11px] text-ink-muted sm:block">{user.fullName}</p>
               </div>
               <Button
                 variant="ghost"

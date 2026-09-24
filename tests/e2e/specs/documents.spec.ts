@@ -31,9 +31,22 @@ test.describe('Repositório documental', () => {
     await expect(page).toHaveURL(/\/app\/documents$/)
     await expect(page.locator('table tbody tr').first()).toBeVisible()
 
-    // Server-side search: the result set shrinks to the matching supplier.
-    await page.getByLabel('Pesquisar por título, referência ou metadados…').fill('Northstar')
-    await expect(page.locator('table tbody tr')).toHaveCount(2)
+    // A pesquisa corre no servidor e devolve só o que corresponde. Prova-se com duas pesquisas em
+    // vez de contar linhas: o que entra numa não aparece na outra. Contar seria refém do catálogo,
+    // que cresce com cada documento submetido pelo portal.
+    const search = page.getByLabel('Pesquisar por título, referência ou metadados…')
+
+    await search.fill('Northstar')
+    await expect(page.getByRole('link', { name: /Fatura Northstar Supplies/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /Fatura Atlas Tecnologia/ })).toHaveCount(0)
+
+    // Outro termo, outro conjunto: «Atlas» devolve resultados e nenhum deles é o da Northstar.
+    await search.fill('Atlas')
+    await expect(page.locator('table tbody tr').first()).toBeVisible()
+    await expect(page.getByRole('link', { name: /Fatura Northstar Supplies/ })).toHaveCount(0)
+
+    await search.fill('Northstar')
+    await expect(page.getByRole('link', { name: /Fatura Northstar Supplies/ })).toBeVisible()
 
     await page.getByRole('link', { name: /Fatura Northstar Supplies/ }).click()
     await expect(page).toHaveURL(/\/app\/documents\/[0-9a-f-]+$/)
@@ -112,8 +125,13 @@ test.describe('Repositório documental', () => {
     // O parceiro aterra no portal, não no repositório interno.
     await page.waitForURL(/\/portal$/)
 
+    // A fatura que lhe foi partilhada está lá. Não se conta o total: este parceiro também submete
+    // documentos pelo portal, e uma contagem fixa tornaria este teste refém da ordem de execução.
     const submissions = page.getByRole('list', { name: 'Submissões' })
-    await expect(submissions.getByRole('listitem')).toHaveCount(1)
+    await expect(submissions.getByRole('listitem').first()).toBeVisible()
     await expect(page.getByText(/Fatura Northstar Supplies/)).toBeVisible()
+
+    // O que continua a valer é que nada da organização que não lhe pertença aparece aqui.
+    await expect(page.getByText(/Atlas Tecnologia|Ibérica Logística|Verdemar/)).toHaveCount(0)
   })
 })
