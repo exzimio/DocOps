@@ -11,6 +11,7 @@ public static class AuditActions
     public const string UserCreated = "user.created";
     public const string UserUpdated = "user.updated";
     public const string UserDeactivated = "user.deactivated";
+    public const string UserActivated = "user.activated";
     public const string UserRolesChanged = "user.roles.changed";
     public const string UserDepartmentsChanged = "user.departments.changed";
 

@@ -3,6 +3,7 @@ using DocOps.Application.Documents;
 using DocOps.Application.Identity;
 using DocOps.Application.Inbox;
 using DocOps.Application.Portal;
+using DocOps.Application.Administration;
 using DocOps.Application.Reporting;
 using DocOps.Application.Signatures;
 using DocOps.Application.Integrations;
@@ -17,6 +18,7 @@ using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Identity;
 using DocOps.Infrastructure.Inbox;
 using DocOps.Infrastructure.Portal;
+using DocOps.Infrastructure.Administration;
 using DocOps.Infrastructure.Reporting;
 using DocOps.Infrastructure.Signatures;
 using DocOps.Infrastructure.Integrations;
@@ -82,6 +84,7 @@ public static class DependencyInjection
         AddPortal(services);
         AddSignatures(services);
         AddReporting(services);
+        AddAdministration(services);
         AddWorkflows(services);
         AddIntelligence(services, configuration);
 
@@ -207,6 +210,13 @@ public static class DependencyInjection
         services.AddScoped<IIntegrationService, IntegrationService>();
         services.AddScoped<IIntegrationRunner, IntegrationRunner>();
         services.AddScoped<IntegrationQueueProcessor>();
+    }
+
+    private static void AddAdministration(IServiceCollection services)
+    {
+        // A organização vem sempre das claims do cookie, nunca do pedido: não há parâmetro por onde
+        // um administrador de uma organização alcance as contas de outra.
+        services.AddScoped<IAdministrationService, AdministrationService>();
     }
 
     private static void AddReporting(IServiceCollection services)
