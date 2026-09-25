@@ -1,148 +1,153 @@
-# DocOps Control Tower — o que é, e o que faz quando estiver concluído
+# DocOps Control Tower
 
-> Documento de apresentação do projeto. Para a arquitetura, ver
-> [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
->
-> **Projeto de portefólio independente.** Demonstração técnica pessoal, sem afiliação a qualquer
-> produto ou fornecedor comercial. Todas as organizações, pessoas e documentos são fictícios.
+**Plataforma de gestão documental e automação de processos para organizações.**
 
----
+Projeto de portefólio independente. Demonstração técnica pessoal, sem afiliação a qualquer
+produto ou fornecedor comercial. Todas as organizações, pessoas e documentos são fictícios.
 
-## 1. Em uma frase
+## 1. O que é
 
-Uma plataforma que trata um documento não como um ficheiro, mas como o **início de um processo de
-negócio** — com responsáveis, prazos, decisões, prova e memória.
+Uma plataforma empresarial completa onde documentos entram, são classificados, percorrem
+circuitos de aprovação, são assinados, pesquisados, auditados e medidos.
 
-## 2. O problema
+Não é um protótipo nem uma maqueta. É software que funciona contra uma base de dados real:
+todos os botões fazem alguma coisa, todos os números vêm de uma consulta, e o projeto tem uma
+regra explícita que proíbe páginas de marcador de posição, secções «em breve» e funcionalidade
+por acabar.
 
-Nas organizações, os documentos que realmente importam — faturas de fornecedor, contratos,
-encomendas, processos de colaboradores — chegam por e-mail, ficam em pastas partilhadas e circulam
-por conversas informais. O resultado é sempre o mesmo:
+## 2. O problema que resolve
 
-| O que acontece | O que custa |
-| --- | --- |
-| A fatura chega ao e-mail de alguém | Ninguém sabe que existe até alguém se lembrar dela |
-| A aprovação é dada numa conversa | Seis meses depois não há como provar quem aprovou |
-| Os dados são copiados à mão para o ERP | Erros de digitação, tempo perdido, retrabalho |
-| O prazo passa | Descobre-se com a chamada do fornecedor |
-| Alguém pergunta «quem viu este contrato?» | Não há resposta |
+Nas organizações, os documentos que importam — contratos, faturas, propostas, pareceres —
+vivem espalhados por correio eletrónico, pastas partilhadas e sistemas que não falam uns com
+os outros. Ninguém sabe onde está o processo, quem falta aprovar, nem quanto tempo demorou.
 
-Nenhum destes problemas é de tecnologia. São todos de **rasto**: ninguém sabe onde as coisas estão,
-quem lhes tocou, nem o que falta fazer.
+O DocOps Control Tower centraliza esse ciclo de vida: da entrada do documento até ao arquivo,
+com quem pode ver o quê decidido pelo servidor, um trilho de auditoria que a própria aplicação
+não consegue alterar, e indicadores que saem dos dados reais em vez de folhas de cálculo.
 
-## 3. O que a plataforma faz
+## 3. O que já faz
 
-O percurso completo, tal como funciona hoje na demonstração:
+**Gestão documental.** Versões, metadados, tipos de documento, etiquetas. Permissões ao nível
+do documento cruzadas com departamentos e perfis. Pré-visualização e descarga controladas.
 
-1. **Uma fatura chega** — por correio eletrónico, submetida por um fornecedor no portal externo, ou
-   carregada à mão. Seja qual for a porta, entra no mesmo sítio.
-2. **É lida automaticamente** — a plataforma classifica o documento (é uma fatura? um contrato?) e
-   extrai os campos (fornecedor, número, datas, valores), dizendo de que linha do documento tirou
-   cada valor.
-3. **Uma pessoa confirma** — nada é aplicado sem decisão humana. Quem valida vê a sugestão, a
-   confiança associada e a citação exata; aceita, corrige ou rejeita, campo a campo.
-4. **O processo arranca sozinho** — o circuito de aprovação certo para aquele tipo de documento:
-   quem valida, quem aprova, com que prazo, o que acontece se ninguém responder.
-5. **As pessoas certas recebem tarefas** — com prazos, prioridade, escalonamento automático quando o
-   prazo passa, e possibilidade de reatribuir ou pedir mais informação.
-6. **Tudo fica registado** — quem viu, quem descarregou, quem alterou, quem aprovou e quando. O
-   registo é imutável: a aplicação não tem forma de o alterar ou apagar.
-7. **Procura-se por linguagem natural** — «contratos do departamento jurídico aprovados este ano»
-   devolve o que a pessoa que pergunta tem direito a ver, e nada mais.
+**Motor de workflow.** Desenhador visual de circuitos de aprovação. Passos sequenciais e
+paralelos, prazos, escalonamento automático por serviço em segundo plano, notificações,
+reatribuição e histórico completo de decisões.
 
-## 4. O que estará concluído no fim
+**Inteligência artificial aplicada.** Classificação de documentos, extração de campos e
+sumarização, com nível de confiança e revisão humana das extrações. O fornecedor de
+demonstração é determinista e está identificado como tal em todo o lado onde aparece: o
+projeto proíbe apresentar uma resposta de demonstração como saída de um modelo real, ou
+inventar citações.
 
-O projeto é construído em **dez fases**, cada uma entregue a funcionar de ponta a ponta. **Seis estão
-concluídas; a sétima está em curso.**
+**Pesquisa.** Texto integral sobre o conteúdo, filtros combinados e pesquisa em linguagem
+natural — sempre restrita ao que quem pesquisa tem direito a ver.
 
-### Já a funcionar
+**Caixa de entrada e integrações.** Conetor de correio com sincronização agendada. Seis
+adaptadores de integração (ERP, CRM, Outlook, importação de ficheiros, assinatura, webhooks)
+com fila de execução, repetição em caso de falha e registo consultável de cada corrida.
 
-| Capacidade | O que significa na prática |
-| --- | --- |
-| **Repositório documental governado** | Documentos com versões, tipos, metadados configuráveis, etiquetas, políticas de retenção e classificação de sensibilidade |
-| **Controlo de acesso explicável** | Cada pessoa vê exatamente o que lhe compete — e a aplicação mostra **porquê**, regra a regra |
-| **Motor de circuitos de aprovação** | Circuitos desenhados visualmente, com condições, caminhos paralelos, prazos e escalonamento |
-| **Desenhador visual de processos** | Quem percebe do negócio desenha o circuito; não é preciso programar |
-| **Inteligência documental** | Classificação, extração de campos e perguntas sobre o conteúdo, sempre com validação humana |
-| **Pesquisa por conteúdo e por pergunta** | Texto integral, filtros por qualquer dimensão, e perguntas em linguagem corrente |
-| **Caixa de entrada documental** | O correio que chega transforma-se em documentos e processos, sem passos manuais |
-| **Centro de integrações** | Ligações a ERP, CRM, correio, assinatura, webhooks e importação de ficheiros |
+**Portal externo.** Parceiros e fornecedores submetem documentos sem terem acesso ao produto.
+As submissões entram no circuito interno com as permissões certas atribuídas.
 
-### A construir (fases 7 a 10)
+**Assinatura eletrónica.** Pedido, assinatura pelo signatário nomeado, cancelamento e deteção
+de alteração do conteúdo depois do pedido. Demonstração de portefólio — o projeto declara
+explicitamente que não reclama validade legal.
 
-| Capacidade | O que trará |
-| --- | --- |
-| **Portal externo** *(feito)* | Fornecedores submetem faturas e acompanham o estado, sem verem nada do que é interno |
-| **Assinatura eletrónica** *(feita)* | Pedido de assinatura, estado, versão assinada e impressão digital do documento |
-| **Relatórios e indicadores** | Tempo médio de aprovação, documentos em atraso, carga por departamento — sobre dados reais |
-| **Administração** | Gestão de utilizadores, perfis, departamentos e tipos de documento pela interface |
-| **Segurança e observabilidade** | Endurecimento, rastreio distribuído, testes de carga |
-| **Acessibilidade e desempenho** | Auditoria de acessibilidade e afinação final |
+**Análises e relatórios.** Indicadores de volume, tempo médio de processamento, taxa de
+automação, estrangulamentos por passo de workflow, distribuições por estado, tipo e
+departamento. Gráficos construídos à mão em SVG. Exportação para CSV. Quando não há base de
+cálculo, o painel diz que não há — não mostra zero.
 
-## 5. Para quem serve
+**Administração.** Criação e desativação de contas, atribuição de perfis e departamentos,
+gestão de departamentos. 38 permissões distribuídas por 6 perfis.
 
-- **Departamentos financeiros** que recebem centenas de faturas por mês e precisam de as aprovar com
-  rasto.
-- **Departamentos jurídicos** que gerem contratos com datas de renovação que ninguém pode falhar.
-- **Recursos humanos**, com documentação de colaboradores sujeita a prazos de conservação legal.
-- **Qualquer organização auditada**, que tenha de responder a «mostre-me quem aprovou isto, quando, e
-  com que documento à frente».
+**Transversal.** Auditoria imutável, multi-organização, português europeu e inglês, tema claro
+e escuro, acessibilidade, interface funcional em telemóvel.
 
-A plataforma é **multi-organização** desde a fundação: várias empresas partilham a mesma instalação
-sem que nenhuma alcance os dados da outra — uma garantia verificada por testes automáticos que
-falham a compilação se alguma entidade nova ficar desprotegida.
+## 4. Como está construído
 
-## 6. O que este projeto demonstra tecnicamente
+- **Backend** — .NET 10 / C# 14, monólito modular em quatro camadas (Domínio, Aplicação,
+  Infraestrutura, API), mais um serviço de trabalho periódico.
+- **Dados** — SQL Server, Entity Framework Core, 28 tabelas.
+- **Frontend** — React 19, TypeScript, Tailwind, TanStack Query, i18next.
+- **Testes** — xUnit, Testcontainers (SQL Server real em contentor), Playwright.
+- **Ambiente** — Docker Compose.
 
-Escrito de raiz, sem gerador de código nem *template*:
+## 5. Onde está a complexidade real
 
-- **Backend** .NET 10 com C# 14, arquitetura em camadas explícitas, SQL Server real.
-- **Frontend** React 19 com TypeScript, sistema de design próprio, tema claro/escuro, português e
-  inglês.
-- **Motor de workflow próprio** — não é um produto de terceiros embrulhado: as travessias do grafo
-  são transacionais e falham de forma explícita em vez de saltarem passos.
-- **Segurança levada a sério**: autenticação por cookie seguro, autorização por permissão validada no
-  servidor em cada pedido, proteção contra falsificação de pedidos e contra pedidos forjados do lado
-  do servidor, isolamento entre organizações em duas camadas independentes.
-- **Cerca de 560 testes automáticos** — unitários, de integração contra SQL Server verdadeiro em
-  contentor, e de ponta a ponta no browser, em ecrã de computador e de telemóvel.
-- **Decisões documentadas**: sete registos de decisão arquitetural explicam não só o que foi feito,
-  mas o que foi **rejeitado** e porquê.
+Estes são os problemas que separam uma aplicação de demonstração de software que aguenta
+produção.
 
-## 7. Três princípios que moldam tudo
+**1. Isolamento entre organizações imposto na persistência.** Cada consulta é filtrada pela
+organização de quem pede, vinda das claims do cookie e nunca do pedido. Não há parâmetro por
+onde um utilizador alcance dados de outra organização. Existe um teste que falha a compilação
+se alguém acrescentar uma entidade sem esse filtro — a rede não depende de ninguém se lembrar.
 
-**Nada de fachada.** Não existe um único ecrã de demonstração estático, botão sem ação ou secção «em
-breve». Tudo o que se vê está ligado à base de dados real. É uma restrição incómoda e é deliberada:
-é o que separa um protótipo de software a funcionar.
+**2. Autorização em camadas, sempre no servidor.** O que a interface esconde é conveniência,
+nunca segurança. As permissões do perfil funcionam como um teto sobre o que a posse de um
+documento concede: ser dono não dá mais do que o perfil permite.
 
-**Honestidade sobre o que é simulado.** O projeto corre sem contas em serviços de terceiros. Onde
-existe simulação — o fornecedor de IA de demonstração, a caixa de correio, as listas do ERP — isso é
-dito no próprio ecrã, e diz-se **o quê**. E a regra corta nos dois sentidos: o que faz trabalho
-verdadeiro não se rotula de demonstração só por estar atrás de uma abstração.
+**3. Um predicado de visibilidade único, traduzível para SQL.** A mesma regra de «o que esta
+pessoa pode ver» é reutilizada na pesquisa, no portal e nos relatórios. Sem isso, um painel
+poderia revelar por contagem a existência de documentos que a pessoa não pode abrir — uma fuga
+subtil que este projeto teve de corrigir uma vez e depois fechou na origem.
 
-**A autorização é do servidor.** O que a interface esconde é conveniência; a decisão é sempre tomada
-no servidor, e nunca a partir de dados enviados pelo cliente.
+**4. Assinar não é editar.** Descoberta durante a construção: o fluxo de assinatura exigia
+permissão de edição por reutilizar o caminho de mudança de estado. Um signatário externo
+passaria a poder alterar o documento. Resolvido com um caminho próprio, e documentado numa
+decisão de arquitetura.
 
-## 8. Demonstração em cinco minutos
+**5. Testes que recusam padrões frágeis.** Um padrão de teste repetiu-se três vezes e partiu a
+suíte. Em vez de o documentar como armadilha conhecida, foi escrita uma guarda automática que
+lê o código dos próprios testes e falha a compilação quando o padrão reaparece — validada
+injetando a falha de propósito para confirmar que é apanhada.
 
-1. Um fornecedor submete uma fatura no portal externo.
-2. A fatura aparece do lado interno, por classificar.
-3. A plataforma classifica-a e extrai os campos, com a citação de onde tirou cada valor.
-4. Uma pessoa valida os campos — e cada decisão fica auditada.
-5. O circuito de aprovação arranca automaticamente.
-6. O responsável financeiro recebe a tarefa e aprova.
-7. O documento fica aprovado e arquivado, com a cronologia completa visível.
+**6. Defeitos encontrados a olhar, não a ler.** Mais de dez defeitos reais foram apanhados por
+chamadas à API verdadeira e por leitura de capturas de ecrã, não por revisão de código.
+Exemplos: um administrador de organização conseguia editar a conta de administração da
+plataforma; um ecrã explicava uma recusa com o motivo errado.
 
-Todo este percurso funciona contra a base de dados real. O guião detalhado, ecrã a ecrã, está em
-[`docs/DEMO.md`](DEMO.md).
+## 6. Disciplina de engenharia
 
-## 9. O que ainda não é
+Cada fase segue a mesma ordem, sem exceções: backend primeiro, validação com chamadas reais à
+API, depois interface, verificação no browser com leitura das capturas de ecrã, testes,
+documentação, e só então o commit.
 
-Por honestidade, e porque saber onde estão os limites faz parte de perceber o que se construiu:
+Antes de cada commit correm oito portões — compilação sem qualquer aviso, testes unitários,
+testes de integração contra SQL real, verificação de tipos, análise estática, formatação,
+testes de componentes e testes end-to-end em desktop e telemóvel.
 
-- A **assinatura eletrónica** é uma demonstração de portefólio e **não tem validade legal**.
-- O **fornecedor de IA** por omissão é determinista e local; a ligação a um modelo real existe, é
-  opcional e está desligada.
-- Os **conetores externos** (ERP, CRM, Microsoft Graph) têm contratos reais e implementações de
-  demonstração — trocar por um sistema verdadeiro é escrever uma classe, não redesenhar.
-- Não há **autenticação multifator** nem federação de identidade; a arquitetura suporta ambas.
+Nove decisões de arquitetura estão registadas por escrito (ADR), incluindo as que explicam
+porque algo **não** foi feito — por exemplo, porque a assinatura eletrónica não gerou um par
+de chaves criptográficas: seria mais convincente e continuaria sem valor legal, a pior
+combinação possível.
+
+## 7. Números
+
+- ~60.700 linhas de C# e ~17.700 linhas de TypeScript/React
+- 104 endpoints REST em 15 controladores
+- 43 ficheiros de domínio, 28 tabelas
+- 327 testes unitários
+- 151 testes de integração contra SQL Server real
+- 59 testes de componentes
+- 20 suítes end-to-end, corridas em desktop e telemóvel
+- 9 decisões de arquitetura registadas
+- 38 permissões distribuídas por 6 perfis
+
+## 8. Estado atual
+
+Planeado em dez fases, cada uma entregue a funcionar de ponta a ponta.
+
+Fases 1 a 7 concluídas. Fase 8 em curso — análises concluídas, administração de pessoas e
+departamentos concluída; falta a administração de tipos de documento, campos de metadados,
+políticas de retenção e o editor de permissões. Seguem-se as fases 9 e 10.
+
+Nenhuma fase foi dada por fechada sem estar a funcionar, testada e documentada.
+
+## 9. O que este projeto demonstra
+
+Que sei construir um sistema empresarial completo — não uma funcionalidade isolada — com as
+decisões difíceis tomadas conscientemente e escritas: segurança imposta no servidor,
+isolamento de dados entre clientes, testes que provam comportamento em vez de confirmarem
+implementação, e honestidade sobre o que o software é e o que não é.
