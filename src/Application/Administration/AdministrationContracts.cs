@@ -29,6 +29,13 @@ public sealed record AdminUserDto
     /// organisation with nobody able to undo it.
     /// </summary>
     public required bool CanEdit { get; init; }
+
+    /// <summary>
+    /// True for an account that administers the platform from above this organisation. It is also
+    /// not editable, but for a different reason than the caller's own account — and a screen that
+    /// gave both the same explanation would be telling one of them a falsehood.
+    /// </summary>
+    public required bool IsPlatformAccount { get; init; }
 }
 
 public sealed record AdminDepartmentMembershipDto(Guid Id, string Name, string Code, bool IsPrimary);

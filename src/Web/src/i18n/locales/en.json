@@ -18,7 +18,9 @@
     "openMenu": "Open navigation menu",
     "closeMenu": "Close navigation menu",
     "skipToContent": "Skip to main content",
-    "independentProject": "Independent portfolio project — not affiliated with any third party"
+    "independentProject": "Independent portfolio project — not affiliated with any third party",
+    "edit": "Edit",
+    "save": "Save"
   },
   "landing": {
     "heroTitle": "DocOps Control Tower",
@@ -998,6 +1000,47 @@
       "open": "Open",
       "overdue": "Overdue",
       "longest": "Longest wait"
+    }
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "People, roles and departments of this organisation.",
+    "tabs": {
+      "users": "People",
+      "departments": "Departments"
+    },
+    "users": {
+      "title": "People",
+      "person": "Person",
+      "roles": "Roles",
+      "departments": "Departments",
+      "lastLogin": "Last sign-in",
+      "includeInactive": "Include deactivated",
+      "inactive": "Deactivated",
+      "activate": "Reactivate",
+      "deactivate": "Deactivate",
+      "self": "Your account",
+      "platform": "Platform account",
+      "createTitle": "New person",
+      "editTitle": "Edit person",
+      "create": "Create account",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "jobTitle": "Job title",
+      "permissionCount": "{{count}} permissions",
+      "primaryHint": "The first department chosen becomes the primary one.",
+      "passwordTitle": "Initial password",
+      "passwordBody": "Hand it to {{email}} now: it is not shown again, because the server keeps only its cryptographic digest."
+    },
+    "departments": {
+      "title": "Departments",
+      "name": "Name",
+      "code": "Code",
+      "codeHint": "Short and stable: it appears in lists and filters.",
+      "description": "Description",
+      "members": "People",
+      "createTitle": "New department",
+      "editTitle": "Edit department"
     }
   }
 }

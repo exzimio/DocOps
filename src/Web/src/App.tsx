@@ -19,6 +19,7 @@ import { InboxPage } from '@/pages/InboxPage'
 import { IntegrationsPage } from '@/pages/IntegrationsPage'
 import { SearchPage } from '@/pages/SearchPage'
 import { ReportsPage } from '@/pages/ReportsPage'
+import { AdminPage } from '@/pages/AdminPage'
 import { PortalPage } from '@/pages/PortalPage'
 import { PortalSubmissionPage } from '@/pages/PortalSubmissionPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -57,6 +58,7 @@ export function App() {
             <Route path="inbox" element={<InboxPage />} />
             <Route path="integrations" element={<IntegrationsPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="admin" element={<AdminPage />} />
             <Route path="tasks" element={<TasksPage />} />
             <Route path="workflows" element={<WorkflowsPage />} />
             <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />

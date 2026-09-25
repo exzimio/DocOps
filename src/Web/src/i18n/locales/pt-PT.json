@@ -18,7 +18,9 @@
     "openMenu": "Abrir menu de navegação",
     "closeMenu": "Fechar menu de navegação",
     "skipToContent": "Saltar para o conteúdo principal",
-    "independentProject": "Projeto de portefólio independente — sem afiliação a terceiros"
+    "independentProject": "Projeto de portefólio independente — sem afiliação a terceiros",
+    "edit": "Editar",
+    "save": "Guardar"
   },
   "landing": {
     "heroTitle": "DocOps Control Tower",
@@ -998,6 +1000,47 @@
       "open": "Em aberto",
       "overdue": "Em atraso",
       "longest": "Espera mais longa"
+    }
+  },
+  "admin": {
+    "title": "Administração",
+    "subtitle": "Pessoas, perfis e departamentos desta organização.",
+    "tabs": {
+      "users": "Pessoas",
+      "departments": "Departamentos"
+    },
+    "users": {
+      "title": "Pessoas",
+      "person": "Pessoa",
+      "roles": "Perfis",
+      "departments": "Departamentos",
+      "lastLogin": "Última sessão",
+      "includeInactive": "Incluir desativadas",
+      "inactive": "Desativada",
+      "activate": "Reativar",
+      "deactivate": "Desativar",
+      "self": "A sua conta",
+      "platform": "Conta de plataforma",
+      "createTitle": "Nova pessoa",
+      "editTitle": "Editar pessoa",
+      "create": "Criar conta",
+      "firstName": "Nome próprio",
+      "lastName": "Apelido",
+      "jobTitle": "Função",
+      "permissionCount": "{{count}} permissões",
+      "primaryHint": "O primeiro departamento escolhido fica como principal.",
+      "passwordTitle": "Palavra-passe inicial",
+      "passwordBody": "Entregue-a a {{email}} agora: não volta a ser mostrada, porque o servidor guarda apenas o resumo criptográfico."
+    },
+    "departments": {
+      "title": "Departamentos",
+      "name": "Nome",
+      "code": "Código",
+      "codeHint": "Curto e estável: aparece nas listas e nos filtros.",
+      "description": "Descrição",
+      "members": "Pessoas",
+      "createTitle": "Novo departamento",
+      "editTitle": "Editar departamento"
     }
   }
 }

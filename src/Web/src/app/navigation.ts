@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Plug,
   Search,
+  Settings,
   Sparkles,
 } from 'lucide-react'
 import { Permission } from '@/lib/types'
@@ -86,6 +87,12 @@ export const navigationSections: NavSection[] = [
         to: '/app/reports',
         icon: ChartColumn,
         permission: Permission.reportsView,
+      },
+      {
+        labelKey: 'nav.admin',
+        to: '/app/admin',
+        icon: Settings,
+        permission: Permission.adminUsers,
       },
       {
         labelKey: 'nav.integrations',

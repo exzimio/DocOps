@@ -79,6 +79,7 @@ export const Permission = {
   reportsView: 'reports.view',
   reportsExport: 'reports.export',
   adminUsers: 'admin.users',
+  adminDepartments: 'admin.departments',
   signaturesRequest: 'signatures.request',
   signaturesSign: 'signatures.sign',
   portalAccess: 'portal.access',

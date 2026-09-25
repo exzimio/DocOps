@@ -49,6 +49,7 @@ public sealed class AdministrationService(
                 user.ExternalOrganisation,
                 user.IsActive,
                 user.LastLoginAtUtc,
+                user.IsPlatformAdministrator,
                 Departments = dbContext.UserDepartments
                     .Where(membership => membership.UserId == user.Id)
                     .Select(membership => new AdminDepartmentMembershipDto(
@@ -80,7 +81,8 @@ public sealed class AdministrationService(
                 LastLoginAtUtc = row.LastLoginAtUtc,
                 Roles = [.. await userManager.GetRolesAsync(entity)],
                 Departments = row.Departments,
-                CanEdit = row.Id != me
+                CanEdit = row.Id != me && !row.IsPlatformAdministrator,
+                IsPlatformAccount = row.IsPlatformAdministrator
             });
         }
 
@@ -304,8 +306,21 @@ public sealed class AdministrationService(
                 "Não pode alterar a sua própria conta por aqui. Peça a outro administrador.");
         }
 
-        return await dbContext.Users.FirstOrDefaultAsync(user => user.Id == userId, cancellationToken)
+        ApplicationUser user = await dbContext.Users
+            .FirstOrDefaultAsync(candidate => candidate.Id == userId, cancellationToken)
             ?? throw new EntityNotFoundException(nameof(ApplicationUser), userId);
+
+        // Uma conta de administração da plataforma está acima desta organização: um administrador de
+        // organização que a pudesse desativar cortaria o acesso de quem o supervisiona, e guardar as
+        // alterações despromovia-a em silêncio, porque SystemAdmin não está entre os perfis que este
+        // ecrã oferece. Apanhado ao ler a captura, não a código.
+        if (user.IsPlatformAdministrator)
+        {
+            throw new ForbiddenOperationException(
+                "Esta conta é de administração da plataforma e não se gere a partir de uma organização.");
+        }
+
+        return user;
     }
 
     private async Task EnsureRolesExistAsync(IReadOnlyList<string> roles, CancellationToken cancellationToken)
