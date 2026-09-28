@@ -793,6 +793,52 @@ o carregamento até alguém responder a uma pergunta que só ler o documento res
 Crie um tipo novo, dê-lhe um campo, e apague-o. Enquanto ninguém o preencheu, apagar não destrói
 nada — e por isso é permitido. A regra não é «não se mexe»; é **alargar pode, estreitar não**.
 
+## Demonstração disponível na Fase 8 — Etiquetas e retenção (≈4 minutos)
+
+Como `admin@asteria.example`, abra **Administração** e o separador **Etiquetas**.
+
+### 1. Remover sem destruir (1 min 30 s)
+
+Escolha uma etiqueta com documentos e **remova-a**. Desaparece da lista.
+
+Ligue **«incluir removidas»**: continua lá, marcada como removida. **Restaure-a** e repare no
+número de documentos — voltou ao que era.
+
+Esta é a parte que vale a pena explicar. No separador **Catálogo**, eliminar um campo de metadados
+com valores é **recusado**. Aqui, remover uma etiqueta é **permitido**. Não é incoerência: um valor
+de metadados é o que o documento *afirma* — o número da fatura, a data —, e destruí-lo destrói o que
+o documento diz. Uma etiqueta é uma anotação *colocada sobre* ele por quem o organiza. A primeira
+não se recupera de lado nenhum; a segunda está a um sinalizador de distância.
+
+### 2. Uma cor que não chega (30 s)
+
+Crie uma etiqueta e escreva `verde` no campo da cor. É recusado, com a indicação de que tem de ser
+hexadecimal.
+
+Reparar nisto é o ponto: o caminho fácil seria ignorar o valor e guardar sem cor. Ficaria alguém à
+procura de uma cor que escolheu e nunca viu aplicada.
+
+### 3. Quando mudar **não** é falsificar (1 min 30 s)
+
+Passe ao separador **Retenção**.
+
+Escolha uma política e **mude a duração**. É permitido — e é o contrário do que o catálogo faz com
+um campo de metadados. A diferença: uma obrigação de retenção que muda é um facto, não uma
+falsificação. Muda a lei, muda o contrato; um catálogo incapaz de a acompanhar é que estaria a
+mentir. O que a mudança faz é mexer na data de eliminação de todos os documentos que a política
+governa, e por isso fica na auditoria com o valor antigo e o novo.
+
+Agora tente **retirar** a política *Contratos — 10 anos após término*. É recusado, e a mensagem
+nomeia o tipo que a adota. Retirá-la deixaria esse tipo a aplicar uma regra que a organização
+decidiu abandonar, sem nada no ecrã a dizê-lo.
+
+### 4. Quem decide o quê (30 s)
+
+Entre como `sofia.martins@asteria.example`. Os separadores **Etiquetas** e **Retenção** não
+aparecem. Gerir etiquetas exige `admin.documenttypes`; decidir quanto tempo se guardam documentos
+exige `admin.settings` — conformidade e classificação são decisões diferentes, e o servidor recusa
+as duas na mesma.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

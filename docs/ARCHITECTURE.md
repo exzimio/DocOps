@@ -529,6 +529,38 @@ até alguém responder a uma pergunta que só ler o documento responde. O seu c�
 classificados sob um tipo referem-se a ele, e um tipo que desaparece leva consigo a classificação
 deles.
 
+## 10.10 Etiquetas e retenção
+
+**A etiqueta e o campo de metadados parecem o mesmo problema e não são.** Um valor de metadados é o
+que o documento **afirma** — o número da fatura, a data de vencimento — e destruí-lo destrói o que o
+documento diz. Uma etiqueta é uma anotação **colocada sobre** o documento por quem o organiza. Por
+isso o catálogo recusa eliminar um campo com valores, e aqui remover é permitido: `Tag` é
+`ISoftDeletable`, as linhas de `DocumentTag` não são tocadas, e restaurar devolve exatamente os
+mesmos documentos. A reversibilidade não é uma promessa da interface — é o que o filtro global de
+`DocumentTag` já garantia, porque exclui as ligações cuja etiqueta está removida sem as apagar.
+
+**A unicidade do nome olha só para o que está em circulação.** Um nome libertado por uma remoção
+volta a estar livre; restaurar uma etiqueta cujo nome foi entretanto ocupado é recusado, porque
+produziria dois rótulos iguais em documentos diferentes.
+
+**A retenção inverte a regra do catálogo, de propósito.** Mudar a duração de uma política é
+permitido: as obrigações de retenção mudam — muda a lei, muda o contrato — e um catálogo incapaz de
+as acompanhar é que seria a falsidade. O que a mudança faz é mexer na data de eliminação de todos os
+documentos que a política governa, e por isso `AuditPolicyAsync` escreve o valor antigo **e** o novo.
+Nem toda a alteração que afeta dados existentes é uma falsificação; distinguir as duas é a decisão de
+desenho deste bloco.
+
+**O que é recusado é retirar de circulação uma política que tipos ainda adotam**, e a mensagem
+nomeia-os: esses tipos continuariam a aplicar uma regra abandonada, e nada no ecrã o diria.
+
+**Uma armadilha do EF Core que este bloco expôs.** `IgnoreQueryFilters()` é um operador **de
+consulta**, não de subconsulta: escrito dentro da projeção de outra consulta, desliga os filtros
+dessa consulta inteira — incluindo o da organização. A primeira versão da lista de etiquetas contava
+documentos assim, e um administrador de uma organização passou a ver as etiquetas de outra. Não
+falhava nada: nem exceção, nem aviso, nem teste vermelho. A contagem passou a ser uma consulta
+própria com a condição de organização escrita à mão, e
+`tests/UnitTests/Persistence/QueryFilterUsageTests.cs` falha a compilação se o padrão reaparecer.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

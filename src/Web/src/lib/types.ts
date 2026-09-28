@@ -81,6 +81,7 @@ export const Permission = {
   adminUsers: 'admin.users',
   adminDepartments: 'admin.departments',
   adminDocumentTypes: 'admin.documenttypes',
+  adminSettings: 'admin.settings',
   signaturesRequest: 'signatures.request',
   signaturesSign: 'signatures.sign',
   portalAccess: 'portal.access',

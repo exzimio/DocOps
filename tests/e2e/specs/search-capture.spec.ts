@@ -16,7 +16,10 @@ test.describe('Capturas de pesquisa', () => {
     await page.screenshot({ path: 'screenshots/search-empty.png', fullPage: true })
 
     await page.getByRole('searchbox').fill('atlas tecnologia')
-    await page.getByText(/de relevância/).first().waitFor()
+    await page
+      .getByText(/de relevância/)
+      .first()
+      .waitFor()
     await page.waitForLoadState('networkidle')
     await page.screenshot({ path: 'screenshots/search-results.png', fullPage: true })
 

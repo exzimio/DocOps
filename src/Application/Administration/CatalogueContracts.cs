@@ -59,9 +59,54 @@ public sealed record AdminMetadataFieldDto
     public required bool CanDelete { get; init; }
 }
 
-/// <summary>Retention policies, read-only here: the type only needs to point at one.</summary>
-public sealed record AdminRetentionPolicyDto(
-    Guid Id, string Code, string Name, int RetentionMonths, RetentionTrigger Trigger);
+public sealed record AdminRetentionPolicyDto
+{
+    public required Guid Id { get; init; }
+    public required string Code { get; init; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+
+    /// <summary>The legal or contractual obligation behind the rule, so it stays explainable.</summary>
+    public string? LegalBasis { get; init; }
+
+    public required int RetentionMonths { get; init; }
+    public required RetentionTrigger Trigger { get; init; }
+    public required bool IsActive { get; init; }
+
+    /// <summary>How many document types adopt this policy by default.</summary>
+    public required int TypeCount { get; init; }
+}
+
+/// <summary>
+/// A tag as administration sees it. <see cref="DocumentCount"/> is what lets the screen say what
+/// removing it would cost before it is removed.
+/// </summary>
+public sealed record AdminTagDto
+{
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public string? Colour { get; init; }
+    public required int DocumentCount { get; init; }
+    public required bool IsDeleted { get; init; }
+}
+
+public sealed record SaveTagRequest
+{
+    public required string Name { get; init; }
+
+    /// <summary>`#RRGGBB`, or nothing. Anything else is refused rather than quietly dropped.</summary>
+    public string? Colour { get; init; }
+}
+
+public sealed record SaveRetentionPolicyRequest
+{
+    public required string Code { get; init; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public string? LegalBasis { get; init; }
+    public required int RetentionMonths { get; init; }
+    public RetentionTrigger Trigger { get; init; } = RetentionTrigger.OnArchive;
+}
 
 public sealed record SaveDocumentTypeRequest
 {
@@ -126,4 +171,37 @@ public interface IDocumentCatalogueAdminService
 
     Task<IReadOnlyList<AdminRetentionPolicyDto>> GetRetentionPoliciesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<AdminRetentionPolicyDto> CreateRetentionPolicyAsync(
+        SaveRetentionPolicyRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Editing a policy is allowed, including its duration — retention obligations genuinely
+    /// change, and a catalogue that could not follow the law would be the falsehood. The change is
+    /// audited with the old and the new value, because it moves the disposal date of every document
+    /// the policy governs.
+    /// </summary>
+    Task<AdminRetentionPolicyDto> UpdateRetentionPolicyAsync(
+        Guid policyId, SaveRetentionPolicyRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Refused while any document type still adopts the policy by default.</summary>
+    Task<AdminRetentionPolicyDto> SetRetentionPolicyActiveAsync(
+        Guid policyId, bool isActive, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AdminTagDto>> GetTagsAsync(
+        bool includeDeleted, CancellationToken cancellationToken = default);
+
+    Task<AdminTagDto> CreateTagAsync(SaveTagRequest request, CancellationToken cancellationToken = default);
+
+    Task<AdminTagDto> UpdateTagAsync(
+        Guid tagId, SaveTagRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes a tag from circulation without destroying anything. Unlike a metadata value, which
+    /// is what a document asserts, a tag is an annotation placed on it — so removing one is
+    /// reversible by design: the links survive and <see cref="RestoreTagAsync"/> brings them back.
+    /// </summary>
+    Task DeleteTagAsync(Guid tagId, CancellationToken cancellationToken = default);
+
+    Task<AdminTagDto> RestoreTagAsync(Guid tagId, CancellationToken cancellationToken = default);
 }

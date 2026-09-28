@@ -17,11 +17,13 @@ import {
   type SaveUserInput,
 } from '@/features/administration/api'
 import { DocumentCataloguePanel } from '@/features/administration/DocumentCataloguePanel'
+import { TagsPanel } from '@/features/administration/TagsPanel'
+import { RetentionPanel } from '@/features/administration/RetentionPanel'
 import { Button } from '@/components/ui/Button'
 import { Checkbox, TextField } from '@/components/ui/Field'
 import { Badge, Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
 
-type Tab = 'users' | 'departments' | 'catalogue'
+type Tab = 'users' | 'departments' | 'catalogue' | 'tags' | 'retention'
 
 const EMPTY: SaveUserInput = { firstName: '', lastName: '', roles: [], departmentIds: [] }
 
@@ -56,6 +58,8 @@ export function AdminPage() {
   const canAdminUsers = hasPermission(me, Permission.adminUsers)
   const canAdminDepartments = hasPermission(me, Permission.adminDepartments)
   const canAdminTypes = hasPermission(me, Permission.adminDocumentTypes)
+  // Reter documentos é uma decisão de conformidade, não de classificação: outra permissão.
+  const canAdminRetention = hasPermission(me, Permission.adminSettings)
 
   const startCreate = () => {
     setEditing(null)
@@ -122,6 +126,8 @@ export function AdminPage() {
             ['users', t('admin.tabs.users'), canAdminUsers],
             ['departments', t('admin.tabs.departments'), canAdminDepartments],
             ['catalogue', t('admin.tabs.catalogue'), canAdminTypes],
+            ['tags', t('admin.tabs.tags'), canAdminTypes],
+            ['retention', t('admin.tabs.retention'), canAdminRetention],
           ] as const
         )
           .filter(([, , allowed]) => allowed)
@@ -336,6 +342,10 @@ export function AdminPage() {
       )}
 
       {tab === 'catalogue' && canAdminTypes && <DocumentCataloguePanel />}
+
+      {tab === 'tags' && canAdminTypes && <TagsPanel />}
+
+      {tab === 'retention' && canAdminRetention && <RetentionPanel />}
 
       {tab === 'departments' && canAdminDepartments && (
         <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">

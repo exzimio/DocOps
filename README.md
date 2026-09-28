@@ -45,7 +45,7 @@ vem da base de dados através da API.
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | **Concluída** |
-| 8 | Relatórios e administração | **Em curso** — análises, administração de pessoas e departamentos, e catálogo de tipos e campos de metadados entregues; faltam etiquetas, retenção e editor de permissões |
+| 8 | Relatórios e administração | **Em curso** — análises, pessoas e departamentos, catálogo de tipos e campos, etiquetas e retenção entregues; falta o editor de permissões |
 | 9 | Testes, segurança e observabilidade | Planeada |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
 
@@ -307,14 +307,32 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
   ficheiro antes de alguém o ter lido — incluindo os que chegam por correio e pelo portal.
 - Cada recusa traz a contagem que a explica, e aparece **dentro do formulário** que a provocou.
 
+**Etiquetas e retenção** nos separadores Etiquetas e Retenção de `/app/admin`:
+
+- **Remover uma etiqueta é permitido e reversível**, e a distinção é deliberada: um valor de
+  metadados é o que o documento **afirma**, e por isso não se apaga; uma etiqueta é uma anotação
+  **colocada sobre** ele. As ligações aos documentos sobrevivem à remoção, e restaurar traz-lhes o
+  número de volta ao que era.
+- Nome único entre as que estão em circulação — um nome libertado por uma remoção volta a estar
+  livre. Cor validada como hexadecimal e **recusada**, não ignorada: uma cor que não chega é uma
+  cor que alguém escolheu e nunca viu aplicada.
+- **Mudar a duração de uma política de retenção é permitido**, ao contrário do que acontece no
+  catálogo. As obrigações mudam de facto — muda a lei, muda o contrato — e um catálogo incapaz de as
+  acompanhar é que seria a mentira. A mudança fica na auditoria com o valor antigo e o novo, porque
+  mexe na data de eliminação de todos os documentos que a política governa.
+- **Retirar uma política que tipos de documento adotam é recusado**, e a mensagem nomeia-os: esses
+  tipos continuariam a aplicar uma regra que a organização decidiu deixar de aplicar.
+- Gerir etiquetas é `admin.documenttypes`; decidir **quanto tempo se guardam documentos** é
+  `admin.settings` — é uma decisão de conformidade, não de classificação.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 327 |
-| Integração com SQL Server real (Testcontainers) | 160 |
+| Unitários (xUnit) | 328 |
+| Integração com SQL Server real (Testcontainers) | 169 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
-| End-to-end (Playwright, desktop e móvel) | 118 |
+| End-to-end (Playwright, desktop e móvel) | 134 |
 
 ## 4. Arquitetura
 
@@ -613,6 +631,10 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/admin/document-types/{id}/active` | Desativa ou reativa; o tipo de entrada é recusado |
 | `GET /api/admin/document-types/{id}/fields` · `POST` · `PUT /{fieldId}` · `DELETE /{fieldId}` | Esquema de metadados do tipo; eliminar é recusado se algum documento preencher o campo |
 | `GET /api/admin/retention-policies` | As políticas que um tipo pode adotar por omissão |
+| `GET /api/admin/tags` · `POST` · `PUT /{id}` | Etiquetas da organização (`includeDeleted` traz as removidas) |
+| `DELETE /api/admin/tags/{id}` · `POST /{id}/restore` | Remove de circulação e repõe: as ligações aos documentos sobrevivem |
+| `POST /api/admin/retention-policies` · `PUT /{id}` | Políticas de retenção; exige `admin.settings` |
+| `POST /api/admin/retention-policies/{id}/active` | Retirar é recusado enquanto um tipo a adotar |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow

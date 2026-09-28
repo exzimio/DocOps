@@ -26,6 +26,13 @@ public static class AuditActions
     public const string MetadataFieldCreated = "metadatafield.created";
     public const string MetadataFieldUpdated = "metadatafield.updated";
     public const string MetadataFieldDeleted = "metadatafield.deleted";
+    public const string TagCreated = "tag.created";
+    public const string TagUpdated = "tag.updated";
+    public const string TagDeleted = "tag.deleted";
+    public const string TagRestored = "tag.restored";
+    public const string RetentionPolicyCreated = "retentionpolicy.created";
+    public const string RetentionPolicyUpdated = "retentionpolicy.updated";
+    public const string RetentionPolicyActivationChanged = "retentionpolicy.activation.changed";
 
     public const string DocumentCreated = "document.created";
     public const string DocumentViewed = "document.viewed";
@@ -100,6 +107,8 @@ public static class AuditEntityTypes
     public const string Department = "Department";
     public const string DocumentType = "DocumentType";
     public const string MetadataField = "MetadataField";
+    public const string Tag = "Tag";
+    public const string RetentionPolicy = "RetentionPolicy";
     public const string Tenant = "Tenant";
     public const string Session = "Session";
     public const string Document = "Document";

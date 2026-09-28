@@ -50,8 +50,14 @@ export interface AdminRetentionPolicy {
   id: string
   code: string
   name: string
+  description: string | null
+  /** A obrigação legal ou contratual por trás da regra, para continuar explicável. */
+  legalBasis: string | null
   retentionMonths: number
   trigger: number
+  isActive: boolean
+  /** Quantos tipos de documento a adotam por omissão. É o que bloqueia retirá-la. */
+  typeCount: number
 }
 
 export interface SaveDocumentTypeInput {

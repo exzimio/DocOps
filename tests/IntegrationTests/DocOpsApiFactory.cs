@@ -59,6 +59,14 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
         Environment.SetEnvironmentVariable("Seed__Enabled", "false");
         Environment.SetEnvironmentVariable("Seed__ApplyMigrations", "false");
         Environment.SetEnvironmentVariable("Seed__DefaultPassword", SeedPassword);
+
+        // The whole suite is one process signing in against its own API, so the limiter counts the
+        // size of the test suite rather than anything about the product. It started refusing when
+        // the suite grew past two hundred sign-ins — a failure that says nothing about the code.
+        // Raised only here: production keeps the defaults in RateLimitingOptions, and no test
+        // asserts on the limiter, so nothing is being silenced.
+        Environment.SetEnvironmentVariable("RateLimiting__AuthenticationPermitLimit", "100000");
+        Environment.SetEnvironmentVariable("RateLimiting__GlobalPermitLimit", "1000000");
     }
 
     /// <summary>

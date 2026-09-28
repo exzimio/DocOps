@@ -49,7 +49,10 @@ test.describe('Centro de tarefas', () => {
     // document's type, so a purchase order would (correctly) offer nothing.
     await page.goto('/app/documents')
     await page.getByLabel('Pesquisar por título, referência ou metadados…').fill('Atlas Tecnologia 2026/0771')
-    await page.getByRole('link', { name: /Fatura Atlas Tecnologia 2026\/0771/ }).first().click()
+    await page
+      .getByRole('link', { name: /Fatura Atlas Tecnologia 2026\/0771/ })
+      .first()
+      .click()
     await page.waitForURL(/\/app\/documents\/[0-9a-f-]+$/)
 
     // Start the invoice approval process from the document itself.
@@ -61,7 +64,10 @@ test.describe('Centro de tarefas', () => {
 
     // The validation task lands on Procurement, which this user belongs to.
     await navigateTo(page, 'Tarefas')
-    const row = page.getByRole('main').locator('table tbody tr', { hasText: 'Validar dados da fatura' }).first()
+    const row = page
+      .getByRole('main')
+      .locator('table tbody tr', { hasText: 'Validar dados da fatura' })
+      .first()
     await expect(row).toBeVisible()
 
     await row.getByRole('button', { name: 'Concluir' }).click()

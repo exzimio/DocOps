@@ -59,11 +59,15 @@ test.describe('Centro de integrações', () => {
     await clickReliably(erpCard.getByRole('button', { name: 'Ver registo' }))
     const logDialog = page.getByRole('dialog', { name: /Registo — ERP/ })
     await logDialog.waitFor()
-    await expect(logDialog.getByText('«Nordvik Systems» não existe no sistema externo.').first()).toBeVisible()
+    await expect(
+      logDialog.getByText('«Nordvik Systems» não existe no sistema externo.').first(),
+    ).toBeVisible()
 
     // O filtro de nível esconde a entrada informativa e deixa só o aviso.
     await clickReliably(logDialog.getByRole('button', { name: 'Aviso' }))
-    await expect(logDialog.getByText('«Nordvik Systems» não existe no sistema externo.').first()).toBeVisible()
+    await expect(
+      logDialog.getByText('«Nordvik Systems» não existe no sistema externo.').first(),
+    ).toBeVisible()
     await expect(logDialog.getByText(/valor\(es\) de/)).toHaveCount(0)
 
     await clickReliably(logDialog.getByRole('button', { name: 'Fechar' }))
@@ -98,7 +102,9 @@ test.describe('Centro de integrações', () => {
 
     await page.reload()
     await page.getByRole('heading', { name: 'Integrações' }).waitFor()
-    await expect(page.getByRole('region', { name: 'Importação de ficheiros' }).getByText('Desativada')).toBeVisible()
+    await expect(
+      page.getByRole('region', { name: 'Importação de ficheiros' }).getByText('Desativada'),
+    ).toBeVisible()
 
     // Repõe o catálogo de demonstração como estava.
     const restoredCard = page.getByRole('region', { name: 'Importação de ficheiros' })

@@ -76,7 +76,9 @@ test.describe('Pesquisa', () => {
     await expect(page.getByText('Demonstração')).toBeVisible()
     const reading = page.getByRole('list', { name: 'Filtros lidos na pergunta' })
     await expect(reading.getByRole('listitem').filter({ hasText: 'Aprovação:' })).toBeVisible()
-    await expect(reading.getByRole('listitem').filter({ hasText: 'Tipo: Fatura de fornecedor' })).toBeVisible()
+    await expect(
+      reading.getByRole('listitem').filter({ hasText: 'Tipo: Fatura de fornecedor' }),
+    ).toBeVisible()
   })
 
   test('uma pergunta que ninguém ensinou é dita como tal, e não inventada', async ({ page }) => {

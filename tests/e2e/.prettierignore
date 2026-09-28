@@ -1,0 +1,4 @@
+# Saída das corridas, não código: capturas, relatórios e vestígios do Playwright.
+screenshots/
+test-results/
+playwright-report/

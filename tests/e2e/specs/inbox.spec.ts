@@ -97,7 +97,9 @@ test.describe('Caixa de entrada', () => {
     await expect(list.getByRole('button').filter({ hasNotText: 'Arquivada' })).toHaveCount(0)
   })
 
-  test('guardar um anexo cria um documento, liga a mensagem e o documento passa a existir', async ({ page }) => {
+  test('guardar um anexo cria um documento, liga a mensagem e o documento passa a existir', async ({
+    page,
+  }) => {
     await signIn(page, manager)
     await page.goto('/app/inbox')
     await showEveryStatus(page)
@@ -180,6 +182,12 @@ test.describe('Caixa de entrada', () => {
     const detail = page.getByRole('region', { name: /regularizar/ })
     const archiveButton = detail.getByRole('button', { name: 'Arquivar' })
     const reopenButton = detail.getByRole('button', { name: 'Reabrir' })
+
+    // Esperar por um dos dois antes de perguntar qual está lá. `count()` não espera: com o painel
+    // ainda a carregar responde zero, o teste saltaria a reabertura e ficaria à espera de um botão
+    // «Arquivar» que nunca apareceria, porque a mensagem já estaria arquivada de uma corrida
+    // anterior. Foi assim que este teste falhou uma vez e passou nas seguintes.
+    await expect(archiveButton.or(reopenButton)).toBeVisible()
 
     // Uma corrida anterior pode tê-la deixado arquivada; reabre-se primeiro para partir de um
     // estado conhecido, tal como aconteceria se alguém a tivesse arquivado por engano.

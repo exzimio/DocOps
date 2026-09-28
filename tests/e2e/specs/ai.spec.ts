@@ -41,7 +41,9 @@ async function deleteDocument(page: Page, url: string) {
 }
 
 test.describe('Inteligência documental', () => {
-  test('uma fatura por classificar é lida, revista, aplicada e fica registada na auditoria', async ({ page }) => {
+  test('uma fatura por classificar é lida, revista, aplicada e fica registada na auditoria', async ({
+    page,
+  }) => {
     await signIn(page, manager)
     const documentUrl = await uploadIntakeDocument(page, `Fatura recebida E2E ${Date.now()}`)
 

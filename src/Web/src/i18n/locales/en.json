@@ -1005,11 +1005,13 @@
   },
   "admin": {
     "title": "Administration",
-    "subtitle": "People, roles, departments and this organisation's document type catalogue.",
+    "subtitle": "People, roles, departments, document types, tags and retention for this organisation.",
     "tabs": {
       "users": "People",
       "departments": "Departments",
-      "catalogue": "Catalogue"
+      "catalogue": "Catalogue",
+      "tags": "Tags",
+      "retention": "Retention"
     },
     "users": {
       "title": "People",
@@ -1098,6 +1100,53 @@
       "emptyTitle": "No fields",
       "emptyBody": "This type asks for no metadata beyond what every document has.",
       "formLabel": "Field form"
+    },
+    "tags": {
+      "title": "Tags",
+      "subtitle": "A tag is an annotation placed on a document, not something the document asserts — so removing one is allowed, and reversible: the links survive.",
+      "tag": "Tag",
+      "name": "Name",
+      "colour": "Colour",
+      "colourHint": "Hexadecimal, such as #2F6F62. Leave empty for no colour.",
+      "documents": "Documents",
+      "includeDeleted": "Include removed",
+      "removed": "Removed",
+      "remove": "Remove",
+      "restore": "Restore",
+      "create": "Create tag",
+      "createTitle": "New tag",
+      "editTitle": "Edit tag",
+      "formLabel": "Tag form",
+      "search": "Search tags…",
+      "noneTitle": "No tags",
+      "noneBody": "Nothing matches what you searched for."
+    },
+    "retention": {
+      "title": "Retention policies",
+      "subtitle": "How long each class of document is kept, and from which event. Changing the duration is allowed — obligations do change — and is audited with the old and the new value.",
+      "policy": "Policy",
+      "name": "Name",
+      "code": "Code",
+      "duration": "Duration",
+      "durationMonths": "Duration in months",
+      "durationHint": "Between 1 and 1200 months.",
+      "months": "{{count}} months",
+      "trigger": "Starts at",
+      "triggers": {
+        "0": "Creation",
+        "1": "Approval",
+        "2": "Archiving"
+      },
+      "types": "Types",
+      "legalBasis": "Legal or contractual basis",
+      "legalBasisHint": "Shown beside the policy, so the rule stays explainable.",
+      "withdraw": "Withdraw",
+      "withdrawn": "Withdrawn",
+      "reinstate": "Reinstate",
+      "create": "Create policy",
+      "createTitle": "New policy",
+      "editTitle": "Edit policy",
+      "formLabel": "Retention policy form"
     }
   }
 }

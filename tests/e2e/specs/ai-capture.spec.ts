@@ -24,12 +24,18 @@ test.describe('Capturas de inteligência documental', () => {
     await page.screenshot({ path: 'screenshots/ai-review.png' })
 
     // Clicking a piece of evidence highlights the line it was read from.
-    await page.getByRole('button', { name: /linha 21/ }).first().click()
+    await page
+      .getByRole('button', { name: /linha 21/ })
+      .first()
+      .click()
     await page.waitForTimeout(600)
     await page.screenshot({ path: 'screenshots/ai-evidence.png' })
 
     await page.getByRole('button', { name: 'Qual é o total?' }).click()
-    await page.getByText(/906,50/).first().waitFor()
+    await page
+      .getByText(/906,50/)
+      .first()
+      .waitFor()
     await page.getByRole('heading', { name: 'Perguntar ao documento' }).scrollIntoViewIfNeeded()
     await page.waitForTimeout(400)
     await page.screenshot({ path: 'screenshots/ai-ask.png' })

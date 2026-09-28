@@ -213,6 +213,12 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Metadados de documentos apagados pela porta da configuração | Um campo com valores não se elimina nem muda de tipo: eliminar apagaria o que os documentos dizem, e mudar de tipo deixaria os valores na coluna errada — ilegíveis, não em erro |
 | Catálogo a afirmar o que os documentos não cumprem | Tornar um campo obrigatório é recusado se algum documento do tipo ficasse por preencher, com a contagem na resposta |
 | Entrada de documentos fechada por configuração | O tipo de entrada não se desativa nem aceita campos obrigatórios: fechá-lo travaria o correio e o portal, onde ninguém está a olhar para reparar |
+| **Filtros de organização desligados sem querer por uma subconsulta** | `IgnoreQueryFilters()` é um operador de consulta: dentro de uma projeção desliga os filtros da consulta toda, incluindo o da organização, sem falhar nada. Aconteceu na lista de etiquetas. Uma guarda lê o código-fonte e falha a compilação se o operador aparecer dentro de uma projeção |
+| Etiquetas de uma organização visíveis noutra | Contagens em consulta própria, com a condição de organização escrita à mão, e um teste de integração que verifica identidade — nenhuma etiqueta de uma aparece na outra |
+| Anotações de documentos destruídas por um clique | Remover uma etiqueta é reversível: as ligações sobrevivem e restaurar devolve o mesmo número de documentos. O que é irreversível — um campo de metadados com valores — continua a ser recusado |
+| Retenção encurtada sem rasto | Mudar a duração é permitido, porque as obrigações mudam, mas fica na auditoria com o valor antigo e o novo: move a data de eliminação de todos os documentos que a política governa |
+| Regra de retenção abandonada a continuar a aplicar-se | Retirar uma política é recusado enquanto um tipo de documento a adotar por omissão, e a mensagem nomeia os tipos |
+| Quem classifica a decidir quanto tempo se guarda | `admin.documenttypes` gere etiquetas e tipos; alterar políticas de retenção exige `admin.settings` — conformidade e classificação são decisões diferentes |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

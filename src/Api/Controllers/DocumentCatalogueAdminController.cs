@@ -97,13 +97,91 @@ public sealed class DocumentCatalogueAdminController(IDocumentCatalogueAdminServ
         return NoContent();
     }
 
-    /// <summary>The policies a type can point at. Managing the policies themselves comes later.</summary>
+    /// <summary>
+    /// Reading the policies needs only catalogue rights, because a type has to be able to point at
+    /// one. Changing them is <see cref="Permissions.AdminSettings"/>: how long the organisation
+    /// keeps its documents is a compliance decision, not a classification one.
+    /// </summary>
     [HttpGet("retention-policies")]
     [HasPermission(Permissions.AdminDocumentTypes)]
     [ProducesResponseType<IReadOnlyList<AdminRetentionPolicyDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AdminRetentionPolicyDto>>> GetRetentionPolicies(
         CancellationToken cancellationToken) =>
         Ok(await catalogue.GetRetentionPoliciesAsync(cancellationToken));
+
+    [HttpPost("retention-policies")]
+    [HasPermission(Permissions.AdminSettings)]
+    [ProducesResponseType<AdminRetentionPolicyDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AdminRetentionPolicyDto>> CreateRetentionPolicy(
+        SaveRetentionPolicyRequest request, CancellationToken cancellationToken)
+    {
+        AdminRetentionPolicyDto created = await catalogue.CreateRetentionPolicyAsync(request, cancellationToken);
+
+        return CreatedAtAction(nameof(GetRetentionPolicies), new { }, created);
+    }
+
+    [HttpPut("retention-policies/{id:guid}")]
+    [HasPermission(Permissions.AdminSettings)]
+    [ProducesResponseType<AdminRetentionPolicyDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AdminRetentionPolicyDto>> UpdateRetentionPolicy(
+        Guid id, SaveRetentionPolicyRequest request, CancellationToken cancellationToken) =>
+        Ok(await catalogue.UpdateRetentionPolicyAsync(id, request, cancellationToken));
+
+    /// <summary>Withdrawing a policy is refused while a document type still adopts it.</summary>
+    [HttpPost("retention-policies/{id:guid}/active")]
+    [HasPermission(Permissions.AdminSettings)]
+    [ProducesResponseType<AdminRetentionPolicyDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AdminRetentionPolicyDto>> SetRetentionPolicyActive(
+        Guid id, SetTypeActiveRequest request, CancellationToken cancellationToken) =>
+        Ok(await catalogue.SetRetentionPolicyActiveAsync(id, request.IsActive, cancellationToken));
+
+    [HttpGet("tags")]
+    [HasPermission(Permissions.AdminDocumentTypes)]
+    [ProducesResponseType<IReadOnlyList<AdminTagDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AdminTagDto>>> GetTags(
+        [FromQuery] bool includeDeleted = false, CancellationToken cancellationToken = default) =>
+        Ok(await catalogue.GetTagsAsync(includeDeleted, cancellationToken));
+
+    [HttpPost("tags")]
+    [HasPermission(Permissions.AdminDocumentTypes)]
+    [ProducesResponseType<AdminTagDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AdminTagDto>> CreateTag(
+        SaveTagRequest request, CancellationToken cancellationToken)
+    {
+        AdminTagDto created = await catalogue.CreateTagAsync(request, cancellationToken);
+
+        return CreatedAtAction(nameof(GetTags), new { }, created);
+    }
+
+    [HttpPut("tags/{id:guid}")]
+    [HasPermission(Permissions.AdminDocumentTypes)]
+    [ProducesResponseType<AdminTagDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AdminTagDto>> UpdateTag(
+        Guid id, SaveTagRequest request, CancellationToken cancellationToken) =>
+        Ok(await catalogue.UpdateTagAsync(id, request, cancellationToken));
+
+    /// <summary>Takes the tag out of circulation. The links survive, and restoring brings them back.</summary>
+    [HttpDelete("tags/{id:guid}")]
+    [HasPermission(Permissions.AdminDocumentTypes)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteTag(Guid id, CancellationToken cancellationToken)
+    {
+        await catalogue.DeleteTagAsync(id, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("tags/{id:guid}/restore")]
+    [HasPermission(Permissions.AdminDocumentTypes)]
+    [ProducesResponseType<AdminTagDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AdminTagDto>> RestoreTag(Guid id, CancellationToken cancellationToken) =>
+        Ok(await catalogue.RestoreTagAsync(id, cancellationToken));
 }
 
 public sealed record SetTypeActiveRequest(bool IsActive);
