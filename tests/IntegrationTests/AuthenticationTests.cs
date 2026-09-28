@@ -41,6 +41,15 @@ public class AuthenticationTests(DocOpsApiFactory factory)
         Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("samesite=lax", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(DocOpsApiFactory.SeedPassword, setCookie, StringComparison.Ordinal);
+
+        // A outra metade da mesma regra. O cookie ser HttpOnly não vale nada se a resposta trouxer
+        // a credencial no corpo, onde qualquer script a lê — e é assim que a regra se perde na
+        // prática: alguém acrescenta um token ao corpo para resolver um problema de sessão.
+        string body = await response.Content.ReadAsStringAsync();
+
+        Assert.DoesNotContain("token", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("bearer", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(DocOpsApiFactory.SeedPassword, body, StringComparison.Ordinal);
     }
 
     [Fact]

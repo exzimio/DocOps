@@ -235,6 +235,60 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |
 | Divulgação em mensagens de erro | `ProblemDetails` uniformes, sem detalhe interno |
 
+## 12.1 Revisão da superfície de ataque (Fase 9)
+
+A lista acima tem 89 entradas. Uma lista dessas envelhece de uma forma perigosa: cada linha continua
+a **parecer** verdade muito depois de o código ter mudado, e uma ameaça listada que já não descreve
+o produto é pior do que uma ameaça não listada, porque dá confiança em vez de a pedir.
+
+A revisão foi, por isso, **confirmar afirmações**, não escrever linhas novas. O que se seguiu foi
+escolher as afirmações cuja falsidade seria silenciosa e verificá-las contra o código a correr.
+
+### O que passou a ter prova
+
+| Afirmação | Como estava | Como está |
+| --- | --- | --- |
+| **A sessão vive num cookie `HttpOnly` e em mais lado nenhum** | Regra não-negociável do projeto, **sem um único teste** | `tests/e2e/specs/session-storage.spec.ts` entra na aplicação, enumera tudo o que o browser guardou e recusa qualquer valor com ar de credencial — por nome, por conteúdo e pela forma de um JWT. E confirma que `document.cookie` não vê o cookie de sessão |
+| A resposta ao início de sessão não traz credenciais | O teste verificava o cookie, não o corpo | Passa a verificar o corpo. O cookie ser `HttpOnly` não vale nada se a credencial vier no corpo, onde qualquer script a lê |
+| As sondas anónimas não descrevem falhas | Assumido | Verificado em `SystemHealthTests`: nome, estado e duração, e nunca exceção, cadeia de ligação ou nome de máquina |
+
+Estas três partilham um modo de falhar, e é o que as torna dignas de teste: **perdem-se por alguém
+resolver um problema legítimo**. Uma sessão que não sobrevive a uma janela nova, um pedido que falha
+depois de recarregar — guardar o token no `localStorage` resolve os dois, passa a funcionar, e
+ninguém repara.
+
+O teste de armazenamento tem um par que é preciso ler em conjunto: o segundo verifica que a sessão
+**sobrevive a recarregar a página**. Sem ele, o primeiro seria satisfeito por uma aplicação que não
+guarda a sessão em sítio nenhum — e que, por isso, também não a mantém.
+
+### O que já tinha prova, e continua a ter
+
+Imutabilidade da auditoria (a aplicação não altera nem apaga eventos), cabeçalhos de segurança e
+identificador de correlação em cada resposta, respostas indistinguíveis entre conta inexistente e
+palavra-passe errada, recusa de pedidos que alteram estado sem origem permitida, cobertura dos
+filtros por organização, e ausência de `IgnoreQueryFilters` dentro de projeções. As duas últimas
+não são testes: falham a **compilação**.
+
+### Duas coisas que estão no repositório de propósito, e que convém dizer
+
+Uma revisão honesta também nomeia o que parece um defeito e não é — senão a próxima pessoa a olhar
+gasta uma tarde a chegar à mesma conclusão, ou pior, «corrige-o».
+
+- **A cadeia de ligação de desenvolvimento está versionada**, com a palavra-passe do contentor
+  local. É deliberado: o contentor é descartável, publica só em *loopback*, e a cadeia existe para
+  que o projeto arranque sem configuração. Em `appsettings.json` — o ficheiro que vale fora de
+  desenvolvimento — a cadeia está **vazia**, e o valor real vem do ambiente.
+- **A palavra-passe das contas de demonstração está no código do frontend** e é mostrada no ecrã de
+  entrada. Também é deliberado: todas as contas são fictícias e o produto é uma demonstração de
+  portefólio. Escondê-la seria encenação — quem visita a demonstração precisa de entrar, e fingir
+  que aquilo é um segredo não protegeria nada.
+
+### O que a revisão não fez
+
+Não reescreveu a lista, não acrescentou ameaças novas, e não verificou as 89 uma a uma. Verificou as
+que **falham em silêncio** e as que a Fase 9 tocou. As restantes descrevem código que não mudou
+desde que foram escritas, e cada uma nasceu com o bloco que a tornou verdadeira.
+
 ## 13. Trabalho em segundo plano
 
 O worker corre sem organização no contexto ambiente, o que lhe permite processar todas as
