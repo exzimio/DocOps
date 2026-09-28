@@ -446,6 +446,60 @@ mais nada: nenhuma permissão contorna isso.
 
 Detalhes e alternativas rejeitadas em [ADR-009](adr/ADR-009-electronic-signature.md).
 
+## 10.7 Análises e relatórios
+
+**Nenhum número é guardado.** Não há tabela de agregados nem cache: cada indicador do painel é uma
+consulta executada no momento, sobre as mesmas tabelas que a aplicação usa para trabalhar. É uma
+decisão com um custo assumido — o painel paga latência de consulta a cada abertura — e a alternativa,
+agregados mantidos por um processo à parte, traz a única avaria que este projeto não pode ter: um
+painel que discorda da lista que está ao lado dele. Ver [ADR-010](adr/ADR-010-analytics-from-queries.md).
+
+**As consultas passam pelo predicado de visibilidade.** `ReportingService` reutiliza
+`DocumentAccessResolver.BuildVisibilityPredicate`, o mesmo que a listagem, a pesquisa e o portal
+usam. Uma contagem é uma fuga de informação como qualquer outra: saber que existem catorze documentos
+confidenciais no departamento jurídico é saber alguma coisa sobre eles.
+
+**Tudo tem de ser traduzível para SQL.** O agrupamento por dia usa
+`EF.Functions.DateDiffDay(início, data)` — inteiros que o motor sabe agrupar — e as datas são
+reconstruídas depois de ler. `DateOnly.FromDateTime` compila e rebenta em tempo de execução, que é a
+pior ordem possível para descobrir o problema.
+
+**A ausência de base é um valor.** `MetricDto.Value` é `decimal?`. Zero afirma que se mediu e deu
+zero; `null` diz que não havia o que medir, e a interface escreve-o por extenso. Foi preciso olhar
+para o ecrã com uma janela de sete dias para ver que o painel estava a afirmar `0%` de automação num
+período em que nada havia para automatizar.
+
+**Os estados atravessam a fronteira como números.** O servidor envia o valor da enumeração, não o seu
+nome: `PendingApproval` é vocabulário interno, e um ecrã em português que o mostre está a expor a
+implementação. O cliente traduz com as chaves que o resto da aplicação já usa; a exportação para CSV
+reconverte para nomes legíveis, porque um ficheiro não tem quem o traduza.
+
+## 10.8 Administração
+
+**A organização vem sempre das *claims*.** `AdministrationService` nunca aceita um identificador de
+organização vindo do pedido — o mesmo princípio de todo o resto, aplicado ao sítio onde a tentação é
+maior, porque uma administração parece o lugar natural para «escolher a organização».
+
+**Há uma mudança que o serviço recusa sempre: a própria conta.** `LoadEditableAsync` compara com o
+utilizador atual e recusa antes de olhar para o que foi pedido. Não é cautela de interface — um
+administrador que se desative, ou que se retire o perfil, cria uma avaria sem reparação de dentro do
+produto. O DTO expõe `CanEdit` para o ecrã não oferecer o que o servidor vai recusar, mas a decisão é
+do servidor.
+
+**A conta de plataforma está acima da organização**, e por isso também não se gere a partir dela.
+`IsPlatformAccount` no DTO existe para o ecrã poder dizer o motivo certo: as duas contas são
+inalteráveis daqui, mas por razões diferentes, e uma única legenda para as duas seria falsa numa
+delas.
+
+**`SystemAdmin` não é oferecido nem aceite.** `EnsureRolesExistAsync` exclui-o do catálogo devolvido,
+e guardar um perfil que não conste desse catálogo é recusado com `409`. Sem a segunda metade, bastava
+enviar o nome à mão para uma organização se promover para fora da sua fronteira.
+
+**Contas desativam-se, não se eliminam.** `IsActive` a falso tira a conta da lista de trabalho e
+impede o início de sessão; a linha permanece, porque a auditoria, os documentos e as decisões
+referem-se a ela. A palavra-passe inicial é gerada com `RandomNumberGenerator` e devolvida uma única
+vez — o servidor guarda o resumo e não a sabe recuperar.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

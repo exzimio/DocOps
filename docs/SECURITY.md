@@ -200,6 +200,14 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Direitos de edição distribuídos só para recolher assinaturas | Assinar exige ver o documento, não editá-lo: a transição de estado é validada pelo ciclo de vida, não pelos direitos de quem age |
 | Pedido de assinatura que ninguém pode cumprir | Recusado ao pedir, quer o signatário não veja o documento, quer não tenha permissão para assinar |
 | Dúvida sobre se um documento está assinado | No máximo um pedido em aberto por documento, garantido por índice único filtrado na base de dados |
+| Fuga de informação pelos números de um painel | As consultas do relatório passam pelo mesmo predicado de visibilidade da listagem e da pesquisa: um total conta o que quem pergunta pode abrir. Saber que existem catorze documentos confidenciais no jurídico é saber alguma coisa sobre eles |
+| Exportação de dados por quem só pode consultar | Ver e exportar são permissões distintas: `reports.view` mostra o painel, `reports.export` é exigida para o CSV — no servidor, não apenas escondendo o botão |
+| **Administrador de uma organização a gerir a conta que administra a plataforma** | `IsPlatformAdministrator` exclui a conta da edição e da desativação, no DTO **e** no serviço. Sem isto, guardar uma edição demovia-a em silêncio, porque `SystemAdmin` não consta dos perfis que o ecrã oferece |
+| **Organização a promover-se para fora da sua fronteira** | `SystemAdmin` não é devolvido no catálogo de perfis atribuíveis **e** é recusado com `409` se o nome for enviado à mão. A primeira metade sozinha seria apenas uma interface discreta |
+| Administrador a trancar a organização fora de si própria | A própria conta não se edita nem se desativa a partir daqui: retirar-se o perfil de administração é a única avaria sem reparação possível de dentro do produto |
+| Conta eliminada a apagar o significado da auditoria | Contas são desativadas, nunca eliminadas: os documentos, as decisões e o trilho referem-se àquela conta |
+| Palavra-passe inicial recuperável | Gerada com `RandomNumberGenerator` e devolvida **uma única vez**, na resposta à criação. O servidor guarda o resumo; não há endereço que a devolva |
+| Administração de uma organização alcançada por outra | A organização vem das *claims*, nunca do pedido; uma conta de outra organização não é encontrada, e responde `404` em vez de admitir que existe |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

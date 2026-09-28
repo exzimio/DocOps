@@ -672,6 +672,87 @@ Abra o separador **Auditoria** do mesmo documento. Lá estão `signature.request
 `signature.signed`, com quem, quando e sobre que versão — no sítio onde as pessoas procuram a
 história de um documento, e não escondidas num registo separado de assinaturas.
 
+## Demonstração disponível na Fase 8 — Análises (≈4 minutos)
+
+Entre como `admin@asteria.example` e abra **Análises**.
+
+### 1. Os números não estão escritos em lado nenhum (1 min)
+
+Repare primeiro no que o painel diz de si próprio: os números contam **apenas o que quem está a ver
+tem permissão para ver**. Não é uma limitação técnica — é a mesma regra da listagem e da pesquisa,
+aplicada aqui. Uma contagem é informação: saber quantos documentos confidenciais existem no
+jurídico é saber alguma coisa sobre eles.
+
+Mude o período para **7 dias** e veja os números mudarem. Se não mudassem, o filtro não estaria a
+chegar ao servidor — e é exactamente esse o teste que corre nesta página.
+
+### 2. O que o painel se recusa a dizer (1 min)
+
+Ainda com a janela de sete dias, procure uma medida que diga **«sem base de cálculo no período»**.
+
+Esta é a parte que vale a pena explicar em voz alta: quase todos os painéis mostrariam `0%` ali.
+Zero é uma afirmação — mediu-se e deu zero — e num período em que nada aconteceu lê-se como um mau
+resultado quando não houve resultado nenhum. É uma mentira com aspecto de facto. O contrato da API
+devolve `null`, e o ecrã escreve-o por extenso ([ADR-010](adr/ADR-010-analytics-from-queries.md)).
+
+### 3. Um gráfico por medida (1 min)
+
+Documentos criados, processos iniciados e processos concluídos têm **três gráficos separados**, não
+um com dois eixos. Medidas de escalas diferentes num eixo duplo fazem parecer comparável o que não
+é — e o problema não é estético, é de leitura.
+
+Desça até **«Onde os processos param»**: os passos com trabalho à espera, com nome real e há quanto
+tempo. É a pergunta que um gestor faz, respondida com uma consulta em vez de uma impressão.
+
+### 4. Exportar (1 min)
+
+Exporte o CSV. Repare que os estados vão em nomes legíveis, não em números — um ficheiro não tem
+quem o traduza do lado de lá.
+
+Depois saia e entre como `ana.ferreira@asteria.example`. O botão de exportar **desapareceu**: exige
+`reports.export`, que este perfil não tem. Se o forçasse pelo endereço, o servidor recusava na mesma
+— esconder é conveniência, a recusa é do servidor.
+
+## Demonstração disponível na Fase 8 — Administração (≈4 minutos)
+
+Como `admin@asteria.example`, abra **Administração**.
+
+### 1. Criar uma conta que entra mesmo (1 min 30 s)
+
+Crie uma pessoa: e-mail, nome, um perfil e um departamento. A palavra-passe inicial aparece **uma
+vez**, num aviso. Copie-a.
+
+Não há botão para a ver outra vez, e isso é a funcionalidade: o servidor guarda apenas o resumo
+criptográfico. Um ecrã capaz de a mostrar de novo estaria a dizer que a guarda em claro.
+
+Saia, entre com essa conta. Funciona. Volte a entrar como administrador, **desative-a**, e tente
+entrar outra vez — já não entra. Ligue **«incluir desativadas»**: a conta continua lá. Não foi
+eliminada, porque a auditoria e os documentos referem-se a ela.
+
+### 2. A mudança que o ecrã recusa fazer (1 min)
+
+Procure a sua própria linha na lista. **Não tem botões** — diz «a sua conta».
+
+Explique porquê: um administrador que se retire o perfil de administração, ou se desative, cria a
+única avaria sem reparação possível de dentro do produto. O servidor recusa mesmo que o pedido
+chegue por outra via; o que a interface faz é não oferecer o que vai ser recusado.
+
+Procure agora `admin@docops.example`. Também não tem botões, mas a legenda é outra: **«conta de
+plataforma»**. As duas são inalteráveis daqui, por razões diferentes — e uma única legenda para as
+duas seria falsa numa delas. Este foi um defeito real, apanhado a ler uma captura de ecrã.
+
+### 3. O perfil que não se distribui (1 min)
+
+Repare nos perfis oferecidos: `TenantAdmin`, `Manager`, `Employee`, `FinanceApprover`,
+`ExternalPartner` — e **não** `SystemAdmin`. Esse é concedido ao nível da plataforma; se uma
+organização o pudesse atribuir, promovia-se para fora da sua própria fronteira. Não está na lista
+**e** é recusado com `409` se for enviado à mão.
+
+### 4. Departamentos (30 s)
+
+Crie um departamento e tente criar outro com o mesmo código. É recusado, com a mensagem a vir do
+servidor — é lá que a unicidade é decidida, não numa validação do browser.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

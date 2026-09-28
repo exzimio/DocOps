@@ -45,7 +45,7 @@ vem da base de dados através da API.
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | **Concluída** |
-| 8 | Relatórios e administração | Planeada |
+| 8 | Relatórios e administração | **Em curso** — análises e administração de pessoas e departamentos entregues; faltam tipos de documento, metadados, etiquetas, retenção e editor de permissões |
 | 9 | Testes, segurança e observabilidade | Planeada |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
 
@@ -265,14 +265,42 @@ vem da base de dados através da API.
 
 Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signature.md).
 
+### Entregue na Fase 8 (em curso)
+
+**Análises e relatórios** em `/app/reports`:
+
+- **Indicadores calculados por consulta, nunca guardados** — documentos criados, processos iniciados
+  e concluídos, tarefas em atraso, tempo médio de processamento, taxa de automação, tempo até
+  aprovação. O briefing é explícito: *«All analytics must be generated from actual database data»*.
+- **Cada painel é a fatia de quem o abre.** As consultas passam pelo mesmo predicado de visibilidade
+  da pesquisa e do portal — um total que incluísse documentos invisíveis revelaria por agregação
+  aquilo que a lista esconde.
+- **Uma medida sem base diz que não tem base**, em vez de dizer zero. Zero afirma que se mediu; num
+  período em que nada aconteceu é uma mentira com aspeto de facto.
+- Tendências por dia, distribuições por estado, tipo e departamento, e **onde os processos param** —
+  os passos com trabalho à espera e há quanto tempo.
+- Gráficos em SVG construídos à mão, um por medida. Medidas de escalas diferentes não partilham
+  eixo. Exportação para CSV atrás da permissão `reports.export`.
+
+**Administração** em `/app/admin`:
+
+- Criar contas com **palavra-passe inicial mostrada uma única vez** — o servidor guarda o resumo
+  criptográfico e não a sabe devolver. Atribuir perfis e departamentos, desativar e reativar.
+- **A própria conta não se edita a partir daqui.** Tirar a si mesmo a administração, ou desativar-se,
+  pode deixar a organização sem ninguém capaz de desfazer.
+- **Contas são desativadas, nunca eliminadas**: a auditoria e os documentos referem-se a elas.
+- `SystemAdmin` não é atribuível de dentro de uma organização, e a conta que administra a plataforma
+  não se gere a partir de uma organização — recusado no servidor, não apenas escondido.
+- Departamentos com código único por organização, criação e edição.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 325 |
-| Integração com SQL Server real (Testcontainers) | 136 |
-| Componente e unidade no frontend (Vitest + Testing Library) | 57 |
-| End-to-end (Playwright, desktop e móvel) | 90 |
+| Unitários (xUnit) | 327 |
+| Integração com SQL Server real (Testcontainers) | 151 |
+| Componente e unidade no frontend (Vitest + Testing Library) | 59 |
+| End-to-end (Playwright, desktop e móvel) | 106 |
 
 ## 4. Arquitetura
 
@@ -559,6 +587,14 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET /api/documents/{id}/signatures` · `POST` | Pedidos de assinatura de um documento, e criar um |
 | `GET /api/signatures/mine` | O que aguarda a assinatura de quem pergunta |
 | `POST /api/signatures/{id}/sign` · `/decline` · `/cancel` | Assinar, recusar com motivo, retirar o pedido |
+| `GET /api/reports/dashboard` | Indicadores, tendências, distribuições e estrangulamentos do período pedido, limitados ao que o chamador pode ver |
+| `GET /api/reports/export` | O mesmo conjunto em CSV; exige `reports.export` |
+| `GET /api/admin/users` | Contas da organização do chamador (`includeInactive` traz as desativadas) |
+| `POST /api/admin/users` | Cria uma conta e devolve a palavra-passe inicial — uma única vez |
+| `PUT /api/admin/users/{id}` | Nome, função, perfis e departamentos; recusa a própria conta e `SystemAdmin` |
+| `POST /api/admin/users/{id}/active` | Desativa ou reativa; nunca elimina |
+| `GET /api/admin/roles` | Perfis atribuíveis e o que cada um concede |
+| `GET /api/admin/departments` · `POST` · `PUT /{id}` | Departamentos da organização, com código único |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow
@@ -703,6 +739,8 @@ necessário para correr o projeto localmente.
 | Motor de workflow próprio | Elsa, BPMN, WF | Persistência e identidade próprias colidiriam com o isolamento e a auditoria; ver [ADR-006](docs/adr/ADR-006-workflow-engine.md) |
 | Condições como operador sobre variável | Linguagem de expressões | Suficiente para regras de negócio, e sem superfície para executar código a partir de dados |
 | Worker em processo separado | Trabalho em segundo plano dentro da API | Trabalho periódico e lento não partilha recursos com pedidos de utilizadores |
+| Indicadores calculados no momento | Tabela de agregados mantida por um processo à parte, ou cache | Paga-se latência para nunca haver um painel que discorda da lista ao lado; ver [ADR-010](docs/adr/ADR-010-analytics-from-queries.md) |
+| Medida sem base devolve `null` | Devolver zero, como quase todos os painéis | Zero afirma que se mediu; num período sem nada para medir é uma mentira com aspeto de facto |
 
 ## 18. Melhorias futuras
 

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { clickReliably } from '../support/interactions'
 
 const manager = { email: 'sofia.martins@asteria.example', password: 'Demo!Pass123' }
 const externalPartner = { email: 'contacto@northstar.example', password: 'Demo!Pass123' }
@@ -62,16 +63,38 @@ test.describe('Caixa de entrada', () => {
     await signIn(page, manager)
     await page.goto('/app/inbox')
 
-    await page.getByRole('button', { name: 'Não lida', exact: true }).click()
-    await page.getByRole('button', { name: 'Lida', exact: true }).click()
-    await page.getByRole('button', { name: 'Arquivada', exact: true }).click()
+    // O filtro só prova alguma coisa se existir pelo menos uma mensagem arquivada — e numa base
+    // acabada de semear não existe nenhuma. Antes, este teste passava porque uma corrida anterior
+    // tinha deixado uma para trás, o que é o mesmo que não ter precondição nenhuma. Arquiva ele
+    // próprio a mensagem em que mais nenhum teste toca, e fica idempotente: se já estiver
+    // arquivada de uma corrida do outro perfil de browser, o botão que aparece é «Reabrir».
+    await clickReliably(page.getByRole('button', { name: 'Arquivada', exact: true }))
+    await clickReliably(messageFrom(page, 'Teresa Albuquerque'))
+
+    const archive = page.getByRole('button', { name: 'Arquivar', exact: true })
+    const reopen = page.getByRole('button', { name: 'Reabrir', exact: true })
+
+    // Esperar por um dos dois antes de perguntar qual está lá: `isVisible` responde de imediato,
+    // e com o painel ainda a carregar responderia «não» às duas perguntas.
+    await expect(archive.or(reopen)).toBeVisible()
+
+    if (await archive.isVisible()) {
+      await clickReliably(archive)
+    }
+
+    await expect(reopen).toBeVisible()
+
+    // Só arquivadas: desligar os dois estados que a caixa mostra por omissão.
+    await clickReliably(page.getByRole('button', { name: 'Não lida', exact: true }))
+    await clickReliably(page.getByRole('button', { name: 'Lida', exact: true }))
 
     const list = page.getByRole('list', { name: 'Mensagens' })
     await expect(list.getByRole('button').first()).toBeVisible()
 
-    for (const row of await list.getByRole('button').all()) {
-      await expect(row).toContainText('Arquivada')
-    }
+    // Uma asserção que espera, em vez de um ciclo sobre `all()`: este fotografa a lista no
+    // instante em que é chamado, e a lista ainda está a ser refeita com o filtro novo. Não havia
+    // defeito no produto — havia uma corrida no teste, que o telemóvel perdia e o desktop ganhava.
+    await expect(list.getByRole('button').filter({ hasNotText: 'Arquivada' })).toHaveCount(0)
   })
 
   test('guardar um anexo cria um documento, liga a mensagem e o documento passa a existir', async ({ page }) => {
