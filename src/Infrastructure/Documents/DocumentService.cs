@@ -11,6 +11,7 @@ using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using DocOps.Infrastructure.Observability;
 
 namespace DocOps.Infrastructure.Documents;
 
@@ -25,6 +26,7 @@ public sealed class DocumentService(
     ICurrentUser currentUser,
     ITenantContext tenantContext,
     IDateTimeProvider clock,
+    DocOpsMetrics metrics,
     ILogger<DocumentService> logger) : IDocumentService
 {
     private const int MaxExtractedTextLength = 100_000;
@@ -210,6 +212,8 @@ public sealed class DocumentService(
         await ApplyTagsAsync(document, request.Tags, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        metrics.DocumentCreated();
 
         logger.LogInformation(
             "Created document {Reference} ({DocumentId}) of type {TypeCode}", document.Reference, document.Id, type.Code);

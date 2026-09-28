@@ -15,6 +15,7 @@ public sealed class WorkflowTimerJob(
     WorkflowEngine engine,
     IDateTimeProvider clock,
     ILogger<WorkflowTimerJob> logger)
+    : IBackgroundJob
 {
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {

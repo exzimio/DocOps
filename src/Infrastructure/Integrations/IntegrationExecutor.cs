@@ -4,6 +4,7 @@ using DocOps.Application.Integrations;
 using DocOps.Domain.Integrations;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.Extensions.Logging;
+using DocOps.Infrastructure.Observability;
 
 namespace DocOps.Infrastructure.Integrations;
 
@@ -21,6 +22,7 @@ public sealed class IntegrationExecutor(
     DocOpsDbContext dbContext,
     IEnumerable<IIntegrationAdapter> adapters,
     IDateTimeProvider clock,
+    DocOpsMetrics metrics,
     ILogger<IntegrationExecutor> logger)
 {
     private readonly Dictionary<IntegrationKind, IIntegrationAdapter> _adapters =
@@ -112,6 +114,10 @@ public sealed class IntegrationExecutor(
         long durationMs = (long)Stopwatch.GetElapsedTime(timestamp).TotalMilliseconds;
         int errors = result.Entries.Count(entry => entry.Level == IntegrationLogLevel.Error);
         bool failed = result.Outcome == IntegrationRunOutcome.Failed;
+
+        // Etiquetado pelo adaptador, nunca pela organização: um contador por organização seria uma
+        // fuga lenta de quem faz quanto negócio, para sistemas com outras regras de acesso.
+        metrics.IntegrationRun(integration.Kind.ToString(), succeeded: !failed);
 
         foreach (IntegrationLogEntry entry in result.Entries)
         {

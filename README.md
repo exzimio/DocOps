@@ -46,7 +46,7 @@ vem da base de dados através da API.
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | **Concluída** |
 | 8 | Relatórios e administração | **Concluída** |
-| 9 | Testes, segurança e observabilidade | Planeada |
+| 9 | Testes, segurança e observabilidade | **Em curso** — observabilidade do trabalho em segundo plano entregue |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
 
 ### Entregue na Fase 1
@@ -344,7 +344,7 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
 
 | Nível | Contagem |
 | --- | --- |
-| Unitários (xUnit) | 328 |
+| Unitários (xUnit) | 330 |
 | Integração com SQL Server real (Testcontainers) | 173 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
 | End-to-end (Playwright, desktop e móvel) | 144 |

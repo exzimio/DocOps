@@ -14,6 +14,7 @@ public sealed class IntegrationJob(
     IIntegrationRunner runner,
     IntegrationQueueProcessor queue,
     ILogger<IntegrationJob> logger)
+    : IBackgroundJob
 {
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {

@@ -6,6 +6,7 @@ using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using DocOps.Infrastructure.Observability;
 
 namespace DocOps.Infrastructure.Workflows;
 
@@ -24,6 +25,7 @@ public sealed class WorkflowEngine(
     IAuditService auditService,
     ICurrentUser currentUser,
     IDateTimeProvider clock,
+    DocOpsMetrics metrics,
     ILogger<WorkflowEngine> logger)
 {
     /// <summary>Guards against a definition whose edges form a cycle with no waiting node in it.</summary>
@@ -65,6 +67,8 @@ public sealed class WorkflowEngine(
             ActiveNodeKeysJson = WorkflowVariables.ToNodeKeysJson([start.Key]),
             VariablesJson = WorkflowVariables.ToJson(instanceVariables)
         };
+
+        metrics.WorkflowInstance("started");
 
         dbContext.WorkflowInstances.Add(instance);
 
@@ -328,9 +332,13 @@ public sealed class WorkflowEngine(
             {
                 result = await executor.ExecuteAsync(context, node, cancellationToken);
                 await documentStatusEffect.ApplyAsync(context, node, cancellationToken);
+                metrics.WorkflowStep(node.Type.ToString(), succeeded: true);
             }
             catch (DomainException exception)
             {
+                // Contado antes de terminar o processo: é o passo que falhou, e é por tipo de nó
+                // que se descobre qual deles falha sempre.
+                metrics.WorkflowStep(node.Type.ToString(), succeeded: false);
                 Fail(context, $"Nó '{node.Key}': {exception.Message}");
                 return;
             }
@@ -400,6 +408,10 @@ public sealed class WorkflowEngine(
         WorkflowInstance instance = context.Instance;
 
         instance.Status = result.EndsAsRejected ? WorkflowInstanceStatus.Rejected : WorkflowInstanceStatus.Completed;
+
+        // Contado onde o estado é decidido, e não onde é gravado: gravar pode falhar, e um processo
+        // que não chegou a terminar não deve aparecer como terminado em lado nenhum.
+        metrics.WorkflowInstance(result.EndsAsRejected ? "rejected" : "completed");
         instance.CompletedAtUtc = context.Now;
         instance.Outcome = result.Outcome;
         instance.ActiveNodeKeysJson = WorkflowVariables.ToNodeKeysJson([]);
@@ -417,6 +429,8 @@ public sealed class WorkflowEngine(
 
         instance.Status = WorkflowInstanceStatus.Failed;
         instance.StatusReason = reason;
+
+        metrics.WorkflowInstance("failed");
         instance.CompletedAtUtc = context.Now;
         instance.VariablesJson = WorkflowVariables.ToJson(context.Variables);
 

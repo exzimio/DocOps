@@ -600,6 +600,40 @@ correio e reconciliar catálogos não tem a urgência de um prazo a expirar.
 
 A verificação de retenção junta-se a estes trabalhos na fase respetiva.
 
+## 11.1 Observabilidade do trabalho em segundo plano
+
+**Os quatro trabalhos do worker correm isolados uns dos outros.** Cada um tem o seu âmbito, o seu
+`try`/`catch` e a sua medição, e o contador de ciclos avança sempre. Antes, um único `catch` à volta
+do ciclo inteiro fazia com que uma falha nos temporizadores parasse também o escalonamento, a fila de
+IA e as integrações nessa passagem — e, por o contador não avançar, a cadência das integrações ficava
+parada com ela. Nada o anunciava: uma linha de erro no registo, e o resto simplesmente não acontecia.
+
+**Os trabalhos são resolvidos por chave**, não por tipo concreto. Foi o que tornou possível
+substituí-los num teste por um duplo que falha de propósito — e é esse teste que prova que a falha de
+um não leva os outros atrás. Os nomes vivem em `BackgroundJobNames`, um sítio só, usado pelo registo,
+pelo executor e pela etiqueta da métrica: um trabalho não pode ficar registado com um nome e contado
+com outro.
+
+**`DocOpsMetrics` publica o que a instrumentação HTTP não sabe.** O OpenTelemetry que vem de origem
+responde «a API está de pé e é rápida». Não responde às perguntas que este produto existe para
+responder: os processos estão a terminar ou a acumular-se, o trabalho periódico correu, a integração
+chegou ao outro lado. São cinco instrumentos — execuções e duração dos trabalhos, instâncias de
+workflow por estado, passos por tipo de nó, documentos criados, corridas de integração — e **cada um
+tem quem o alimente**. Um instrumento declarado que ninguém incrementa lê sempre zero, e um zero é
+uma afirmação: diria que este sistema nunca cria documentos.
+
+**Nenhuma etiqueta identifica quem.** Nem organização, nem utilizador, nem documento. As métricas
+saem do processo e aterram em sistemas com outras regras de acesso; um contador por organização seria
+uma fuga lenta de quem faz quanto negócio. As etiquetas dizem o **tipo** de trabalho, nunca de quem é.
+
+**O contador de documentos não tem etiqueta de origem**, e a ausência é deliberada. Separar por onde o
+documento entrou — carregamento, correio, portal, integração — seria o contador mais útil, e o modelo
+não o regista: todos os caminhos terminam no mesmo serviço. Inventar a dimensão produziria um gráfico
+com ar de resposta.
+
+**O worker não tinha telemetria nenhuma.** Tem Serilog desde a Fase 3, mas nenhum exportador — as
+métricas de trabalhos falhados, que o briefing pede por esse nome, não tinham para onde ir.
+
 ## 12. Preparação para a nuvem
 
 | Abstração | Implementação local | Implementação em Azure |

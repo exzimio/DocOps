@@ -7,6 +7,7 @@ namespace DocOps.Worker.Jobs;
 /// outside any HTTP request and outside the workflow engine's transaction (ADR-004).
 /// </summary>
 public sealed class AiProcessingJob(AiQueueProcessor processor, ILogger<AiProcessingJob> logger)
+    : IBackgroundJob
 {
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {

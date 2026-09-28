@@ -14,6 +14,7 @@ using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
+using DocOps.Infrastructure.Observability;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -97,7 +98,8 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing =>
     {
         tracing.AddAspNetCoreInstrumentation(o => o.RecordException = true)
-            .AddHttpClientInstrumentation();
+            .AddHttpClientInstrumentation()
+            .AddSource(DocOpsMetrics.ActivitySource.Name);
 
         if (builder.Configuration["OpenTelemetry:OtlpEndpoint"] is { Length: > 0 })
         {
@@ -106,7 +108,10 @@ builder.Services.AddOpenTelemetry()
     })
     .WithMetrics(metrics =>
     {
-        metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
+        // Sem isto, os instrumentos do produto existem e não saem do processo.
+        metrics.AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddMeter(DocOpsMetrics.MeterName);
 
         if (builder.Configuration["OpenTelemetry:OtlpEndpoint"] is { Length: > 0 })
         {

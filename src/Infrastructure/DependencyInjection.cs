@@ -36,6 +36,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Infrastructure.Observability;
 
 namespace DocOps.Infrastructure;
 
@@ -216,6 +217,10 @@ public static class DependencyInjection
     {
         // A organização vem sempre das claims do cookie, nunca do pedido: não há parâmetro por onde
         // um administrador de uma organização alcance as contas de outra.
+        // Os instrumentos do produto. Singleton: um Meter é criado uma vez e vive com o processo.
+        services.AddMetrics();
+        services.AddSingleton<DocOpsMetrics>();
+
         services.AddScoped<IAdministrationService, AdministrationService>();
         services.AddScoped<IDocumentCatalogueAdminService, DocumentCatalogueAdminService>();
     }

@@ -223,6 +223,9 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Painel de autorização a divergir da regra que aplica | O painel não calcula: mostra o `EffectiveAccess` produzido pelo mesmo avaliador que decide quando alguém abre, edita ou descarrega |
 | Perfil inexistente ou de plataforma nomeado numa concessão | Os perfis oferecidos vêm de `RoleNames`, a lista que a autorização usa, e `SystemAdmin` é excluído: está acima da organização |
 | Acesso temporário que nunca acaba | As concessões aceitam prazo, e o predicado de visibilidade respeita-o; um prazo no passado é recusado na validação |
+| Métricas a revelarem quem faz quanto | Nenhum instrumento leva organização, utilizador ou documento nas etiquetas: as métricas saem do processo para sistemas com outras regras de acesso, e um contador por organização seria uma fuga lenta de volume de negócio |
+| Pilha de chamadas nos registos do worker | A falha de um trabalho é registada com a **mensagem**, nunca com a pilha: quem está de piquete lê estes registos, e uma pilha neles é ruído e uma descrição do interior do processo |
+| Um trabalho avariado a parar o resto do trabalho periódico | Cada trabalho corre isolado, com o seu próprio âmbito e captura; o ciclo avança mesmo quando um falha, e ambos os desfechos são contados |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

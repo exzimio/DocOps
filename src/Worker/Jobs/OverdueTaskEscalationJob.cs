@@ -21,6 +21,7 @@ public sealed class OverdueTaskEscalationJob(
     IAuditService auditService,
     IDateTimeProvider clock,
     ILogger<OverdueTaskEscalationJob> logger)
+    : IBackgroundJob
 {
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {

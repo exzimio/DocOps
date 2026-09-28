@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using DocOps.Infrastructure.Observability;
 using DocOps.Worker.Jobs;
 using Microsoft.Extensions.Options;
 
@@ -67,37 +69,71 @@ public sealed class BackgroundJobRunner(
         while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
-    private async Task RunOnceAsync(CancellationToken cancellationToken)
+    internal async Task RunOnceAsync(CancellationToken cancellationToken)
     {
-        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-
+        // Each job is run on its own. Before, a single failure was caught one level up — which meant
+        // a broken timer job also stopped escalation, the AI queue and the integrations for that
+        // tick, and left the cycle counter where it was, so the integration cadence stalled with it.
+        // Nothing announced any of that: the log showed one error and the rest simply did not happen.
         if (_options.ResumeWorkflowTimers)
         {
-            await scope.ServiceProvider.GetRequiredService<WorkflowTimerJob>().RunAsync(cancellationToken);
+            await RunJobAsync(BackgroundJobNames.WorkflowTimers, cancellationToken);
         }
 
         if (_options.EscalateOverdueTasks)
         {
-            await scope.ServiceProvider.GetRequiredService<OverdueTaskEscalationJob>().RunAsync(cancellationToken);
+            await RunJobAsync(BackgroundJobNames.OverdueEscalation, cancellationToken);
         }
 
         if (_options.ProcessAiQueue)
         {
-            // Its own scope: the analyses and the instances they resume are tracked separately from
-            // the timer and escalation work above.
-            await using AsyncServiceScope aiScope = scopeFactory.CreateAsyncScope();
-            await aiScope.ServiceProvider.GetRequiredService<AiProcessingJob>().RunAsync(cancellationToken);
+            await RunJobAsync(BackgroundJobNames.AiQueue, cancellationToken);
         }
 
         if (_options.RunIntegrations && _cycle % Math.Max(1, _options.IntegrationEveryNCycles) == 0)
         {
-            // Its own scope as well, and for a stronger reason: an integration reaches outside
-            // this application, and whatever it drags in stays out of the tracker the local work
-            // above is using.
-            await using AsyncServiceScope integrationScope = scopeFactory.CreateAsyncScope();
-            await integrationScope.ServiceProvider.GetRequiredService<IntegrationJob>().RunAsync(cancellationToken);
+            await RunJobAsync(BackgroundJobNames.Integrations, cancellationToken);
         }
 
+        // Always: the cadence of the slower jobs is counted in cycles, and a cycle that failed still
+        // happened.
         _cycle++;
+    }
+
+    /// <summary>
+    /// Runs one job in a scope of its own, times it, and counts the outcome.
+    ///
+    /// The scope per job is not only tidiness: an integration reaches outside this application, and
+    /// whatever it drags into the change tracker must not be sharing one with the local work.
+    /// </summary>
+    private async Task RunJobAsync(string name, CancellationToken cancellationToken)
+    {
+        using Activity? activity = DocOpsMetrics.ActivitySource.StartActivity($"job {name}");
+
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+
+        DocOpsMetrics metrics = scope.ServiceProvider.GetRequiredService<DocOpsMetrics>();
+        long start = Stopwatch.GetTimestamp();
+
+        try
+        {
+            IBackgroundJob job = scope.ServiceProvider.GetRequiredKeyedService<IBackgroundJob>(name);
+            int handled = await job.RunAsync(cancellationToken);
+            metrics.JobFinished(name, succeeded: true, Stopwatch.GetElapsedTime(start));
+
+            if (handled > 0)
+            {
+                logger.LogInformation("Background job {Job} handled {Handled} item(s)", name, handled);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            metrics.JobFinished(name, succeeded: false, Stopwatch.GetElapsedTime(start));
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+
+            // The message, never the stack: worker logs are read by whoever is on call, and a stack
+            // trace in them is both noise and a description of the inside of the process.
+            logger.LogError("Background job {Job} failed: {Reason}", name, exception.Message);
+        }
     }
 }
