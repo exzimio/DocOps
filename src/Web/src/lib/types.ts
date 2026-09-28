@@ -80,6 +80,7 @@ export const Permission = {
   reportsExport: 'reports.export',
   adminUsers: 'admin.users',
   adminDepartments: 'admin.departments',
+  adminDocumentTypes: 'admin.documenttypes',
   signaturesRequest: 'signatures.request',
   signaturesSign: 'signatures.sign',
   portalAccess: 'portal.access',

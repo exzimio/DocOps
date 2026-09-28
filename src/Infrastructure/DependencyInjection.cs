@@ -217,6 +217,7 @@ public static class DependencyInjection
         // A organização vem sempre das claims do cookie, nunca do pedido: não há parâmetro por onde
         // um administrador de uma organização alcance as contas de outra.
         services.AddScoped<IAdministrationService, AdministrationService>();
+        services.AddScoped<IDocumentCatalogueAdminService, DocumentCatalogueAdminService>();
     }
 
     private static void AddReporting(IServiceCollection services)

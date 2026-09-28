@@ -20,6 +20,13 @@ public static class AuditActions
     public const string DepartmentUpdated = "department.updated";
     public const string TenantSettingsChanged = "tenant.settings.changed";
 
+    public const string DocumentTypeCreated = "documenttype.created";
+    public const string DocumentTypeUpdated = "documenttype.updated";
+    public const string DocumentTypeActivationChanged = "documenttype.activation.changed";
+    public const string MetadataFieldCreated = "metadatafield.created";
+    public const string MetadataFieldUpdated = "metadatafield.updated";
+    public const string MetadataFieldDeleted = "metadatafield.deleted";
+
     public const string DocumentCreated = "document.created";
     public const string DocumentViewed = "document.viewed";
     public const string DocumentDownloaded = "document.downloaded";
@@ -91,6 +98,8 @@ public static class AuditEntityTypes
     public const string User = "User";
     public const string Role = "Role";
     public const string Department = "Department";
+    public const string DocumentType = "DocumentType";
+    public const string MetadataField = "MetadataField";
     public const string Tenant = "Tenant";
     public const string Session = "Session";
     public const string Document = "Document";

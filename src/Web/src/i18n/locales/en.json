@@ -20,7 +20,8 @@
     "skipToContent": "Skip to main content",
     "independentProject": "Independent portfolio project — not affiliated with any third party",
     "edit": "Edit",
-    "save": "Save"
+    "save": "Save",
+    "delete": "Delete"
   },
   "landing": {
     "heroTitle": "DocOps Control Tower",
@@ -1004,10 +1005,11 @@
   },
   "admin": {
     "title": "Administration",
-    "subtitle": "People, roles and departments of this organisation.",
+    "subtitle": "People, roles, departments and this organisation's document type catalogue.",
     "tabs": {
       "users": "People",
-      "departments": "Departments"
+      "departments": "Departments",
+      "catalogue": "Catalogue"
     },
     "users": {
       "title": "People",
@@ -1041,6 +1043,61 @@
       "members": "People",
       "createTitle": "New department",
       "editTitle": "Edit department"
+    },
+    "types": {
+      "title": "Document types",
+      "type": "Type",
+      "code": "Code",
+      "codeHint": "A stable identifier. The intake type's code cannot be changed.",
+      "name": "Name",
+      "prefix": "Prefix",
+      "prefixHint": "Opens the generated reference: FAT gives FAT-2026-00042. Two types cannot share one.",
+      "description": "Description",
+      "classification": "Default sensitivity",
+      "retention": "Default retention policy",
+      "fields": "Fields",
+      "documents": "Documents",
+      "manageFields": "Fields",
+      "includeInactive": "Include inactive",
+      "inactive": "Inactive",
+      "intake": "Intake",
+      "alwaysActive": "Always active",
+      "activate": "Reactivate",
+      "deactivate": "Deactivate",
+      "create": "Create type",
+      "createTitle": "New type",
+      "editTitle": "Edit type",
+      "formLabel": "Document type form"
+    },
+    "fields": {
+      "title": "Fields of {{type}}",
+      "subtitle": "What a document of this type is asked for. A field with values cannot change kind or be deleted.",
+      "field": "Field",
+      "label": "Label",
+      "code": "Code",
+      "kind": "Data type",
+      "kinds": {
+        "0": "Text",
+        "1": "Number",
+        "2": "Date",
+        "3": "Yes/No",
+        "4": "Amount",
+        "5": "Choice"
+      },
+      "options": "Options",
+      "optionsHint": "One per line.",
+      "helpText": "Help text",
+      "order": "Order",
+      "required": "Required",
+      "requiredHint": "Making a field required is a claim about documents that already exist: it is refused if any would be left blank.",
+      "filled": "Filled in",
+      "inUse": "{{count}} document(s) use it",
+      "create": "Create field",
+      "createTitle": "New field",
+      "editTitle": "Edit field",
+      "emptyTitle": "No fields",
+      "emptyBody": "This type asks for no metadata beyond what every document has.",
+      "formLabel": "Field form"
     }
   }
 }

@@ -208,6 +208,11 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Conta eliminada a apagar o significado da auditoria | Contas são desativadas, nunca eliminadas: os documentos, as decisões e o trilho referem-se àquela conta |
 | Palavra-passe inicial recuperável | Gerada com `RandomNumberGenerator` e devolvida **uma única vez**, na resposta à criação. O servidor guarda o resumo; não há endereço que a devolva |
 | Administração de uma organização alcançada por outra | A organização vem das *claims*, nunca do pedido; uma conta de outra organização não é encontrada, e responde `404` em vez de admitir que existe |
+| Administrar pessoas a dar por arrasto o catálogo | `admin.users` e `admin.documenttypes` são permissões distintas, verificadas no servidor em cada ação: manter o esquema de classificação é outro trabalho que decidir quem tem conta |
+| Catálogo de uma organização alcançado por outra | O serviço usa o `DbContext` filtrado pela organização: um tipo de outra não é encontrado, e responde `404` em vez de admitir que existe |
+| Metadados de documentos apagados pela porta da configuração | Um campo com valores não se elimina nem muda de tipo: eliminar apagaria o que os documentos dizem, e mudar de tipo deixaria os valores na coluna errada — ilegíveis, não em erro |
+| Catálogo a afirmar o que os documentos não cumprem | Tornar um campo obrigatório é recusado se algum documento do tipo ficasse por preencher, com a contagem na resposta |
+| Entrada de documentos fechada por configuração | O tipo de entrada não se desativa nem aceita campos obrigatórios: fechá-lo travaria o correio e o portal, onde ninguém está a olhar para reparar |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

@@ -20,7 +20,8 @@
     "skipToContent": "Saltar para o conteúdo principal",
     "independentProject": "Projeto de portefólio independente — sem afiliação a terceiros",
     "edit": "Editar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "delete": "Eliminar"
   },
   "landing": {
     "heroTitle": "DocOps Control Tower",
@@ -1004,10 +1005,11 @@
   },
   "admin": {
     "title": "Administração",
-    "subtitle": "Pessoas, perfis e departamentos desta organização.",
+    "subtitle": "Pessoas, perfis, departamentos e o catálogo de tipos de documento desta organização.",
     "tabs": {
       "users": "Pessoas",
-      "departments": "Departamentos"
+      "departments": "Departamentos",
+      "catalogue": "Catálogo"
     },
     "users": {
       "title": "Pessoas",
@@ -1041,6 +1043,61 @@
       "members": "Pessoas",
       "createTitle": "Novo departamento",
       "editTitle": "Editar departamento"
+    },
+    "types": {
+      "title": "Tipos de documento",
+      "type": "Tipo",
+      "code": "Código",
+      "codeHint": "Identificador estável. O código do tipo de entrada não se altera.",
+      "name": "Nome",
+      "prefix": "Prefixo",
+      "prefixHint": "Abre a referência gerada: FAT dá FAT-2026-00042. Dois tipos não podem partilhá-lo.",
+      "description": "Descrição",
+      "classification": "Confidencialidade por omissão",
+      "retention": "Política de retenção por omissão",
+      "fields": "Campos",
+      "documents": "Documentos",
+      "manageFields": "Campos",
+      "includeInactive": "Incluir inativos",
+      "inactive": "Inativo",
+      "intake": "Entrada",
+      "alwaysActive": "Sempre ativo",
+      "activate": "Reativar",
+      "deactivate": "Desativar",
+      "create": "Criar tipo",
+      "createTitle": "Novo tipo",
+      "editTitle": "Editar tipo",
+      "formLabel": "Formulário do tipo de documento"
+    },
+    "fields": {
+      "title": "Campos de {{type}}",
+      "subtitle": "O que se pede a um documento deste tipo. Um campo com valores não muda de tipo nem se apaga.",
+      "field": "Campo",
+      "label": "Rótulo",
+      "code": "Código",
+      "kind": "Tipo de dado",
+      "kinds": {
+        "0": "Texto",
+        "1": "Número",
+        "2": "Data",
+        "3": "Sim/Não",
+        "4": "Montante",
+        "5": "Escolha"
+      },
+      "options": "Opções",
+      "optionsHint": "Uma por linha.",
+      "helpText": "Texto de ajuda",
+      "order": "Ordem",
+      "required": "Obrigatório",
+      "requiredHint": "Tornar obrigatório é uma afirmação sobre os documentos que já existem: é recusado se algum ficar por preencher.",
+      "filled": "Preenchido em",
+      "inUse": "{{count}} documento(s) usam-no",
+      "create": "Criar campo",
+      "createTitle": "Novo campo",
+      "editTitle": "Editar campo",
+      "emptyTitle": "Sem campos",
+      "emptyBody": "Este tipo não pede metadados além dos que todos os documentos têm.",
+      "formLabel": "Formulário do campo"
     }
   }
 }

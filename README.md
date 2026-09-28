@@ -45,7 +45,7 @@ vem da base de dados através da API.
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | **Concluída** |
-| 8 | Relatórios e administração | **Em curso** — análises e administração de pessoas e departamentos entregues; faltam tipos de documento, metadados, etiquetas, retenção e editor de permissões |
+| 8 | Relatórios e administração | **Em curso** — análises, administração de pessoas e departamentos, e catálogo de tipos e campos de metadados entregues; faltam etiquetas, retenção e editor de permissões |
 | 9 | Testes, segurança e observabilidade | Planeada |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
 
@@ -293,14 +293,28 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
   não se gere a partir de uma organização — recusado no servidor, não apenas escondido.
 - Departamentos com código único por organização, criação e edição.
 
+**Catálogo de documentos** no separador Catálogo de `/app/admin`:
+
+- **Tipos de documento** com código, prefixo de referência, confidencialidade por omissão e política
+  de retenção. Dois tipos nunca partilham prefixo: a referência é o que as pessoas citam umas às
+  outras, e duas iguais para documentos diferentes tornam-na inútil.
+- **Campos de metadados por tipo** — texto, número, data, sim/não, montante e escolha com opções.
+- **As recusas são a funcionalidade.** Um campo que documentos já preenchem **não muda de tipo** (o
+  valor está na coluna do tipo atual e deixaria de ser legível) e **não se elimina** (apagaria o que
+  esses documentos dizem). Tornar um campo obrigatório é recusado se algum documento ficasse por
+  preencher: é uma afirmação sobre o que já existe, e seria falsa no momento em que fosse guardada.
+- **O tipo de entrada não se desativa nem aceita campos obrigatórios.** É por ele que entra um
+  ficheiro antes de alguém o ter lido — incluindo os que chegam por correio e pelo portal.
+- Cada recusa traz a contagem que a explica, e aparece **dentro do formulário** que a provocou.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
 | Unitários (xUnit) | 327 |
-| Integração com SQL Server real (Testcontainers) | 151 |
+| Integração com SQL Server real (Testcontainers) | 160 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
-| End-to-end (Playwright, desktop e móvel) | 106 |
+| End-to-end (Playwright, desktop e móvel) | 118 |
 
 ## 4. Arquitetura
 
@@ -595,6 +609,10 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/admin/users/{id}/active` | Desativa ou reativa; nunca elimina |
 | `GET /api/admin/roles` | Perfis atribuíveis e o que cada um concede |
 | `GET /api/admin/departments` · `POST` · `PUT /{id}` | Departamentos da organização, com código único |
+| `GET /api/admin/document-types` · `POST` · `PUT /{id}` | Tipos de documento da organização (`includeInactive` traz os desativados) |
+| `POST /api/admin/document-types/{id}/active` | Desativa ou reativa; o tipo de entrada é recusado |
+| `GET /api/admin/document-types/{id}/fields` · `POST` · `PUT /{fieldId}` · `DELETE /{fieldId}` | Esquema de metadados do tipo; eliminar é recusado se algum documento preencher o campo |
+| `GET /api/admin/retention-policies` | As políticas que um tipo pode adotar por omissão |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow

@@ -500,6 +500,35 @@ impede o início de sessão; a linha permanece, porque a auditoria, os documento
 referem-se a ela. A palavra-passe inicial é gerada com `RandomNumberGenerator` e devolvida uma única
 vez — o servidor guarda o resumo e não a sabe recuperar.
 
+## 10.9 Catálogo de documentos
+
+**O catálogo não é configuração: é uma promessa já cumprida.** Quando um tipo ganha um campo,
+documentos passam a ser descritos por ele; quando um campo muda, muda o significado do que já está
+escrito. Por isso o `DocumentCatalogueAdminService` faz a cada alteração uma única pergunta antes de
+a aplicar — **torna falso alguma coisa que já está escrita?** Alargar é permitido; estreitar é
+recusado, com a contagem que o explica.
+
+**Os valores vivem em colunas tipadas.** `DocumentMetadataValue` guarda o texto em `TextValue`, o
+número em `NumberValue`, e assim por diante, para filtrar e ordenar em SQL em vez de em memória. A
+consequência é que mudar o tipo de um campo **não move o que lá está**: o número fica em
+`NumberValue` e o campo passa a ler `TextValue`. O documento não dá erro — fica em branco, ou mostra
+outra coisa. Por isso a mudança de tipo é recusada a partir do primeiro valor.
+
+**Tornar obrigatório é uma afirmação retroativa.** `EnsureNothingBecomesInvalidAsync` conta os
+documentos do tipo sem valor no campo e recusa se existir algum. Um campo obrigatório que dezenas de
+documentos não cumprem não descreve a organização: descreve uma intenção, e o catálogo deixa de
+poder ser lido como verdade.
+
+**O tipo de entrada é intocável em dois pontos.** Não se desativa, porque é por ele que entra um
+ficheiro antes de alguém saber o que é — e a caixa de entrada e o portal criam documentos sem
+ninguém a olhar. E não aceita campos obrigatórios, porque isso significaria recusar o carregamento
+até alguém responder a uma pergunta que só ler o documento responde. O seu código também não muda:
+é por código que o resto do produto o encontra.
+
+**Tipos desativam-se, nunca se eliminam**, pela mesma razão que as contas: os documentos
+classificados sob um tipo referem-se a ele, e um tipo que desaparece leva consigo a classificação
+deles.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

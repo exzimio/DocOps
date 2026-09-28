@@ -753,6 +753,46 @@ organização o pudesse atribuir, promovia-se para fora da sua própria fronteir
 Crie um departamento e tente criar outro com o mesmo código. É recusado, com a mensagem a vir do
 servidor — é lá que a unicidade é decidida, não numa validação do browser.
 
+## Demonstração disponível na Fase 8 — Catálogo de documentos (≈4 minutos)
+
+Como `admin@asteria.example`, abra **Administração** e o separador **Catálogo**.
+
+> **A frase a dizer antes de mostrar:** este ecrã parece configuração, mas não é. Já existem
+> documentos classificados por estes tipos e descritos por estes campos. Cada alteração aqui muda o
+> significado do que já está escrito — e é por isso que o servidor recusa metade do que se lhe pede.
+
+### 1. O que o catálogo já produziu (1 min)
+
+Repare nas colunas **Campos** e **Documentos**: não são decoração, são o que torna as recusas
+explicáveis. «Este campo não pode mudar» não é uma resposta; «8 documentos têm valor nele» é.
+
+### 2. A recusa que interessa (1 min 30 s)
+
+Abra os **Campos** de *Fatura de fornecedor*. Repare que os campos preenchidos **não têm botão de
+eliminar** — no lugar dele está o número de documentos que os usam.
+
+Agora crie um campo novo e marque-o como **obrigatório**. É recusado, e a mensagem diz quantos
+documentos ficariam inválidos.
+
+Explique porquê: tornar um campo obrigatório é uma afirmação sobre documentos que já existem. Se
+algum não o cumpre, a afirmação é falsa no instante em que é guardada — e o catálogo deixa de poder
+ser lido como verdade.
+
+### 3. A porta que não se fecha (1 min)
+
+Volte à lista e procure **Por classificar**, marcado como **Entrada**. Não tem botão de desativar:
+diz «sempre ativo».
+
+É por este tipo que entra um ficheiro antes de alguém saber o que é — incluindo os que chegam pela
+caixa de entrada e pelo portal, onde ninguém está a olhar. Desativá-lo travaria a entrada de
+documentos sem ninguém dar por isso. Pela mesma razão não aceita campos obrigatórios: seria recusar
+o carregamento até alguém responder a uma pergunta que só ler o documento responde.
+
+### 4. O que é permitido (30 s)
+
+Crie um tipo novo, dê-lhe um campo, e apague-o. Enquanto ninguém o preencheu, apagar não destrói
+nada — e por isso é permitido. A regra não é «não se mexe»; é **alargar pode, estreitar não**.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.
