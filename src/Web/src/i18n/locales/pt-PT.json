@@ -1010,13 +1010,14 @@
   },
   "admin": {
     "title": "Administração",
-    "subtitle": "Pessoas, perfis, departamentos, tipos de documento, etiquetas e retenção desta organização.",
+    "subtitle": "Configuração e operação desta organização.",
     "tabs": {
       "users": "Pessoas",
       "departments": "Departamentos",
       "catalogue": "Catálogo",
       "tags": "Etiquetas",
-      "retention": "Retenção"
+      "retention": "Retenção",
+      "health": "Sistema"
     },
     "users": {
       "title": "Pessoas",
@@ -1152,6 +1153,33 @@
       "createTitle": "Nova política",
       "editTitle": "Editar política",
       "formLabel": "Formulário da política de retenção"
+    },
+    "health": {
+      "jobsTitle": "Trabalho em segundo plano",
+      "recordsSince": "Registos desde {{since}}. O worker corre acima de todas as organizações.",
+      "noRecords": "Ainda não há registos: o worker não correu desde que esta tabela existe.",
+      "job": "Trabalho",
+      "jobs": {
+        "workflow-timers": "Temporizadores de processos",
+        "overdue-escalation": "Escalonamento de prazos",
+        "ai-queue": "Fila de análises de IA",
+        "integrations": "Integrações"
+      },
+      "lastRun": "Última corrida",
+      "lastDay": "Últimas 24 horas",
+      "average": "Duração média",
+      "never": "Nunca correu",
+      "failures": "{{count}} falha(s)",
+      "milliseconds": "{{value}} ms",
+      "queuesTitle": "Trabalho à espera",
+      "queuesSubtitle": "Desta organização, e apenas o que tem permissão para ver.",
+      "queues": {
+        "overdueTasks": "Tarefas em atraso",
+        "queuedIntegrationRuns": "Integrações em fila",
+        "pendingAiAnalyses": "Análises de IA por correr",
+        "documentsAwaitingApproval": "Documentos a aguardar aprovação",
+        "documentsAwaitingSignature": "Assinaturas pendentes"
+      }
     }
   }
 }

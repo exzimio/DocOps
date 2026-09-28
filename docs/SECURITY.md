@@ -226,6 +226,10 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Métricas a revelarem quem faz quanto | Nenhum instrumento leva organização, utilizador ou documento nas etiquetas: as métricas saem do processo para sistemas com outras regras de acesso, e um contador por organização seria uma fuga lenta de volume de negócio |
 | Pilha de chamadas nos registos do worker | A falha de um trabalho é registada com a **mensagem**, nunca com a pilha: quem está de piquete lê estes registos, e uma pilha neles é ruído e uma descrição do interior do processo |
 | Um trabalho avariado a parar o resto do trabalho periódico | Cada trabalho corre isolado, com o seu próprio âmbito e captura; o ciclo avança mesmo quando um falha, e ambos os desfechos são contados |
+| Sonda de vida usada para reconhecimento | `/health*` devolve nome, estado e duração e nada mais: nunca descrição da falha, exceção, cadeia de ligação ou nome de máquina. Verificado por teste, não assumido |
+| Detalhe operacional exposto a quem administra pessoas | O estado do trabalho em segundo plano exige `admin.settings`; `admin.users` não o alcança. Operar a plataforma e gerir contas são trabalhos diferentes |
+| Fuga por contagem no painel de operação | As contagens de documentos passam pelo predicado de visibilidade, não apenas pelo filtro por organização: a pergunta é quantos **quem está a ver** vê, não quantos existem |
+| Rasto de execução a revelar o interior do processo | A linha de uma corrida falhada guarda a **mensagem**, nunca a pilha, e está limitada a 1024 caracteres — não há onde caber uma |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

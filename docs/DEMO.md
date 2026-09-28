@@ -877,6 +877,39 @@ Entre como `ana.ferreira@asteria.example` e abra o mesmo separador. Não há for
 nem seletor de pessoa. E se forçasse o pedido, o servidor recusava: perguntar «esta pessoa
 conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
 
+## Demonstração disponível na Fase 9 — Saúde do sistema (≈3 minutos)
+
+Como `admin@asteria.example`, abra **Administração** e o separador **Sistema**.
+
+### 1. O que o produto sabe sobre si próprio (1 min 30 s)
+
+Os quatro trabalhos em segundo plano aparecem com a última corrida, o desfecho, quantas vezes
+correram nas últimas 24 horas e quanto demoraram em média.
+
+A parte que vale a pena explicar é **porque é que isto existe em tabela**. As métricas do worker
+saem por OpenTelemetry, que é o sítio certo para elas — e que é outro processo. Sem uma linha
+escrita na base de dados, «o trabalho periódico correu esta noite?» é uma pergunta que a aplicação
+não sabe responder sobre si própria.
+
+Repare também que **os quatro aparecem sempre**, mesmo os que nunca correram. Um trabalho ausente do
+ecrã e um trabalho que nunca correu parecem o mesmo a quem lê. Quem nunca correu diz «nunca correu»,
+e a duração média fica a traço — não a zero, que se leria como «instantâneo».
+
+### 2. O que as sondas públicas dizem, e o que não dizem (1 min)
+
+Abra `/health` numa janela sem sessão iniciada. Responde, e devolve **nome, estado e duração**. Mais
+nada: nem mensagem de exceção, nem cadeia de ligação, nem nome de máquina.
+
+É o que o briefing quer dizer com *«do not expose sensitive health information»*. Uma sonda de vida
+que descreve a falha é reconhecimento gratuito para quem está a sondar o sistema. O detalhe — qual
+trabalho falhou, o que disse — está no separador **Sistema**, atrás de permissão.
+
+### 3. Quem opera não é quem administra (30 s)
+
+Entre como `sofia.martins@asteria.example`. O separador **Sistema** não aparece: ver o estado da
+plataforma exige `admin.settings`, e administrar pessoas é `admin.users`. São trabalhos diferentes, e
+o servidor recusa na mesma.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

@@ -6,6 +6,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using DocOps.Domain.Operations;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 

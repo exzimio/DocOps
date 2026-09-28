@@ -37,6 +37,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using DocOps.Infrastructure.Observability;
+using DocOps.Infrastructure.Operations;
+using DocOps.Application.Operations;
 
 namespace DocOps.Infrastructure;
 
@@ -223,6 +225,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAdministrationService, AdministrationService>();
         services.AddScoped<IDocumentCatalogueAdminService, DocumentCatalogueAdminService>();
+        services.AddScoped<ISystemHealthService, SystemHealthService>();
     }
 
     private static void AddReporting(IServiceCollection services)

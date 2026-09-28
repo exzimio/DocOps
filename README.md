@@ -46,7 +46,7 @@ vem da base de dados através da API.
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | **Concluída** |
 | 8 | Relatórios e administração | **Concluída** |
-| 9 | Testes, segurança e observabilidade | **Em curso** — observabilidade do trabalho em segundo plano entregue |
+| 9 | Testes, segurança e observabilidade | **Em curso** — observabilidade e saúde do sistema entregues |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
 
 ### Entregue na Fase 1
@@ -340,14 +340,28 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
 - O servidor só responde sobre outra pessoa a quem possa partilhar o documento. Perguntar «esta
   pessoa conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
 
+**Saúde do sistema** no separador Sistema de `/app/admin`:
+
+- **O que cada trabalho em segundo plano andou a fazer** — última corrida, desfecho, corridas e
+  falhas nas últimas 24 horas, duração média. Os quatro aparecem sempre, mesmo os que nunca
+  correram: um trabalho ausente do ecrã e um trabalho que nunca correu parecem o mesmo a quem lê, e
+  não são a mesma coisa.
+- **Trabalho à espera** nesta organização: tarefas em atraso, integrações em fila, análises de IA
+  por correr, documentos a aguardar aprovação e assinaturas pendentes. Números, nunca
+  identificadores.
+- **As sondas anónimas continuam tersas.** `/health`, `/health/live` e `/health/ready` devolvem
+  nome, estado e duração — nunca uma mensagem de exceção, uma cadeia de ligação ou um nome de
+  máquina, que é o que transforma uma sonda de vida em reconhecimento. O detalhe fica atrás de
+  `admin.settings`.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
 | Unitários (xUnit) | 330 |
-| Integração com SQL Server real (Testcontainers) | 173 |
+| Integração com SQL Server real (Testcontainers) | 179 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
-| End-to-end (Playwright, desktop e móvel) | 144 |
+| End-to-end (Playwright, desktop e móvel) | 150 |
 
 ## 4. Arquitetura
 
@@ -652,7 +666,8 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `POST /api/admin/retention-policies/{id}/active` | Retirar é recusado enquanto um tipo a adotar |
 | `GET /api/tenants/current/roles` | Os perfis a quem um documento pode ser concedido |
 | `GET /api/documents/{id}/effective-access` | Porque é que o chamador — ou, para quem pode partilhar, outra pessoa — alcança o documento |
-| `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
+| `GET /api/system/health` | Estado do trabalho em segundo plano e do trabalho à espera; exige `admin.settings` |
+| `GET /health` · `/health/live` · `/health/ready` | Sondas anónimas: nome, estado e duração, e nada mais |
 
 ## 10. Motor de workflow
 

@@ -634,6 +634,39 @@ com ar de resposta.
 **O worker não tinha telemetria nenhuma.** Tem Serilog desde a Fase 3, mas nenhum exportador — as
 métricas de trabalhos falhados, que o briefing pede por esse nome, não tinham para onde ir.
 
+## 11.2 Saúde do sistema
+
+**O worker é outro processo, e é isso que molda esta parte.** As métricas que ele publica saem por
+OpenTelemetry, que é onde pertencem — e que não é a aplicação. Um administrador a olhar para o
+produto não pode ser servido com contadores que nunca atravessaram a fronteira do processo. Sem uma
+linha escrita em tabela, «o trabalho periódico correu esta noite?» é uma pergunta que o produto não
+sabe responder sobre si próprio.
+
+Daí `BackgroundJobRun`: uma linha por execução, com o trabalho, a hora, a duração, o desfecho, o
+número de itens tratados e — quando falha — **a mensagem, nunca a pilha**. A tabela não é
+multi-organização de propósito: o worker corre acima de todas, e um ciclo não é uma coisa que
+aconteça a uma delas.
+
+**Gravar o rasto não pode ser mais frágil do que o trabalho que descreve.** Se a escrita falhar, o
+executor regista um aviso e segue: um trabalho que correu bem não passa a falhado por não se ter
+conseguido escrever que correu.
+
+**As duas metades do painel têm âmbitos diferentes, e a diferença está dita no ecrã.** Os trabalhos
+são da plataforma; as filas são da organização de quem pergunta — e os documentos passam pelo mesmo
+predicado de visibilidade da listagem e dos relatórios. O filtro por organização sozinho responderia
+«quantos documentos desta organização aguardam aprovação»; a pergunta que o ecrã diz responder é
+quantos **quem está a ver** vê a aguardar aprovação. Um administrador vê tudo na prática, mas um
+perfil com `admin.settings` e sem administração documental não veria — e a contagem contá-los-ia na
+mesma. É a fuga por contagem do defeito 18, evitada num sítio novo.
+
+**Ausência não é zero.** Um trabalho que nunca correu traz `null` na última corrida e na duração
+média, e o ecrã escreve «nunca correu». Zero diria «correu instantaneamente», que é o oposto.
+
+**As sondas anónimas ficam como estavam.** `/health`, `/health/live` e `/health/ready` devolvem nome,
+estado e duração; o `HealthReporter` nunca inclui descrições nem exceções. É o que o briefing quer
+dizer com «do not expose sensitive health information», e foi confirmado por teste em vez de
+assumido.
+
 ## 12. Preparação para a nuvem
 
 | Abstração | Implementação local | Implementação em Azure |

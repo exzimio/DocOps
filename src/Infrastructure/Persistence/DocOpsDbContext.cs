@@ -14,6 +14,7 @@ using DocOps.Domain.Workflows;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using DocOps.Domain.Operations;
 
 namespace DocOps.Infrastructure.Persistence;
 
@@ -43,6 +44,9 @@ public class DocOpsDbContext : IdentityDbContext<ApplicationUser, ApplicationRol
     public DbSet<DocumentTag> DocumentTags => Set<DocumentTag>();
     public DbSet<DocumentPermission> DocumentPermissions => Set<DocumentPermission>();
     public DbSet<RetentionPolicy> RetentionPolicies => Set<RetentionPolicy>();
+
+    /// <summary>Sem filtro de organização de propósito: o worker corre acima de todas elas.</summary>
+    public DbSet<BackgroundJobRun> BackgroundJobRuns => Set<BackgroundJobRun>();
 
     public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
     public DbSet<WorkflowNode> WorkflowNodes => Set<WorkflowNode>();

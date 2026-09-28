@@ -1,5 +1,8 @@
 using System.Diagnostics;
+using DocOps.Application.Abstractions;
+using DocOps.Domain.Operations;
 using DocOps.Infrastructure.Observability;
+using DocOps.Infrastructure.Persistence;
 using DocOps.Worker.Jobs;
 using Microsoft.Extensions.Options;
 
@@ -39,6 +42,7 @@ public sealed class BackgroundJobOptions
 public sealed class BackgroundJobRunner(
     IServiceScopeFactory scopeFactory,
     IOptions<BackgroundJobOptions> options,
+    IDateTimeProvider clock,
     ILogger<BackgroundJobRunner> logger) : BackgroundService
 {
     private readonly BackgroundJobOptions _options = options.Value;
@@ -115,16 +119,21 @@ public sealed class BackgroundJobRunner(
         DocOpsMetrics metrics = scope.ServiceProvider.GetRequiredService<DocOpsMetrics>();
         long start = Stopwatch.GetTimestamp();
 
+        DateTimeOffset startedAt = clock.UtcNow;
+
         try
         {
             IBackgroundJob job = scope.ServiceProvider.GetRequiredKeyedService<IBackgroundJob>(name);
             int handled = await job.RunAsync(cancellationToken);
+
             metrics.JobFinished(name, succeeded: true, Stopwatch.GetElapsedTime(start));
 
             if (handled > 0)
             {
                 logger.LogInformation("Background job {Job} handled {Handled} item(s)", name, handled);
             }
+
+            await RecordAsync(scope, name, startedAt, start, handled, failure: null, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -134,6 +143,53 @@ public sealed class BackgroundJobRunner(
             // The message, never the stack: worker logs are read by whoever is on call, and a stack
             // trace in them is both noise and a description of the inside of the process.
             logger.LogError("Background job {Job} failed: {Reason}", name, exception.Message);
+
+            await RecordAsync(scope, name, startedAt, start, 0, exception.Message, cancellationToken);
         }
     }
+
+    /// <summary>
+    /// Writes the run down, because the metrics cannot be read back here.
+    ///
+    /// The counters leave through OpenTelemetry, which is where they belong — and which is a
+    /// different process from the API. Without a row, «did the background work run last night» is a
+    /// question the product cannot answer about itself.
+    ///
+    /// Failing to record must not turn a job that worked into a job that failed, so this swallows
+    /// its own errors after saying so once.
+    /// </summary>
+    private async Task RecordAsync(
+        AsyncServiceScope scope,
+        string name,
+        DateTimeOffset startedAt,
+        long start,
+        int handled,
+        string? failure,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            DocOpsDbContext dbContext = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+
+            dbContext.BackgroundJobRuns.Add(new BackgroundJobRun
+            {
+                Id = Guid.CreateVersion7(),
+                Job = name,
+                StartedAtUtc = startedAt,
+                DurationMs = (int)Stopwatch.GetElapsedTime(start).TotalMilliseconds,
+                Succeeded = failure is null,
+                ItemsHandled = handled,
+                Failure = failure is null ? null : Truncate(failure, 1024)
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning("Could not record the run of {Job}: {Reason}", name, exception.Message);
+        }
+    }
+
+    private static string Truncate(string value, int max) =>
+        value.Length <= max ? value : value[..max];
 }

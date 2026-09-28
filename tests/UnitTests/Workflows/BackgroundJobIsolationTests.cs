@@ -1,3 +1,4 @@
+using DocOps.Application.Abstractions;
 using DocOps.Infrastructure.Observability;
 using DocOps.Worker;
 using DocOps.Worker.Jobs;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using DocOps.Domain.Operations;
 
 namespace DocOps.UnitTests.Workflows;
 
@@ -88,7 +90,18 @@ public class BackgroundJobIsolationTests
         new(
             provider.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new BackgroundJobOptions { IntegrationEveryNCycles = 1 }),
+            new FrozenClock(new DateTimeOffset(2026, 9, 28, 9, 0, 0, TimeSpan.Zero)),
             NullLogger<BackgroundJobRunner>.Instance);
+
+    /// <summary>
+    /// Sem `DocOpsDbContext` registado de propósito: o executor tenta gravar a corrida e não
+    /// consegue. Se isso bastasse para partir o ciclo, gravar o rasto seria mais frágil do que o
+    /// trabalho que ele descreve.
+    /// </summary>
+    private sealed class FrozenClock(DateTimeOffset now) : IDateTimeProvider
+    {
+        public DateTimeOffset UtcNow { get; } = now;
+    }
 
     private sealed class RecordingJob(bool throws) : IBackgroundJob
     {

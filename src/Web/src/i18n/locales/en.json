@@ -1010,13 +1010,14 @@
   },
   "admin": {
     "title": "Administration",
-    "subtitle": "People, roles, departments, document types, tags and retention for this organisation.",
+    "subtitle": "This organisation's configuration and operation.",
     "tabs": {
       "users": "People",
       "departments": "Departments",
       "catalogue": "Catalogue",
       "tags": "Tags",
-      "retention": "Retention"
+      "retention": "Retention",
+      "health": "System"
     },
     "users": {
       "title": "People",
@@ -1152,6 +1153,33 @@
       "createTitle": "New policy",
       "editTitle": "Edit policy",
       "formLabel": "Retention policy form"
+    },
+    "health": {
+      "jobsTitle": "Background work",
+      "recordsSince": "Records since {{since}}. The worker runs above every organisation.",
+      "noRecords": "No records yet: the worker has not run since this table came into being.",
+      "job": "Job",
+      "jobs": {
+        "workflow-timers": "Workflow timers",
+        "overdue-escalation": "Deadline escalation",
+        "ai-queue": "AI analysis queue",
+        "integrations": "Integrations"
+      },
+      "lastRun": "Last run",
+      "lastDay": "Last 24 hours",
+      "average": "Average duration",
+      "never": "Never ran",
+      "failures": "{{count}} failure(s)",
+      "milliseconds": "{{value}} ms",
+      "queuesTitle": "Work waiting",
+      "queuesSubtitle": "For this organisation, and only what you may see.",
+      "queues": {
+        "overdueTasks": "Overdue tasks",
+        "queuedIntegrationRuns": "Queued integration runs",
+        "pendingAiAnalyses": "AI analyses not yet run",
+        "documentsAwaitingApproval": "Documents awaiting approval",
+        "documentsAwaitingSignature": "Pending signatures"
+      }
     }
   }
 }

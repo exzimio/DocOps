@@ -1510,6 +1510,41 @@ namespace DocOps.Infrastructure.Persistence.Migrations
                     b.ToTable("Notifications", (string)null);
                 });
 
+            modelBuilder.Entity("DocOps.Domain.Operations.BackgroundJobRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Failure")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<int>("ItemsHandled")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Job")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAtUtc");
+
+                    b.HasIndex("Job", "StartedAtUtc");
+
+                    b.ToTable("BackgroundJobRuns", (string)null);
+                });
+
             modelBuilder.Entity("DocOps.Domain.Signatures.SignatureRequest", b =>
                 {
                     b.Property<Guid>("Id")

@@ -19,11 +19,12 @@ import {
 import { DocumentCataloguePanel } from '@/features/administration/DocumentCataloguePanel'
 import { TagsPanel } from '@/features/administration/TagsPanel'
 import { RetentionPanel } from '@/features/administration/RetentionPanel'
+import { SystemHealthPanel } from '@/features/administration/SystemHealthPanel'
 import { Button } from '@/components/ui/Button'
 import { Checkbox, TextField } from '@/components/ui/Field'
 import { Badge, Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
 
-type Tab = 'users' | 'departments' | 'catalogue' | 'tags' | 'retention'
+type Tab = 'users' | 'departments' | 'catalogue' | 'tags' | 'retention' | 'health'
 
 const EMPTY: SaveUserInput = { firstName: '', lastName: '', roles: [], departmentIds: [] }
 
@@ -128,6 +129,7 @@ export function AdminPage() {
             ['catalogue', t('admin.tabs.catalogue'), canAdminTypes],
             ['tags', t('admin.tabs.tags'), canAdminTypes],
             ['retention', t('admin.tabs.retention'), canAdminRetention],
+            ['health', t('admin.tabs.health'), canAdminRetention],
           ] as const
         )
           .filter(([, , allowed]) => allowed)
@@ -346,6 +348,8 @@ export function AdminPage() {
       {tab === 'tags' && canAdminTypes && <TagsPanel />}
 
       {tab === 'retention' && canAdminRetention && <RetentionPanel />}
+
+      {tab === 'health' && canAdminRetention && <SystemHealthPanel />}
 
       {tab === 'departments' && canAdminDepartments && (
         <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
