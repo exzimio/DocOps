@@ -561,6 +561,33 @@ falhava nada: nem exceção, nem aviso, nem teste vermelho. A contagem passou a 
 própria com a condição de organização escrita à mão, e
 `tests/UnitTests/Persistence/QueryFilterUsageTests.cs` falha a compilação se o padrão reaparecer.
 
+## 10.11 Editor de permissões
+
+**O painel não calcula nada.** `EffectiveAccess` — os níveis, as razões e as restrições — é produzido
+pelo `DocumentAccessEvaluator`, o mesmo que decide de verdade quando alguém tenta abrir, editar ou
+descarregar. Um painel de autorização que computasse a sua própria resposta acabaria por discordar da
+regra que diz explicar, e a discordância seria invisível até alguém alcançar o que não devia.
+
+**Explicar o acesso de outra pessoa é uma ação de quem concede.** `GetEffectiveAccessAsync` exige
+`Share` sobre o documento quando o pedido é sobre terceiros, e nada quando é sobre o próprio além de
+poder vê-lo. A assimetria é deliberada: a resposta descreve o alcance de outra pessoa, e quem não
+decide concessões não tem razão para a conhecer. O `DocumentAccessResolver.BuildSubjectForAsync` já
+existia para a assinatura eletrónica, que faz a mesma pergunta antes de pedir a alguém que assine.
+
+**Os perfis oferecidos vêm do `RoleNames`**, a mesma lista que a camada de autorização usa, através
+de `GET /api/tenants/current/roles`. Estavam escritos à mão no cliente. `SystemAdmin` é excluído:
+está acima da organização, e conceder-lhe um documento seria dar acesso a uma conta que a
+organização não gere.
+
+**As concessões podem expirar.** `DocumentPermission.ExpiresAtUtc` sempre existiu e o predicado de
+visibilidade sempre o respeitou; faltava poder pedi-lo. Uma data no passado é recusada pelo
+validador — uma janela que fechou antes de abrir não é uma janela. A interface interpreta uma data
+sem hora como o fim desse dia, porque quem escreve «31 de dezembro» quer o dia inteiro.
+
+**`Administer` não é oferecido no formulário.** Os outros seis níveis são. Administrar um documento
+é conceder o poder de redistribuir acesso a ele, e essa é uma decisão de administração da
+organização, não de partilha — quem a tem, tem-na pelo perfil.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

@@ -45,7 +45,7 @@ vem da base de dados através da API.
 | 5 | Abstração de IA e inteligência documental | **Concluída** |
 | 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
 | 7 | Portal externo e assinatura eletrónica | **Concluída** |
-| 8 | Relatórios e administração | **Em curso** — análises, pessoas e departamentos, catálogo de tipos e campos, etiquetas e retenção entregues; falta o editor de permissões |
+| 8 | Relatórios e administração | **Concluída** |
 | 9 | Testes, segurança e observabilidade | Planeada |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | Planeada |
 
@@ -325,14 +325,29 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
 - Gerir etiquetas é `admin.documenttypes`; decidir **quanto tempo se guardam documentos** é
   `admin.settings` — é uma decisão de conformidade, não de classificação.
 
+**Editor de permissões** no separador Permissões de cada documento:
+
+- **Concessões por pessoa, departamento e perfil**, como o briefing pede. Os perfis vêm do servidor
+  (`GET /api/tenants/current/roles`) e não de uma lista escrita no ecrã: duas listas de perfis
+  divergem, e a que a interface mostra é a que ninguém repara que está errada. A administração da
+  plataforma não é oferecida — está acima da organização.
+- **Concessões com prazo**, para a janela de um auditor externo. Um prazo já passado é recusado: uma
+  janela de acesso que fechou antes de abrir não é uma janela.
+- **«Porque é que alguém alcança este documento»** — a peça que o briefing pede. Mostrar só o acesso
+  de quem está a olhar responde a metade da pergunta; quem concede precisa de saber porque é que
+  **outra** pessoa alcança, ou não alcança. O painel mostra a mesma avaliação que o servidor usa ao
+  decidir, regra a regra: o que cada uma concede e o que cada restrição retira.
+- O servidor só responde sobre outra pessoa a quem possa partilhar o documento. Perguntar «esta
+  pessoa conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
+
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
 | --- | --- |
 | Unitários (xUnit) | 328 |
-| Integração com SQL Server real (Testcontainers) | 169 |
+| Integração com SQL Server real (Testcontainers) | 173 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
-| End-to-end (Playwright, desktop e móvel) | 134 |
+| End-to-end (Playwright, desktop e móvel) | 144 |
 
 ## 4. Arquitetura
 
@@ -635,6 +650,8 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `DELETE /api/admin/tags/{id}` · `POST /{id}/restore` | Remove de circulação e repõe: as ligações aos documentos sobrevivem |
 | `POST /api/admin/retention-policies` · `PUT /{id}` | Políticas de retenção; exige `admin.settings` |
 | `POST /api/admin/retention-policies/{id}/active` | Retirar é recusado enquanto um tipo a adotar |
+| `GET /api/tenants/current/roles` | Os perfis a quem um documento pode ser concedido |
+| `GET /api/documents/{id}/effective-access` | Porque é que o chamador — ou, para quem pode partilhar, outra pessoa — alcança o documento |
 | `GET /health` · `/health/live` · `/health/ready` | Estado do sistema |
 
 ## 10. Motor de workflow

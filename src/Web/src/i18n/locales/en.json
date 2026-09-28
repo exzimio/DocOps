@@ -213,7 +213,7 @@
       "subject": "Grantee",
       "levels": "Levels",
       "grantedBy": "Granted by",
-      "expires": "Expires",
+      "expires": "Expires on",
       "grant": "Grant access",
       "revoke": "Revoke",
       "subjectType": "Type",
@@ -221,7 +221,12 @@
       "subjectTypeDepartment": "Department",
       "subjectTypeRole": "Role",
       "empty": "No explicit permissions. Access comes from the classification and ownership rules.",
-      "hidden": "You need share permission to view and manage this document's permissions."
+      "hidden": "You need share permission to view and manage this document's permissions.",
+      "whyTitle": "Why someone reaches this document",
+      "whySubtitle": "The same evaluation the server makes when deciding, explained rule by rule.",
+      "whoseAccess": "Access of",
+      "noAccessTitle": "Does not reach this document",
+      "noAccessBody": "Nothing — ownership, department, role or grant — gives them access."
     },
     "accessPanel": {
       "title": "Effective access",

@@ -213,7 +213,7 @@
       "subject": "Destinatário",
       "levels": "Níveis",
       "grantedBy": "Concedido por",
-      "expires": "Expira",
+      "expires": "Expira em",
       "grant": "Conceder acesso",
       "revoke": "Revogar",
       "subjectType": "Tipo",
@@ -221,7 +221,12 @@
       "subjectTypeDepartment": "Departamento",
       "subjectTypeRole": "Perfil",
       "empty": "Sem permissões explícitas. O acesso resulta das regras de classificação e propriedade.",
-      "hidden": "Precisa de permissão de partilha para ver e gerir as permissões deste documento."
+      "hidden": "Precisa de permissão de partilha para ver e gerir as permissões deste documento.",
+      "whyTitle": "Porque é que alguém alcança este documento",
+      "whySubtitle": "A mesma avaliação que o servidor faz ao decidir, explicada regra a regra.",
+      "whoseAccess": "Acesso de",
+      "noAccessTitle": "Não alcança este documento",
+      "noAccessBody": "Nada — posse, departamento, perfil ou concessão — lhe dá acesso."
     },
     "accessPanel": {
       "title": "Acesso efetivo",

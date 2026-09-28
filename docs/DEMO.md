@@ -839,6 +839,44 @@ aparecem. Gerir etiquetas exige `admin.documenttypes`; decidir quanto tempo se g
 exige `admin.settings` — conformidade e classificação são decisões diferentes, e o servidor recusa
 as duas na mesma.
 
+## Demonstração disponível na Fase 8 — Editor de permissões (≈4 minutos)
+
+Abra um documento e vá ao separador **Permissões**. Esta é a demonstração que mais peso costuma ter
+numa avaliação técnica, porque autorização é onde os produtos empresariais falham em silêncio.
+
+### 1. Conceder (1 min 30 s)
+
+Conceda acesso a um **departamento**, depois mude o tipo para **perfil** e para **utilizador**. Os
+três existem porque o briefing os pede, e a lista de perfis **vem do servidor** — é a mesma que a
+camada de autorização usa. Uma lista escrita no ecrã divergiria, e seria a do ecrã que ninguém
+repararia que estava errada.
+
+Repare que **`SystemAdmin` não aparece**. Está acima da organização; conceder-lhe um documento seria
+dar acesso a uma conta que esta organização não gere.
+
+Preencha **«expira em»** com uma data futura. É a janela de um auditor externo. Tente uma data
+passada: é recusada — uma janela que fechou antes de abrir não é uma janela.
+
+### 2. A pergunta que interessa (2 min)
+
+Desça até **«Porque é que alguém alcança este documento»** e escolha uma pessoa.
+
+Explique isto em voz alta: mostrar o acesso **de quem está a olhar** responde a metade da pergunta.
+Quem administra precisa de saber porque é que **outra** pessoa alcança — ou não alcança — um
+documento. O painel mostra a avaliação regra a regra: o que a posse concede, o que o departamento
+concede, o que uma concessão explícita acrescenta, e o que uma restrição retira.
+
+**E não é um cálculo à parte.** É o mesmo `DocumentAccessEvaluator` que decide de verdade quando
+alguém tenta abrir ou descarregar o documento. Um painel que computasse a sua própria resposta
+acabaria por discordar da regra que diz explicar — e a discordância só se descobriria quando alguém
+alcançasse o que não devia.
+
+### 3. Quem pode perguntar (30 s)
+
+Entre como `ana.ferreira@asteria.example` e abra o mesmo separador. Não há formulário de concessão
+nem seletor de pessoa. E se forçasse o pedido, o servidor recusava: perguntar «esta pessoa
+conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.

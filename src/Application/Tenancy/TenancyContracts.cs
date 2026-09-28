@@ -27,12 +27,22 @@ public sealed record TenantProfileDto(
 /// </summary>
 public sealed record TenantMemberDto(Guid Id, string DisplayName, string? DepartmentCode);
 
+/// <summary>A role a document can be shared with, named as the organisation knows it.</summary>
+public sealed record TenantRoleDto(string Name, string Description);
+
 public interface ITenantDirectory
 {
     /// <summary>Profile of the caller's own tenant, including its departments. Scoped by the authenticated principal.</summary>
     Task<TenantProfileDto> GetCurrentTenantAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<DepartmentDto>> GetDepartmentsAsync(bool includeInactive = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The roles a grant can name. Platform administration is not among them: it is held above
+    /// the organisation, and sharing a document with it would be granting access to an account
+    /// the organisation does not manage.
+    /// </summary>
+    Task<IReadOnlyList<TenantRoleDto>> GetRolesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// The active people in the caller's own organisation, for the screens that filter or assign by

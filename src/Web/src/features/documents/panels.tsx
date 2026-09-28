@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Download, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
-import { downloadUrl, useDocumentAudit, useGrantPermission, useRevokePermission } from './api'
+import {
+  downloadUrl,
+  useDocumentAudit,
+  useEffectiveAccessFor,
+  useGrantPermission,
+  useRevokePermission,
+  useTenantMembers,
+  useTenantRoles,
+} from './api'
 import { formatBytes, formatDateTime, formatMetadataValue } from './format'
 import { PermissionSubjectType, type DocumentDetail, type EffectiveAccess } from './types'
 import { Button } from '@/components/ui/Button'
@@ -199,6 +207,16 @@ export function PermissionsPanel({
   const [subjectType, setSubjectType] = useState<number>(PermissionSubjectType.Department)
   const [subjectId, setSubjectId] = useState('')
   const [levels, setLevels] = useState<string[]>(['view', 'download'])
+  const [expiresAt, setExpiresAt] = useState('')
+
+  // O briefing pede permissões por pessoa, departamento, perfil e documento. Os perfis vêm do
+  // servidor, não de uma lista escrita aqui: duas listas divergem, e a que a interface mostra é a
+  // que ninguém repara que está errada.
+  const roles = useTenantRoles()
+  const members = useTenantMembers()
+
+  const [explainFor, setExplainFor] = useState<string | null>(null)
+  const explained = useEffectiveAccessFor(document.summary.id, explainFor)
 
   if (!canShare) {
     return <EmptyState title={t('documents.permissionsPanel.hidden')} />
@@ -217,12 +235,16 @@ export function PermissionsPanel({
     }
 
     try {
+      // Uma data sem hora é o fim desse dia: quem escreve «31 de dezembro» quer o dia inteiro.
+      const expiresAtUtc = expiresAt ? new Date(`${expiresAt}T23:59:59`).toISOString() : null
+
       await grant.mutateAsync(
         subjectType === PermissionSubjectType.Role
-          ? { subjectType, roleName: subjectId, accessLevels: levels }
-          : { subjectType, subjectId, accessLevels: levels },
+          ? { subjectType, roleName: subjectId, accessLevels: levels, expiresAtUtc }
+          : { subjectType, subjectId, accessLevels: levels, expiresAtUtc },
       )
       setSubjectId('')
+      setExpiresAt('')
     } catch {
       // Rendered from grant.error below.
     }
@@ -321,6 +343,9 @@ export function PermissionsPanel({
                 <option value={PermissionSubjectType.Role}>
                   {t('documents.permissionsPanel.subjectTypeRole')}
                 </option>
+                <option value={PermissionSubjectType.User}>
+                  {t('documents.permissionsPanel.subjectTypeUser')}
+                </option>
               </select>
             </div>
 
@@ -335,17 +360,25 @@ export function PermissionsPanel({
                 className="h-9 min-w-[12rem] rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
                 <option value="">—</option>
-                {subjectType === PermissionSubjectType.Department
-                  ? departments.map((department) => (
-                      <option key={department.id} value={department.id}>
-                        {department.name}
-                      </option>
-                    ))
-                  : ['Manager', 'FinanceApprover', 'Employee', 'ExternalPartner'].map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
+                {subjectType === PermissionSubjectType.Department &&
+                  departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
+                {subjectType === PermissionSubjectType.Role &&
+                  roles.data?.map((role) => (
+                    <option key={role.name} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
+                {subjectType === PermissionSubjectType.User &&
+                  members.data?.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.displayName}
+                      {member.departmentCode ? ` · ${member.departmentCode}` : ''}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -354,7 +387,7 @@ export function PermissionsPanel({
                 {t('documents.permissionsPanel.levels')}
               </span>
               <div className="flex flex-wrap gap-2">
-                {(['download', 'edit', 'approve', 'share'] as const).map((level) => (
+                {(['download', 'edit', 'delete', 'approve', 'share'] as const).map((level) => (
                   <label key={level} className="flex items-center gap-1 text-xs text-ink-secondary">
                     <input
                       type="checkbox"
@@ -368,6 +401,19 @@ export function PermissionsPanel({
               </div>
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="grant-expires" className="text-xs font-medium text-ink-secondary">
+                {t('documents.permissionsPanel.expires')}
+              </label>
+              <input
+                id="grant-expires"
+                type="date"
+                value={expiresAt}
+                onChange={(event) => setExpiresAt(event.target.value)}
+                className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
+              />
+            </div>
+
             <Button type="submit" loading={grant.isPending} disabled={!subjectId}>
               {t('documents.permissionsPanel.grant')}
             </Button>
@@ -377,6 +423,83 @@ export function PermissionsPanel({
             <p role="alert" className="mt-3 text-xs font-medium text-red-600">
               {grant.error.message}
             </p>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* O briefing pede um painel que mostre exatamente porque é que alguém alcança um documento.
+          Mostrá-lo apenas para quem está a olhar responde a metade da pergunta: quem concede
+          precisa de saber porque é que **outra** pessoa alcança, ou não alcança. O servidor só
+          responde a quem pode partilhar — perguntar «esta pessoa conseguiria?» é legítimo para
+          quem decide conceder, e mais ninguém. */}
+      <Card>
+        <CardHeader
+          title={t('documents.permissionsPanel.whyTitle')}
+          description={t('documents.permissionsPanel.whySubtitle')}
+          icon={<ShieldCheck className="size-4" />}
+        />
+        <CardBody className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="explain-for" className="text-xs font-medium text-ink-secondary">
+              {t('documents.permissionsPanel.whoseAccess')}
+            </label>
+            <select
+              id="explain-for"
+              value={explainFor ?? ''}
+              onChange={(event) => setExplainFor(event.target.value || null)}
+              className="h-9 max-w-sm rounded-md border border-strong bg-raised px-2 text-sm text-ink"
+            >
+              <option value="">—</option>
+              {members.data?.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.displayName}
+                  {member.departmentCode ? ` · ${member.departmentCode}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {explained.isLoading && <LoadingState label={t('common.loading')} />}
+
+          {explained.data && explained.data.levels.length === 0 && (
+            <EmptyState
+              title={t('documents.permissionsPanel.noAccessTitle')}
+              body={t('documents.permissionsPanel.noAccessBody')}
+            />
+          )}
+
+          {explained.data && explained.data.levels.length > 0 && (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {explained.data.levels.map((level) => (
+                  <Badge key={level} tone="teal">
+                    {t(`documents.access.${level}`)}
+                  </Badge>
+                ))}
+              </div>
+
+              <ul className="flex flex-col gap-2">
+                {explained.data.reasons.map((reason, index) => (
+                  <li key={`why-${index}`} className="border-l-2 border-teal-600 pl-2.5">
+                    <p className="text-xs text-ink">{reason.description}</p>
+                    <p className="text-[11px] text-ink-muted">
+                      {t('documents.accessPanel.granted')}:{' '}
+                      {reason.granted.map((level) => t(`documents.access.${level}`)).join(', ')}
+                    </p>
+                  </li>
+                ))}
+
+                {explained.data.restrictions.map((restriction, index) => (
+                  <li key={`why-restriction-${index}`} className="border-l-2 border-amber-500 pl-2.5">
+                    <p className="text-xs text-ink">{restriction.description}</p>
+                    <p className="text-[11px] text-ink-muted">
+                      {t('documents.accessPanel.removed')}:{' '}
+                      {restriction.removed.map((level) => t(`documents.access.${level}`)).join(', ')}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </CardBody>
       </Card>

@@ -7,8 +7,11 @@ import type {
   DocumentListItem,
   DocumentPermission,
   DocumentType,
+  EffectiveAccess,
   PagedResult,
   Tag,
+  TenantMember,
+  TenantRole,
 } from './types'
 
 export const documentKeys = {
@@ -211,7 +214,14 @@ export function useGrantPermission(documentId: string) {
   return useMutation<
     DocumentPermission,
     ApiError,
-    { subjectType: number; subjectId?: string; roleName?: string; accessLevels: string[] }
+    {
+      subjectType: number
+      subjectId?: string
+      roleName?: string
+      accessLevels: string[]
+      /** Concessão temporária — a janela de um auditor externo, por exemplo. */
+      expiresAtUtc?: string | null
+    }
   >({
     mutationFn: (input) => api.post<DocumentPermission>(`/api/documents/${documentId}/permissions`, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.detail(documentId) }),
@@ -232,4 +242,40 @@ export function downloadUrl(documentId: string, version?: number): string {
   return version === undefined
     ? `/api/documents/${documentId}/content`
     : `/api/documents/${documentId}/content?version=${version}`
+}
+
+/**
+ * Os perfis a quem se pode conceder acesso, vindos do servidor.
+ *
+ * Estavam escritos à mão no ecrã. Duas listas de perfis divergem, e a que a interface mostra é a
+ * que ninguém repara que está errada.
+ */
+export function useTenantRoles() {
+  return useQuery<TenantRole[], ApiError>({
+    queryKey: ['tenant', 'roles'],
+    queryFn: () => api.get<TenantRole[]>('/api/tenants/current/roles'),
+    staleTime: 10 * 60_000,
+  })
+}
+
+export function useTenantMembers() {
+  return useQuery<TenantMember[], ApiError>({
+    queryKey: ['tenant', 'members'],
+    queryFn: () => api.get<TenantMember[]>('/api/tenants/current/users'),
+    staleTime: 5 * 60_000,
+  })
+}
+
+/**
+ * Porque é que **esta** pessoa alcança — ou não alcança — este documento.
+ *
+ * O servidor só responde sobre outra pessoa a quem possa partilhar o documento: perguntar «esta
+ * pessoa conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
+ */
+export function useEffectiveAccessFor(documentId: string, userId: string | null) {
+  return useQuery<EffectiveAccess, ApiError>({
+    queryKey: [...documentKeys.detail(documentId), 'effective-access', userId],
+    queryFn: () => api.get<EffectiveAccess>(`/api/documents/${documentId}/effective-access?userId=${userId}`),
+    enabled: userId !== null,
+  })
 }

@@ -1,6 +1,7 @@
 using DocOps.Application.Abstractions;
 using DocOps.Application.Tenancy;
 using DocOps.Domain.Common;
+using DocOps.Domain.Identity;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,4 +72,26 @@ public sealed class TenantDirectory(DocOpsDbContext dbContext, ITenantContext te
                     .Select(m => m.Department!.Code)
                     .FirstOrDefault()))
             .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// The roles a document grant can name.
+    ///
+    /// Read from <see cref="RoleNames"/>, which is the same list the authorisation layer uses,
+    /// rather than from a list written down somewhere else: two lists of roles drift, and the one
+    /// the interface shows would be the one nobody notices is wrong.
+    ///
+    /// Platform administration is excluded. It is held above the organisation, and sharing a
+    /// document with it would be granting access to an account the organisation does not manage.
+    /// </summary>
+    public Task<IReadOnlyList<TenantRoleDto>> GetRolesAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<TenantRoleDto> roles =
+        [
+            .. RoleNames.All
+                .Where(name => name != RoleNames.SystemAdmin)
+                .Select(name => new TenantRoleDto(name, RolePermissionDefaults.Descriptions[name]))
+        ];
+
+        return Task.FromResult(roles);
+    }
 }

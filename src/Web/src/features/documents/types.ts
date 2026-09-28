@@ -213,3 +213,15 @@ export const defaultFilters: DocumentFilters = {
   sortBy: 'CreatedAt',
   sortDescending: true,
 }
+
+/** Um perfil a quem se pode conceder acesso a um documento. */
+export interface TenantRole {
+  name: string
+  description: string
+}
+
+export interface TenantMember {
+  id: string
+  displayName: string
+  departmentCode: string | null
+}

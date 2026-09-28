@@ -219,6 +219,10 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Retenção encurtada sem rasto | Mudar a duração é permitido, porque as obrigações mudam, mas fica na auditoria com o valor antigo e o novo: move a data de eliminação de todos os documentos que a política governa |
 | Regra de retenção abandonada a continuar a aplicar-se | Retirar uma política é recusado enquanto um tipo de documento a adotar por omissão, e a mensagem nomeia os tipos |
 | Quem classifica a decidir quanto tempo se guarda | `admin.documenttypes` gere etiquetas e tipos; alterar políticas de retenção exige `admin.settings` — conformidade e classificação são decisões diferentes |
+| Explicação de acesso usada para sondar o alcance alheio | Perguntar pelo acesso de outra pessoa exige `Share` sobre o documento; sobre o próprio basta poder vê-lo. Quem não decide concessões não tem razão para conhecer o alcance dos outros |
+| Painel de autorização a divergir da regra que aplica | O painel não calcula: mostra o `EffectiveAccess` produzido pelo mesmo avaliador que decide quando alguém abre, edita ou descarrega |
+| Perfil inexistente ou de plataforma nomeado numa concessão | Os perfis oferecidos vêm de `RoleNames`, a lista que a autorização usa, e `SystemAdmin` é excluído: está acima da organização |
+| Acesso temporário que nunca acaba | As concessões aceitam prazo, e o predicado de visibilidade respeita-o; um prazo no passado é recusado na validação |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |

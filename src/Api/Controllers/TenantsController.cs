@@ -36,4 +36,15 @@ public sealed class TenantsController(ITenantDirectory tenantDirectory) : Contro
     [ProducesResponseType<IReadOnlyList<TenantMemberDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetMembers(CancellationToken cancellationToken) =>
         Ok(await tenantDirectory.GetMembersAsync(cancellationToken));
+
+    /// <summary>
+    /// The roles a document can be shared with. Behind the same permission as the people list,
+    /// because it answers the same question — who can a grant name — and sharing a document is not
+    /// an administrative act.
+    /// </summary>
+    [HttpGet("current/roles")]
+    [HasPermission(Permissions.DocumentsView)]
+    [ProducesResponseType<IReadOnlyList<TenantRoleDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<TenantRoleDto>>> GetRoles(CancellationToken cancellationToken) =>
+        Ok(await tenantDirectory.GetRolesAsync(cancellationToken));
 }
