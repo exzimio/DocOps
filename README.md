@@ -68,7 +68,7 @@ vem da base de dados através da API.
 | Unitários (xUnit) | 330 |
 | Integração com SQL Server real (Testcontainers) | 181 |
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
-| End-to-end (Playwright, desktop e móvel) | 178 |
+| End-to-end (Playwright, desktop e móvel) | 190 |
 
 ## 5. Arquitetura
 

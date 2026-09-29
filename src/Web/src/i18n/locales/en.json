@@ -1181,5 +1181,12 @@
         "documentsAwaitingSignature": "Pending signatures"
       }
     }
+  },
+  "command": {
+    "title": "Go to",
+    "placeholder": "Type a screen, or search for a document…",
+    "results": "Results",
+    "nothing": "Nothing matches what you typed.",
+    "help": "Arrows to choose · Enter to open · Esc to close"
   }
 }

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { LanguageSwitcher, ThemeToggle } from '@/components/PreferencesControls'
 import { NotificationBell } from '@/features/workflows/NotificationBell'
 import { LoadingState } from '@/components/ui/Surface'
+import { CommandPalette } from '@/app/CommandPalette'
 
 export function AppShell() {
   const { t } = useTranslation()
@@ -40,6 +41,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-canvas">
+      <CommandPalette />
       <a href="#main-content" className="skip-link">
         {t('common.skipToContent')}
       </a>

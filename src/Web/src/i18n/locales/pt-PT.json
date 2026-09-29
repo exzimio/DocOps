@@ -1181,5 +1181,12 @@
         "documentsAwaitingSignature": "Assinaturas pendentes"
       }
     }
+  },
+  "command": {
+    "title": "Ir para",
+    "placeholder": "Escreva um ecrã ou procure um documento…",
+    "results": "Resultados",
+    "nothing": "Nada corresponde ao que escreveu.",
+    "help": "Setas para escolher · Enter para abrir · Esc para fechar"
   }
 }
