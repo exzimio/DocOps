@@ -30,6 +30,13 @@ namespace DocOps.IntegrationTests;
 /// It runs against a container of its own: seeding thousands of documents into the shared database
 /// would change the figures every other test reads.
 /// </summary>
+/// <remarks>
+/// Na mesma coleção do resto, embora não use o mesmo contentor. A coleção não é sobre partilhar a
+/// base: é sobre <b>não correr ao mesmo tempo</b>. Esta classe levanta um SQL Server só para si, e
+/// dois servidores a disputar a mesma máquina fazem falhar testes que nada têm que ver com carga —
+/// aconteceu, e os que caíram foram os de isolamento entre organizações, que estavam certos.
+/// </remarks>
+[Collection(ApiCollection.Name)]
 public class ReportingLoadTests(ITestOutputHelper output) : IAsyncLifetime
 {
     /// <summary>Two orders of magnitude above the demo catalogue, which has around thirty.</summary>
@@ -106,11 +113,21 @@ public class ReportingLoadTests(ITestOutputHelper output) : IAsyncLifetime
         // Offset paging does get slower with depth — that is how it works. What it must not do is
         // get slower by an order of magnitude, which is what happens when the ordering has no index
         // behind it and the server sorts the whole table to reach row 2500.
+        //
+        // The floor matters as much as the multiple. Both pages answer in single-digit milliseconds
+        // here, and ten times three milliseconds is thirty — a threshold that any noise on a busy
+        // machine crosses. This test failed exactly that way when run alongside the rest of the
+        // suite, and passed on its own: it was measuring the machine, not the query. Below half a
+        // second the difference between the two pages is not a signal about anything.
+        TimeSpan allowed = Max(first * 10, TimeSpan.FromMilliseconds(500));
+
         Assert.True(
-            deep < first * 10 + TimeSpan.FromSeconds(1),
+            deep < allowed,
             $"A página 100 custou {deep.TotalMilliseconds:F0} ms contra {first.TotalMilliseconds:F0} ms da "
             + "primeira. Paginação por deslocamento piora com a profundidade, mas não assim.");
     }
+
+    private static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
 
     private static async Task<TimeSpan> MeasureAsync(HttpClient client, string path, int runs)
     {

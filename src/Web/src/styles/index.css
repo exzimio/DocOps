@@ -14,6 +14,11 @@
   --color-graphite-300: #b0b9c4;
   --color-graphite-400: #8593a3;
   --color-graphite-500: #667586;
+
+  /* Meio passo entre 500 e 600. Existe por uma razão medida, não estética: o 500 dá 4.06:1 sobre o
+     fundo recuado, e a norma pede 4.5:1 para texto normal. É o degrau do texto secundário fraco em
+     modo claro, onde vivem os cabeçalhos de tabela e os subtítulos. */
+  --color-graphite-550: #5f6d7d;
   --color-graphite-600: #505d6d;
   --color-graphite-700: #414b58;
   --color-graphite-800: #333b46;
@@ -70,7 +75,7 @@
   --border-strong: var(--color-graphite-300);
   --text-primary: var(--color-graphite-900);
   --text-secondary: var(--color-graphite-600);
-  --text-muted: var(--color-graphite-500);
+  --text-muted: var(--color-graphite-550);
   --text-inverse: #ffffff;
   color-scheme: light;
 }

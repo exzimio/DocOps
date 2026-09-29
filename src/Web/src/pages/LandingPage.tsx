@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BrainCircuit, FileSearch, GitBranch, PlugZap, ScrollText, ShieldCheck, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge, Card, CardBody } from '@/components/ui/Surface'
+import { Badge, Card, CardBody, TableScroller } from '@/components/ui/Surface'
 import { LanguageSwitcher, ThemeToggle } from '@/components/PreferencesControls'
 import { demoAccounts, demoPassword } from '@/features/auth/demoAccounts'
 
@@ -81,7 +81,7 @@ export function LandingPage() {
           <h2 className="text-sm font-semibold text-ink">{t('landing.demoTitle')}</h2>
           <p className="mt-1 text-xs text-ink-muted">{t('landing.demoBody')}</p>
 
-          <div className="mt-4 overflow-x-auto rounded-lg border border-subtle bg-raised">
+          <TableScroller label={t('login.demoAccounts')}>
             <table className="w-full min-w-[32rem] text-left text-sm">
               <tbody className="divide-y divide-subtle">
                 {demoAccounts.map((account) => (
@@ -98,7 +98,7 @@ export function LandingPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroller>
           <p className="mt-2 font-mono text-xs text-ink-muted">
             {t('login.demoHint', { password: demoPassword })}
           </p>

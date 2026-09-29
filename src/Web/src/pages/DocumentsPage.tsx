@@ -19,7 +19,7 @@ import {
   type DocumentStatusValue,
 } from '@/features/documents/types'
 import { Button } from '@/components/ui/Button'
-import { Badge, Card, EmptyState, ErrorState, LoadingState } from '@/components/ui/Surface'
+import { Badge, Card, EmptyState, ErrorState, LoadingState, TableScroller } from '@/components/ui/Surface'
 
 const statusOptions: DocumentStatusValue[] = [
   DocumentStatus.Draft,
@@ -246,7 +246,7 @@ export function DocumentsPage() {
 
         {result && result.items.length > 0 && (
           <>
-            <div className="overflow-x-auto">
+            <TableScroller label={t('documents.title')}>
               <table className="w-full min-w-[60rem] text-left text-sm">
                 <thead className="bg-sunken text-[11px] uppercase tracking-wide text-ink-muted">
                   <tr>
@@ -337,7 +337,7 @@ export function DocumentsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableScroller>
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-subtle px-3 py-2">
               <p className="text-xs text-ink-muted">

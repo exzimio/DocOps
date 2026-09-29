@@ -13,7 +13,16 @@ import {
 import { formatBytes, formatDateTime, formatMetadataValue } from './format'
 import { PermissionSubjectType, type DocumentDetail, type EffectiveAccess } from './types'
 import { Button } from '@/components/ui/Button'
-import { Badge, Card, CardBody, CardHeader, DataRow, EmptyState, LoadingState } from '@/components/ui/Surface'
+import {
+  Badge,
+  Card,
+  CardBody,
+  CardHeader,
+  DataRow,
+  EmptyState,
+  LoadingState,
+  TableScroller,
+} from '@/components/ui/Surface'
 import type { Department } from '@/lib/types'
 
 export function OverviewPanel({ document }: { document: DocumentDetail }) {
@@ -123,7 +132,7 @@ export function VersionsPanel({ document }: { document: DocumentDetail }) {
   return (
     <Card>
       <CardBody className="p-0">
-        <div className="overflow-x-auto">
+        <TableScroller label={t('documents.versionsPanel.title')}>
           <table className="w-full min-w-[48rem] text-left text-sm">
             <thead className="bg-sunken text-[11px] uppercase tracking-wide text-ink-muted">
               <tr>
@@ -186,7 +195,7 @@ export function VersionsPanel({ document }: { document: DocumentDetail }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroller>
       </CardBody>
     </Card>
   )

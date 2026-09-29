@@ -119,3 +119,22 @@ export function ErrorState({
     </div>
   )
 }
+
+/**
+ * Uma tabela que desliza na horizontal quando não cabe — e que se consegue deslizar sem rato.
+ *
+ * Um `div` com `overflow-x-auto` a envolver uma tabela é invisível para quem navega por teclado: o
+ * conteúdo não é focável, portanto não há como chegar lá para o deslizar, e metade das colunas
+ * deixa de existir. Basta `tabIndex={0}` para o contentor entrar na ordem de tabulação e responder
+ * às setas.
+ *
+ * Existe como componente e não como classe repetida porque foram cinco sítios a cometer o mesmo
+ * erro, e o sexto iria cometê-lo também.
+ */
+export function TableScroller({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div tabIndex={0} role="region" aria-label={label} className="overflow-x-auto">
+      {children}
+    </div>
+  )
+}

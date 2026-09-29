@@ -194,6 +194,27 @@ que endereço, com que identificador de correlação e — quando aplicável —
 - **Navegação orientada a dados e a permissões**: uma entrada só existe quando a rota, a API e a
   persistência existem.
 
+## 9.1 Acessibilidade e carregamento
+
+**A acessibilidade é medida, não afirmada.** `tests/e2e/specs/accessibility.spec.ts` corre `axe`
+contra WCAG 2.1 A e AA sobre dez ecrãs, nos dois perfis de browser, mais o modo escuro e o estado
+com um diálogo aberto. As regras que exigem julgamento humano ficam de fora de propósito: um teste
+que falha sem se poder saber porquê é um teste que se aprende a ignorar.
+
+**O contraste vive nos tokens, e o token tem a razão escrita ao lado.** `--color-graphite-550`
+existe por um número, não por gosto: o degrau 500 dá 4.06:1 sobre o fundo recuado, e a norma pede
+4.5:1 para texto normal. Um comentário no CSS diz isso, para o próximo que lá passar não o «limpar».
+
+**Uma tabela que desliza tem de se conseguir deslizar sem rato.** `TableScroller` é um contentor
+focável: sem `tabIndex`, quem navega por teclado não tem como chegar ao contentor para o mover, e as
+colunas fora do ecrã deixam de existir. Existe como componente porque cinco sítios cometeram o mesmo
+erro.
+
+**As rotas chegam quando alguém lá vai.** Ficam imediatos os ecrãs anteriores à sessão e o painel,
+que é o primeiro a seguir ao início de sessão; as outras catorze são adiadas atrás de uma fronteira
+`Suspense` única. O pacote de entrada passou de 226 kB para 168 kB comprimidos — o que se descarrega
+antes de se ver seja o que for.
+
 ## 10. Motor de workflow
 
 ```mermaid

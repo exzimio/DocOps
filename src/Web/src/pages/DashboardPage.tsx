@@ -5,7 +5,16 @@ import { api, type ApiError } from '@/lib/api'
 import type { TenantProfile } from '@/lib/types'
 import { UserType } from '@/lib/types'
 import { useSession } from '@/features/auth/session'
-import { Badge, Card, CardBody, CardHeader, DataRow, ErrorState, LoadingState } from '@/components/ui/Surface'
+import {
+  Badge,
+  Card,
+  CardBody,
+  CardHeader,
+  DataRow,
+  ErrorState,
+  LoadingState,
+  TableScroller,
+} from '@/components/ui/Surface'
 
 function formatDateTime(value: string | null, locale: string): string | null {
   if (!value) {
@@ -104,7 +113,7 @@ export function DashboardPage() {
         />
         <CardBody className="p-0">
           {tenantQuery.data && (
-            <div className="overflow-x-auto">
+            <TableScroller label={t('dashboard.recent')}>
               <table className="w-full min-w-[36rem] text-left text-sm">
                 <thead className="bg-sunken text-[11px] uppercase tracking-wide text-ink-muted">
                   <tr>
@@ -143,7 +152,7 @@ export function DashboardPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableScroller>
           )}
         </CardBody>
       </Card>
