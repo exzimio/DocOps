@@ -30,7 +30,19 @@ prova.
 | Acessos concedidos sem critério | Autorização por permissão, departamento e documento, validada no servidor |
 | Retenção e obrigações legais geridas em folhas de cálculo | Políticas de retenção, classificação de sensibilidade e retenção legal |
 
-## 3. Estado de construção
+## 3. Começar
+
+```bash
+docker compose up -d                                  # SQL Server
+dotnet run --project src/Api/DocOps.Api.csproj        # API    → http://localhost:5180
+npm --prefix src/Web run dev                          # Web    → http://localhost:5173
+dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker (opcional: prazos e temporizadores)
+```
+
+Pré-requisitos, comandos e credenciais: [`docs/SETUP.md`](docs/SETUP.md).
+Guião da demonstração: [`docs/DEMO.md`](docs/DEMO.md).
+
+## 4. Estado de construção
 
 O projeto é construído por fases; cada fase é entregue a funcionar de ponta a ponta (base de dados,
 API, interface e testes). Não existem ecrãs de demonstração estáticos: tudo o que a interface mostra
@@ -49,311 +61,6 @@ vem da base de dados através da API.
 | 9 | Testes, segurança e observabilidade | **Concluída** |
 | 10 | Refinamento de UX, acessibilidade, desempenho e documentação | **Em curso** — acessibilidade auditada e carregamento dividido |
 
-### Entregue na Fase 1
-
-- Monólito modular .NET 10 com fronteiras explícitas (`Domain`, `Application`, `Infrastructure`, `Api`).
-- Base de dados SQL Server modelada com EF Core: chaves estrangeiras, índices, índices únicos
-  filtrados, tokens de concorrência, *soft delete* e carimbos temporais automáticos.
-- Multi-tenancy com isolamento imposto em duas camadas (filtros globais de leitura + intercetor de
-  escrita).
-- Autenticação por cookie `HttpOnly` com ASP.NET Core Identity, bloqueio por tentativas e política
-  de palavra-passe.
-- Autorização por permissões (não por perfis) com permissões guardadas em base de dados e
-  políticas geradas a pedido.
-- Trilho de auditoria imutável, já a registar autenticações, com identificador de correlação.
-- API REST documentada em OpenAPI, `ProblemDetails` consistente, *rate limiting*, cabeçalhos de
-  segurança e proteção CSRF por validação de origem.
-- Observabilidade: logging estruturado (Serilog), OpenTelemetry e *health checks* `/health`,
-  `/health/live`, `/health/ready`.
-- Frontend React 19 + TypeScript com design system próprio, tema claro/escuro, pt-PT/en e
-  navegação protegida.
-
-### Entregue na Fase 2
-
-- Repositório documental com tipos de documento configuráveis e esquema de metadados por tipo
-  (campos tipados, obrigatórios, listas de valores) — o formulário da interface é gerado a partir do
-  servidor, não codificado no cliente.
-- Versionamento real: cada alteração de conteúdo cria uma nova versão com dimensão, `SHA-256` e
-  autor; versões anteriores nunca são sobrescritas e continuam descarregáveis.
-- Armazenamento de ficheiros atrás de `IFileStorage` (`LocalFileStorage` em disco), com validação de
-  extensão, tipo de conteúdo e dimensão, e chave de armazenamento gerada pelo servidor.
-- Autorização ao nível do documento: propriedade, permissões explícitas (utilizador, departamento,
-  perfil), classificação de sensibilidade e teto imposto pelas permissões do perfil — com um painel
-  de **acesso efetivo** que explica cada decisão.
-- Máquina de estados do documento (rascunho → revisão → aprovação → aprovado/rejeitado → assinatura →
-  arquivo), com arquivo, restauro e eliminação reversível.
-- Políticas de retenção por tipo de documento, com data de expiração calculada no arquivo.
-- Pesquisa e filtros com paginação no servidor, aplicando as regras de acesso dentro da consulta SQL.
-- Concorrência otimista ponta a ponta: o cliente devolve o token recebido e uma gravação baseada numa
-  leitura desatualizada é recusada.
-- Auditoria documental completa: criação, consulta, descarregamento, alteração de metadados, mudança
-  de estado, nova versão, concessão e revogação de permissões, arquivo, restauro e eliminação.
-- Dados de demonstração: 37 documentos consistentes (com versões, etiquetas, metadados, permissões e
-  histórico de auditoria retroativo) em 8 tipos de documento.
-
-### Entregue na Fase 3
-
-- **Motor de workflow próprio**, orientado a dados: definições com nós e ligações persistidas,
-  executadas como instâncias com estado, variáveis e cronologia.
-- Tipos de nó executáveis: início, tarefa humana, aprovação, condição, notificação, ramificação
-  paralela, junção, temporizador e fim. Os tipos que na Fase 3 ainda não estavam implementados
-  **falhavam de forma explícita** em vez de serem ignorados, e a validação impedia ativar uma
-  definição que os usasse; as Fases 5 e 6 implementaram-nos todos (IA e integrações).
-- **Uma travessia é uma transação**: o motor percorre os nós até cada ramo ficar parado ou terminado
-  e só então persiste — instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
-- **Centro de tarefas** com âmbitos (minhas / organização / delegadas), indicadores de SLA, prazos,
-  prioridade, escalonamento e ações decididas no servidor (aprovar, rejeitar, concluir, pedir
-  informação, assumir, reatribuir).
-- Tarefas de grupo: uma tarefa oferecida a um departamento ou perfil é visível a quem pertence a esse
-  grupo e fica atribuída a quem age sobre ela.
-- **Cronologia por instância**, com transições de estado do documento, decisões, notificações e
-  escalonamentos.
-- **Validação de definições** (nós sem saída, ramos em falta, nós inalcançáveis, atribuição em falta),
-  distinguindo erros — que impedem a ativação — de avisos.
-- **Worker em processo separado** para o que não pertence ao pedido HTTP: escalonamento de prazos e
-  retoma de temporizadores.
-- Notificações na aplicação, com contador por ler no cabeçalho.
-- Dados de demonstração: 3 definições e 15 instâncias com tarefas pendentes, em atraso, escaladas,
-  concluídas e uma rejeitada — coerentes com o estado dos documentos.
-
-### Entregue na Fase 4
-
-- **Desenhador visual de processos** sobre React Flow: paleta de nós, ligações desenhadas à mão,
-  arrasto de posições e painel de propriedades que muda conforme o tipo de nó selecionado.
-- Cada campo do painel corresponde a algo que o motor lê. Não há definições decorativas: os ramos
-  oferecidos numa ligação são exatamente os que o motor sabe seguir (`true`/`false` numa condição,
-  `approved`/`rejected` num passo com decisão).
-- **Versionamento por supersessão**: um processo que nunca correu é editado no próprio registo; a
-  partir do momento em que tem execuções, guardar cria uma **nova versão** e reforma a anterior, que
-  permanece na base de dados porque as instâncias em curso continuam a resolver os nós nela.
-- **Concorrência otimista real**: guardar com um token antigo é recusado com `409`, mesmo quando só
-  mudou o grafo — o registo da definição é sempre atualizado para que o `rowversion` seja verificado.
-- Validação em duas camadas: avisos locais enquanto se desenha (passo sem saída, passo inalcançável,
-  ramo em falta) e a validação do servidor, que continua a ser a única que decide se um processo pode
-  ser ativado.
-- Criar, duplicar (sempre inativo) e eliminar processos; eliminar é recusado enquanto existirem
-  execuções em curso.
-- O desenhador é carregado à parte (`React.lazy`): quem nunca o abre não descarrega a biblioteca de
-  diagramas.
-
-### Entregue na Fase 5
-
-- **Abstração de IA** (`IAiDocumentService`: classificar, extrair, responder) com dois fornecedores:
-  um **de demonstração**, determinista e baseado em regras visíveis, e um **opcional compatível com
-  OpenAI / Azure OpenAI**, escolhido por configuração e com a chave lida só do ambiente.
-- **A origem faz parte do contrato.** Toda a resposta de IA diz se veio do modo de demonstração ou
-  de um modelo, e a interface mostra-o onde quer que o resultado apareça. O fornecedor de
-  demonstração **não é um modelo de linguagem** e nunca é apresentado como tal.
-- **Citações verificadas em código.** O texto do documento é numerado no servidor e cada citação é
-  confirmada contra ele. O que não confere é descartado e contado; uma resposta cujas citações caem
-  todas não é apresentada. A um modelo exige-se ainda que o valor se possa reler a partir das
-  palavras citadas — uma citação verdadeira não abona por um valor diferente ao lado.
-- **Classificação e extração com revisão obrigatória**: o tipo sugerido e cada campo são aceites,
-  corrigidos ou rejeitados por uma pessoa; **cada decisão é auditada** no momento em que é tomada, e
-  aplicar escreve pela mesma validação que uma pessoa a editar o formulário atravessa.
-- **Tipo «Por classificar»**: a porta de entrada que permite guardar um ficheiro antes de alguém o
-  ter lido — sem ele, o cenário «carregar → classificar → extrair → validar» seria impossível.
-- **Perguntar ao documento**, com a linha, a página e a secção de onde vem a resposta; perguntas
-  sobre aprovações são respondidas a partir dos registos do sistema, não do texto.
-- **Passos de IA executáveis no workflow**: põem a análise em fila e o worker processa-a fora da
-  transação do motor, retomando a instância. O passo nunca aplica nada ao documento.
-- **Centro de inteligência** em `/app/ai`: documentos por classificar, análises à espera de revisão e
-  a taxa de aceitação das sugestões — tudo limitado, no servidor, ao que o utilizador pode ver.
-
-### Entregue na Fase 6
-
-**Pesquisa**
-
-- Ecrã de pesquisa em `/app/search` com texto livre, excerto do sítio onde o termo foi encontrado e
-  realce da palavra, ordenação por relevância e paginação no servidor.
-- Filtros: tipo, departamento, responsável, etiqueta, estado, classificação, intervalo de datas,
-  **estado do processo** e **estado de aprovação** — estes dois derivados dos workflows e das
-  tarefas de decisão, não guardados no documento.
-- Índice de texto integral do SQL Server, criado por migração protegida. Onde o componente não
-  existe, a pesquisa compara por subcadeia e **diz na resposta e no ecrã qual dos dois caminhos
-  correu** (ADR-005).
-- Perguntas em linguagem natural (`POST /api/search/natural-language`): a pergunta é lida para os
-  mesmos filtros que o formulário produz, a leitura é mostrada antes dos resultados, e a origem da
-  leitura (demonstração ou modelo) é identificada onde quer que apareça.
-- A autorização faz parte da consulta: um documento que o utilizador não pode ver não é contado,
-  não é ordenado e não é paginado.
-
-**Caixa de entrada documental**
-
-- Caixa de entrada em `/app/inbox`: lista e leitura lado a lado, filtros por estado, por anexo e por
-  texto, e contagens do que está por tratar.
-- As ações que o briefing enumera, todas contra a base de dados real: arquivar, reabrir, marcar como
-  processada, **guardar um anexo como documento**, **criar documento a partir da mensagem**,
-  **associar a um documento existente** e **iniciar um processo** sobre o documento que a mensagem
-  produziu.
-- Um anexo que se torna documento passa pelo `IDocumentService`, com a mesma validação, referência,
-  permissões e auditoria de um carregamento manual. Não há porta lateral para o repositório.
-- `IMailConnector` abstrai o sistema de correio com a forma do Microsoft Graph; a implementação de
-  demonstração **não precisa de credenciais** e está identificada como simulação onde quer que as
-  mensagens apareçam (ADR-007).
-- Sincronizar é reconciliar: o identificador da mensagem tem índice único por organização e caixa,
-  por isso sincronizar duas vezes não acrescenta nada.
-
-**Centro de integrações**
-
-- Seis cartões em `/app/integrations` — Microsoft Outlook, ERP, CRM, assinatura eletrónica, webhooks
-  e importação de ficheiros — cada um com estado, última execução, última atividade, registos
-  processados e erros, todos lidos da linha que o servidor escreve depois de uma execução real.
-- Cada cartão tem um adaptador por trás, e o trabalho é verdadeiro: o ERP e o CRM reconciliam os
-  fornecedores e as contrapartes que estão mesmo nos documentos desta organização contra a lista do
-  sistema externo; a importação lê e move ficheiros reais do disco; os webhooks entregam eventos de
-  auditoria por HTTPS; a assinatura conta os documentos que aguardam assinatura.
-- **Só é dito «simulado» o que é simulado.** O lado de lá do ERP, do CRM e do correio é fixo e
-  local, e esses três dizem-no no cartão; os outros três não se rotulam de demonstração por estarem
-  atrás de um adaptador (ADR-007).
-- Registo por integração, consultável e filtrável por nível, com a divergência concreta e os
-  documentos afetados em cada linha.
-- Ver e gerir são permissões distintas: `integrations.view` mostra cartões e registos,
-  `integrations.manage` é que executa, ativa, desativa e configura.
-- O destino dos webhooks é validado **no servidor** — HTTPS obrigatório, *loopback* e gamas privadas
-  recusados — porque um endereço que este servidor vai chamar é uma superfície de SSRF.
-- O nó **`Integration`** do workflow passou a ser executável: enfileira o pedido, larga a transação
-  do motor e o worker retoma a instância quando a execução termina. Com ele, **nenhum tipo de nó do
-  desenhador falha já por não estar implementado**.
-
-### Entregue na Fase 7
-
-**Portal externo**
-
-- Experiência separada em `/portal` para parceiros externos, com shell próprio: nenhuma navegação
-  interna, nenhum sino de notificações, nada pelo qual um convidado pudesse deduzir que ecrãs a
-  organização tem. O cabeçalho identifica a organização que o visitante representa.
-- Submeter um documento, acompanhar o estado, descarregar o que enviou e **responder a pedidos de
-  informação** — as capacidades que o briefing enumera.
-- **O portal não tem autorização própria.** Quem vê o quê é decidido pelo mesmo avaliador de acesso
-  da aplicação interna, que já dizia que um utilizador externo alcança um documento apenas por
-  propriedade ou concessão explícita (ADR-008).
-- Os contratos do portal são **tipos próprios, escritos à mão**, e não os internos com menos campos:
-  é isso que impede que um campo acrescentado do lado de dentro atravesse sozinho.
-- A separação corre **nos dois sentidos**: nenhum perfil interno tem `portal.access`, nem o de
-  administrador; um externo que escreva `/app/documents` volta ao portal, e o servidor recusa na
-  mesma.
-- Uma submissão é criada pelo `IDocumentService` — a mesma validação, referência, permissões e
-  auditoria de um carregamento manual — e entra no departamento que a recebe, com acesso de
-  contribuidor, para que alguém lhe possa realmente pegar.
-- O fornecedor vê **as perguntas que lhe foram dirigidas e as respostas que deu**, e nada mais da
-  cronologia. A lista é construída selecionando dois tipos de evento pelo nome, nunca por exclusão:
-  uma lista por exclusão deixaria entrar o tipo de evento que alguém acrescentar amanhã.
-- **Responder não faz o processo avançar.** Quem decide é quem perguntou — um fornecedor não aprova
-  a sua própria fatura respondendo a uma questão sobre ela. A resposta notifica quem perguntou.
-
-**Assinatura eletrónica**
-
-- **Demonstração de portefólio: não tem validade legal**, e o aviso está no topo do painel, antes de
-  tudo o resto. Não é uma assinatura qualificada nem avançada — nada é assinado com chave privada e
-  não há autoridade de certificação envolvida.
-- O que fica registado é verificável sem confiar na aplicação: o pedido **fixa a versão** e copia o
-  **resumo SHA-256** do conteúdo, e o painel mostra-o por extenso.
-- Assinar é **recusado se o conteúdo mudou** entretanto: consentir um documento é consentir o seu
-  conteúdo. E uma versão nova depois de assinado não apaga nem re-aponta o registo — fá-lo deixar de
-  corresponder, e o ecrã di-lo.
-- **Só a pessoa nomeada assina.** Nem o administrador da organização, que detém todas as permissões,
-  assina em nome de outra. Assinar também **não exige poder editar**: quem é chamado a assinar
-  precisa de ver o documento, não de o alterar.
-- Um pedido que ninguém poderia cumprir é recusado no momento em que se pede — seja porque o
-  signatário não vê o documento, seja porque não tem permissão para assinar.
-- Cada passo fica no **histórico do documento**, que é onde se procura: quem pediu, quem assinou ou
-  recusou, sobre que versão e com que resumo.
-- Nó **`SignatureRequest`** no desenhador de workflows, que espera por uma pessoa como qualquer
-  tarefa humana; um grupo é resolvido para um signatário concreto, porque «o departamento assinou»
-  não é uma afirmação sustentável.
-
-Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signature.md).
-
-### Entregue na Fase 8 (em curso)
-
-**Análises e relatórios** em `/app/reports`:
-
-- **Indicadores calculados por consulta, nunca guardados** — documentos criados, processos iniciados
-  e concluídos, tarefas em atraso, tempo médio de processamento, taxa de automação, tempo até
-  aprovação. O briefing é explícito: *«All analytics must be generated from actual database data»*.
-- **Cada painel é a fatia de quem o abre.** As consultas passam pelo mesmo predicado de visibilidade
-  da pesquisa e do portal — um total que incluísse documentos invisíveis revelaria por agregação
-  aquilo que a lista esconde.
-- **Uma medida sem base diz que não tem base**, em vez de dizer zero. Zero afirma que se mediu; num
-  período em que nada aconteceu é uma mentira com aspeto de facto.
-- Tendências por dia, distribuições por estado, tipo e departamento, e **onde os processos param** —
-  os passos com trabalho à espera e há quanto tempo.
-- Gráficos em SVG construídos à mão, um por medida. Medidas de escalas diferentes não partilham
-  eixo. Exportação para CSV atrás da permissão `reports.export`.
-
-**Administração** em `/app/admin`:
-
-- Criar contas com **palavra-passe inicial mostrada uma única vez** — o servidor guarda o resumo
-  criptográfico e não a sabe devolver. Atribuir perfis e departamentos, desativar e reativar.
-- **A própria conta não se edita a partir daqui.** Tirar a si mesmo a administração, ou desativar-se,
-  pode deixar a organização sem ninguém capaz de desfazer.
-- **Contas são desativadas, nunca eliminadas**: a auditoria e os documentos referem-se a elas.
-- `SystemAdmin` não é atribuível de dentro de uma organização, e a conta que administra a plataforma
-  não se gere a partir de uma organização — recusado no servidor, não apenas escondido.
-- Departamentos com código único por organização, criação e edição.
-
-**Catálogo de documentos** no separador Catálogo de `/app/admin`:
-
-- **Tipos de documento** com código, prefixo de referência, confidencialidade por omissão e política
-  de retenção. Dois tipos nunca partilham prefixo: a referência é o que as pessoas citam umas às
-  outras, e duas iguais para documentos diferentes tornam-na inútil.
-- **Campos de metadados por tipo** — texto, número, data, sim/não, montante e escolha com opções.
-- **As recusas são a funcionalidade.** Um campo que documentos já preenchem **não muda de tipo** (o
-  valor está na coluna do tipo atual e deixaria de ser legível) e **não se elimina** (apagaria o que
-  esses documentos dizem). Tornar um campo obrigatório é recusado se algum documento ficasse por
-  preencher: é uma afirmação sobre o que já existe, e seria falsa no momento em que fosse guardada.
-- **O tipo de entrada não se desativa nem aceita campos obrigatórios.** É por ele que entra um
-  ficheiro antes de alguém o ter lido — incluindo os que chegam por correio e pelo portal.
-- Cada recusa traz a contagem que a explica, e aparece **dentro do formulário** que a provocou.
-
-**Etiquetas e retenção** nos separadores Etiquetas e Retenção de `/app/admin`:
-
-- **Remover uma etiqueta é permitido e reversível**, e a distinção é deliberada: um valor de
-  metadados é o que o documento **afirma**, e por isso não se apaga; uma etiqueta é uma anotação
-  **colocada sobre** ele. As ligações aos documentos sobrevivem à remoção, e restaurar traz-lhes o
-  número de volta ao que era.
-- Nome único entre as que estão em circulação — um nome libertado por uma remoção volta a estar
-  livre. Cor validada como hexadecimal e **recusada**, não ignorada: uma cor que não chega é uma
-  cor que alguém escolheu e nunca viu aplicada.
-- **Mudar a duração de uma política de retenção é permitido**, ao contrário do que acontece no
-  catálogo. As obrigações mudam de facto — muda a lei, muda o contrato — e um catálogo incapaz de as
-  acompanhar é que seria a mentira. A mudança fica na auditoria com o valor antigo e o novo, porque
-  mexe na data de eliminação de todos os documentos que a política governa.
-- **Retirar uma política que tipos de documento adotam é recusado**, e a mensagem nomeia-os: esses
-  tipos continuariam a aplicar uma regra que a organização decidiu deixar de aplicar.
-- Gerir etiquetas é `admin.documenttypes`; decidir **quanto tempo se guardam documentos** é
-  `admin.settings` — é uma decisão de conformidade, não de classificação.
-
-**Editor de permissões** no separador Permissões de cada documento:
-
-- **Concessões por pessoa, departamento e perfil**, como o briefing pede. Os perfis vêm do servidor
-  (`GET /api/tenants/current/roles`) e não de uma lista escrita no ecrã: duas listas de perfis
-  divergem, e a que a interface mostra é a que ninguém repara que está errada. A administração da
-  plataforma não é oferecida — está acima da organização.
-- **Concessões com prazo**, para a janela de um auditor externo. Um prazo já passado é recusado: uma
-  janela de acesso que fechou antes de abrir não é uma janela.
-- **«Porque é que alguém alcança este documento»** — a peça que o briefing pede. Mostrar só o acesso
-  de quem está a olhar responde a metade da pergunta; quem concede precisa de saber porque é que
-  **outra** pessoa alcança, ou não alcança. O painel mostra a mesma avaliação que o servidor usa ao
-  decidir, regra a regra: o que cada uma concede e o que cada restrição retira.
-- O servidor só responde sobre outra pessoa a quem possa partilhar o documento. Perguntar «esta
-  pessoa conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
-
-**Saúde do sistema** no separador Sistema de `/app/admin`:
-
-- **O que cada trabalho em segundo plano andou a fazer** — última corrida, desfecho, corridas e
-  falhas nas últimas 24 horas, duração média. Os quatro aparecem sempre, mesmo os que nunca
-  correram: um trabalho ausente do ecrã e um trabalho que nunca correu parecem o mesmo a quem lê, e
-  não são a mesma coisa.
-- **Trabalho à espera** nesta organização: tarefas em atraso, integrações em fila, análises de IA
-  por correr, documentos a aguardar aprovação e assinaturas pendentes. Números, nunca
-  identificadores.
-- **As sondas anónimas continuam tersas.** `/health`, `/health/live` e `/health/ready` devolvem
-  nome, estado e duração — nunca uma mensagem de exceção, uma cadeia de ligação ou um nome de
-  máquina, que é o que transforma uma sonda de vida em reconhecimento. O detalhe fica atrás de
-  `admin.settings`.
-
 ### Cobertura de testes acumulada
 
 | Nível | Contagem |
@@ -363,7 +70,7 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
 | Componente e unidade no frontend (Vitest + Testing Library) | 59 |
 | End-to-end (Playwright, desktop e móvel) | 178 |
 
-## 4. Arquitetura
+## 5. Arquitetura
 
 ```mermaid
 flowchart TB
@@ -413,7 +120,7 @@ Ver [ADR-001](docs/adr/ADR-001-modular-monolith.md).
 
 Documentação detalhada: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## 5. Stack tecnológica
+## 6. Stack tecnológica
 
 | Camada | Tecnologia |
 | --- | --- |
@@ -426,7 +133,7 @@ Documentação detalhada: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | Testes | xUnit, Testcontainers, Vitest, Testing Library, Playwright |
 | Infraestrutura | Docker Compose, GitHub Actions |
 
-## 6. Modelo de segurança
+## 7. Modelo de segurança
 
 - **A interface nunca é fonte de verdade.** Todas as decisões de autorização são tomadas no servidor;
   o frontend apenas esconde o que o utilizador não pode usar.
@@ -443,7 +150,7 @@ Documentação detalhada: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 Detalhe completo: [`docs/SECURITY.md`](docs/SECURITY.md).
 
-## 7. Desenho da base de dados
+## 8. Desenho da base de dados
 
 ```mermaid
 erDiagram
@@ -562,7 +269,7 @@ flowchart TB
 O acesso responde a *quem pode agir*; o ciclo de vida responde a *o que pode ser feito agora*. São
 deliberadamente independentes: misturá-los tornava impossível arquivar um documento aprovado.
 
-## 8. Fluxo de autenticação
+## 9. Fluxo de autenticação
 
 ```mermaid
 sequenceDiagram
@@ -592,7 +299,7 @@ sequenceDiagram
     A-->>B: Perfil, perfis e permissões efetivas
 ```
 
-## 9. Superfície da API
+## 10. Superfície da API
 
 Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante o desenvolvimento.
 
@@ -669,7 +376,7 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET /api/system/health` | Estado do trabalho em segundo plano e do trabalho à espera; exige `admin.settings` |
 | `GET /health` · `/health/live` · `/health/ready` | Sondas anónimas: nome, estado e duração, e nada mais |
 
-## 10. Motor de workflow
+## 11. Motor de workflow
 
 ```mermaid
 flowchart LR
@@ -707,7 +414,7 @@ Princípios que valem a pena destacar:
 
 Desenho e alternativas ponderadas: [ADR-006](docs/adr/ADR-006-workflow-engine.md).
 
-## 11. Processamento em segundo plano
+## 12. Processamento em segundo plano
 
 O projeto `src/Worker` é um processo separado da API. Corre, num intervalo configurável:
 
@@ -720,14 +427,14 @@ O projeto `src/Worker` é um processo separado da API. Corre, num intervalo conf
 Corre sem organização no contexto ambiente, o que é precisamente o que lhe permite ver todas as
 organizações. É uma exceção deliberada e confinada: nada disto é alcançável a partir de um pedido HTTP.
 
-## 12. Arquitetura de IA
+## 13. Arquitetura de IA
 
 A aplicação depende de abstrações (`IAiDocumentService`, `IAiSearchService`, `IAiWorkflowService`) e
 nunca de um fornecedor concreto. O fornecedor de demonstração é determinístico e identificado como
 tal na interface — respostas de demonstração nunca são apresentadas como geradas por um modelo real.
 Ver [ADR-004](docs/adr/ADR-004-ai-provider-abstraction.md).
 
-## 12.1 Pesquisa
+## 13.1 Pesquisa
 
 `ISearchService` corre filtros, texto e ordenação numa única consulta, dentro do predicado de
 autorização. `IAiSearchService` lê perguntas em linguagem natural e devolve **filtros**, nunca
@@ -738,7 +445,7 @@ O texto integral depende de um componente opcional do SQL Server: a imagem em
 `SERVERPROPERTY('IsFullTextInstalled')`, e a pesquisa deteta o que o servidor sabe fazer e declara-o
 em cada resposta. Ver [ADR-005](docs/adr/ADR-005-search-architecture.md).
 
-## 12.2 Caixa de entrada
+## 13.2 Caixa de entrada
 
 `IMailConnector` é a única porta por onde entra correio, com a forma que o Microsoft Graph tem
 (listar mensagens de uma caixa, buscar o conteúdo de um anexo por identificador). `DemoMailConnector`
@@ -748,7 +455,7 @@ demonstração em cada mensagem que devolve.
 O que a caixa de entrada produz — documentos, processos — é produzido pelos serviços que já existem,
 nunca por escrita direta. Ver [ADR-007](docs/adr/ADR-007-external-connectors.md).
 
-## 13. Estratégia de integrações
+## 14. Estratégia de integrações
 
 Cada sistema externo é representado por um **adaptador atrás de uma interface** (`IIntegrationAdapter`,
 e `IMailConnector` para o correio), com registo de execuções e erros por organização. O
@@ -764,7 +471,7 @@ Quem escreve o estado e os contadores de uma integração é o executor, a parti
 adaptador devolveu — nunca o próprio adaptador, para que o cartão seja o registo do que aconteceu e
 não a opinião do adaptador sobre si mesmo. Ver [ADR-007](docs/adr/ADR-007-external-connectors.md).
 
-## 14. Observabilidade
+## 15. Observabilidade
 
 - **Logs estruturados** (Serilog) com `CorrelationId`, `UserId` e propriedades de pedido.
 - **Correlação ponta a ponta**: o mesmo identificador aparece no cabeçalho `X-Correlation-Id` da
@@ -774,7 +481,7 @@ não a opinião do adaptador sobre si mesmo. Ver [ADR-007](docs/adr/ADR-007-exte
 - **Health checks**: `/health/live` (processo vivo), `/health/ready` (dependências prontas),
   `/health` (visão completa) — sem revelar detalhe de infraestrutura.
 
-## 15. Estratégia de testes
+## 16. Estratégia de testes
 
 | Nível | Ferramenta | O que garante |
 | --- | --- | --- |
@@ -786,7 +493,7 @@ não a opinião do adaptador sobre si mesmo. Ver [ADR-007](docs/adr/ADR-007-exte
 Os testes de integração correm contra SQL Server em container, com as mesmas migrações da aplicação:
 não há base de dados em memória a mascarar comportamento relacional.
 
-## 16. Estratégia de implantação
+## 17. Estratégia de implantação
 
 `docker compose up` levanta a base de dados; a API aplica migrações e semeia dados de demonstração em
 desenvolvimento. Em produção, as migrações são um passo explícito do pipeline e a semeadura está
@@ -794,7 +501,7 @@ desligada. As abstrações de armazenamento, IA e identidade permitem mover para
 Azure SQL, Azure OpenAI e Microsoft Entra ID sem alterar o código de domínio — e nada disso é
 necessário para correr o projeto localmente.
 
-## 17. Compromissos assumidos
+## 18. Compromissos assumidos
 
 | Decisão | Alternativa ponderada | Porque assim |
 | --- | --- | --- |
@@ -814,7 +521,7 @@ necessário para correr o projeto localmente.
 | Indicadores calculados no momento | Tabela de agregados mantida por um processo à parte, ou cache | Paga-se latência para nunca haver um painel que discorda da lista ao lado; ver [ADR-010](docs/adr/ADR-010-analytics-from-queries.md) |
 | Medida sem base devolve `null` | Devolver zero, como quase todos os painéis | Zero afirma que se mediu; num período sem nada para medir é uma mentira com aspeto de facto |
 
-## 18. Melhorias futuras
+## 19. Melhorias futuras
 
 - Extração de módulo de IA para processo próprio caso o volume o justifique.
 - Conetores reais por trás dos adaptadores que hoje simulam o lado de lá (Microsoft Graph para o
@@ -826,14 +533,311 @@ necessário para correr o projeto localmente.
 
 ---
 
-## Começar
+## 20. O que faz, em detalhe
 
-Pré-requisitos, comandos e credenciais: [`docs/SETUP.md`](docs/SETUP.md).
-Guião da demonstração: [`docs/DEMO.md`](docs/DEMO.md).
+As capacidades agrupadas pelo que são, não pela ordem em que foram construídas.
 
-```bash
-docker compose up -d                                  # SQL Server
-dotnet run --project src/Api/DocOps.Api.csproj        # API    → http://localhost:5180
-npm --prefix src/Web run dev                          # Web    → http://localhost:5173
-dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker (opcional: prazos e temporizadores)
-```
+### Fundação, segurança e multi-organização
+
+- Monólito modular .NET 10 com fronteiras explícitas (`Domain`, `Application`, `Infrastructure`, `Api`).
+- Base de dados SQL Server modelada com EF Core: chaves estrangeiras, índices, índices únicos
+  filtrados, tokens de concorrência, *soft delete* e carimbos temporais automáticos.
+- Multi-tenancy com isolamento imposto em duas camadas (filtros globais de leitura + intercetor de
+  escrita).
+- Autenticação por cookie `HttpOnly` com ASP.NET Core Identity, bloqueio por tentativas e política
+  de palavra-passe.
+- Autorização por permissões (não por perfis) com permissões guardadas em base de dados e
+  políticas geradas a pedido.
+- Trilho de auditoria imutável, já a registar autenticações, com identificador de correlação.
+- API REST documentada em OpenAPI, `ProblemDetails` consistente, *rate limiting*, cabeçalhos de
+  segurança e proteção CSRF por validação de origem.
+- Observabilidade: logging estruturado (Serilog), OpenTelemetry e *health checks* `/health`,
+  `/health/live`, `/health/ready`.
+- Frontend React 19 + TypeScript com design system próprio, tema claro/escuro, pt-PT/en e
+  navegação protegida.
+
+### Repositório documental
+
+- Repositório documental com tipos de documento configuráveis e esquema de metadados por tipo
+  (campos tipados, obrigatórios, listas de valores) — o formulário da interface é gerado a partir do
+  servidor, não codificado no cliente.
+- Versionamento real: cada alteração de conteúdo cria uma nova versão com dimensão, `SHA-256` e
+  autor; versões anteriores nunca são sobrescritas e continuam descarregáveis.
+- Armazenamento de ficheiros atrás de `IFileStorage` (`LocalFileStorage` em disco), com validação de
+  extensão, tipo de conteúdo e dimensão, e chave de armazenamento gerada pelo servidor.
+- Autorização ao nível do documento: propriedade, permissões explícitas (utilizador, departamento,
+  perfil), classificação de sensibilidade e teto imposto pelas permissões do perfil — com um painel
+  de **acesso efetivo** que explica cada decisão.
+- Máquina de estados do documento (rascunho → revisão → aprovação → aprovado/rejeitado → assinatura →
+  arquivo), com arquivo, restauro e eliminação reversível.
+- Políticas de retenção por tipo de documento, com data de expiração calculada no arquivo.
+- Pesquisa e filtros com paginação no servidor, aplicando as regras de acesso dentro da consulta SQL.
+- Concorrência otimista ponta a ponta: o cliente devolve o token recebido e uma gravação baseada numa
+  leitura desatualizada é recusada.
+- Auditoria documental completa: criação, consulta, descarregamento, alteração de metadados, mudança
+  de estado, nova versão, concessão e revogação de permissões, arquivo, restauro e eliminação.
+- Dados de demonstração: 37 documentos consistentes (com versões, etiquetas, metadados, permissões e
+  histórico de auditoria retroativo) em 8 tipos de documento.
+
+### Tarefas e motor de workflow
+
+- **Motor de workflow próprio**, orientado a dados: definições com nós e ligações persistidas,
+  executadas como instâncias com estado, variáveis e cronologia.
+- Tipos de nó executáveis: início, tarefa humana, aprovação, condição, notificação, ramificação
+  paralela, junção, temporizador e fim. Os tipos que na Fase 3 ainda não estavam implementados
+  **falhavam de forma explícita** em vez de serem ignorados, e a validação impedia ativar uma
+  definição que os usasse; as Fases 5 e 6 implementaram-nos todos (IA e integrações).
+- **Uma travessia é uma transação**: o motor percorre os nós até cada ramo ficar parado ou terminado
+  e só então persiste — instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
+- **Centro de tarefas** com âmbitos (minhas / organização / delegadas), indicadores de SLA, prazos,
+  prioridade, escalonamento e ações decididas no servidor (aprovar, rejeitar, concluir, pedir
+  informação, assumir, reatribuir).
+- Tarefas de grupo: uma tarefa oferecida a um departamento ou perfil é visível a quem pertence a esse
+  grupo e fica atribuída a quem age sobre ela.
+- **Cronologia por instância**, com transições de estado do documento, decisões, notificações e
+  escalonamentos.
+- **Validação de definições** (nós sem saída, ramos em falta, nós inalcançáveis, atribuição em falta),
+  distinguindo erros — que impedem a ativação — de avisos.
+- **Worker em processo separado** para o que não pertence ao pedido HTTP: escalonamento de prazos e
+  retoma de temporizadores.
+- Notificações na aplicação, com contador por ler no cabeçalho.
+- Dados de demonstração: 3 definições e 15 instâncias com tarefas pendentes, em atraso, escaladas,
+  concluídas e uma rejeitada — coerentes com o estado dos documentos.
+
+### Desenhador visual de processos
+
+- **Desenhador visual de processos** sobre React Flow: paleta de nós, ligações desenhadas à mão,
+  arrasto de posições e painel de propriedades que muda conforme o tipo de nó selecionado.
+- Cada campo do painel corresponde a algo que o motor lê. Não há definições decorativas: os ramos
+  oferecidos numa ligação são exatamente os que o motor sabe seguir (`true`/`false` numa condição,
+  `approved`/`rejected` num passo com decisão).
+- **Versionamento por supersessão**: um processo que nunca correu é editado no próprio registo; a
+  partir do momento em que tem execuções, guardar cria uma **nova versão** e reforma a anterior, que
+  permanece na base de dados porque as instâncias em curso continuam a resolver os nós nela.
+- **Concorrência otimista real**: guardar com um token antigo é recusado com `409`, mesmo quando só
+  mudou o grafo — o registo da definição é sempre atualizado para que o `rowversion` seja verificado.
+- Validação em duas camadas: avisos locais enquanto se desenha (passo sem saída, passo inalcançável,
+  ramo em falta) e a validação do servidor, que continua a ser a única que decide se um processo pode
+  ser ativado.
+- Criar, duplicar (sempre inativo) e eliminar processos; eliminar é recusado enquanto existirem
+  execuções em curso.
+- O desenhador é carregado à parte (`React.lazy`): quem nunca o abre não descarrega a biblioteca de
+  diagramas.
+
+### Inteligência documental
+
+- **Abstração de IA** (`IAiDocumentService`: classificar, extrair, responder) com dois fornecedores:
+  um **de demonstração**, determinista e baseado em regras visíveis, e um **opcional compatível com
+  OpenAI / Azure OpenAI**, escolhido por configuração e com a chave lida só do ambiente.
+- **A origem faz parte do contrato.** Toda a resposta de IA diz se veio do modo de demonstração ou
+  de um modelo, e a interface mostra-o onde quer que o resultado apareça. O fornecedor de
+  demonstração **não é um modelo de linguagem** e nunca é apresentado como tal.
+- **Citações verificadas em código.** O texto do documento é numerado no servidor e cada citação é
+  confirmada contra ele. O que não confere é descartado e contado; uma resposta cujas citações caem
+  todas não é apresentada. A um modelo exige-se ainda que o valor se possa reler a partir das
+  palavras citadas — uma citação verdadeira não abona por um valor diferente ao lado.
+- **Classificação e extração com revisão obrigatória**: o tipo sugerido e cada campo são aceites,
+  corrigidos ou rejeitados por uma pessoa; **cada decisão é auditada** no momento em que é tomada, e
+  aplicar escreve pela mesma validação que uma pessoa a editar o formulário atravessa.
+- **Tipo «Por classificar»**: a porta de entrada que permite guardar um ficheiro antes de alguém o
+  ter lido — sem ele, o cenário «carregar → classificar → extrair → validar» seria impossível.
+- **Perguntar ao documento**, com a linha, a página e a secção de onde vem a resposta; perguntas
+  sobre aprovações são respondidas a partir dos registos do sistema, não do texto.
+- **Passos de IA executáveis no workflow**: põem a análise em fila e o worker processa-a fora da
+  transação do motor, retomando a instância. O passo nunca aplica nada ao documento.
+- **Centro de inteligência** em `/app/ai`: documentos por classificar, análises à espera de revisão e
+  a taxa de aceitação das sugestões — tudo limitado, no servidor, ao que o utilizador pode ver.
+
+### Pesquisa, caixa de entrada e integrações
+
+**Pesquisa**
+
+- Ecrã de pesquisa em `/app/search` com texto livre, excerto do sítio onde o termo foi encontrado e
+  realce da palavra, ordenação por relevância e paginação no servidor.
+- Filtros: tipo, departamento, responsável, etiqueta, estado, classificação, intervalo de datas,
+  **estado do processo** e **estado de aprovação** — estes dois derivados dos workflows e das
+  tarefas de decisão, não guardados no documento.
+- Índice de texto integral do SQL Server, criado por migração protegida. Onde o componente não
+  existe, a pesquisa compara por subcadeia e **diz na resposta e no ecrã qual dos dois caminhos
+  correu** (ADR-005).
+- Perguntas em linguagem natural (`POST /api/search/natural-language`): a pergunta é lida para os
+  mesmos filtros que o formulário produz, a leitura é mostrada antes dos resultados, e a origem da
+  leitura (demonstração ou modelo) é identificada onde quer que apareça.
+- A autorização faz parte da consulta: um documento que o utilizador não pode ver não é contado,
+  não é ordenado e não é paginado.
+
+**Caixa de entrada documental**
+
+- Caixa de entrada em `/app/inbox`: lista e leitura lado a lado, filtros por estado, por anexo e por
+  texto, e contagens do que está por tratar.
+- As ações que o briefing enumera, todas contra a base de dados real: arquivar, reabrir, marcar como
+  processada, **guardar um anexo como documento**, **criar documento a partir da mensagem**,
+  **associar a um documento existente** e **iniciar um processo** sobre o documento que a mensagem
+  produziu.
+- Um anexo que se torna documento passa pelo `IDocumentService`, com a mesma validação, referência,
+  permissões e auditoria de um carregamento manual. Não há porta lateral para o repositório.
+- `IMailConnector` abstrai o sistema de correio com a forma do Microsoft Graph; a implementação de
+  demonstração **não precisa de credenciais** e está identificada como simulação onde quer que as
+  mensagens apareçam (ADR-007).
+- Sincronizar é reconciliar: o identificador da mensagem tem índice único por organização e caixa,
+  por isso sincronizar duas vezes não acrescenta nada.
+
+**Centro de integrações**
+
+- Seis cartões em `/app/integrations` — Microsoft Outlook, ERP, CRM, assinatura eletrónica, webhooks
+  e importação de ficheiros — cada um com estado, última execução, última atividade, registos
+  processados e erros, todos lidos da linha que o servidor escreve depois de uma execução real.
+- Cada cartão tem um adaptador por trás, e o trabalho é verdadeiro: o ERP e o CRM reconciliam os
+  fornecedores e as contrapartes que estão mesmo nos documentos desta organização contra a lista do
+  sistema externo; a importação lê e move ficheiros reais do disco; os webhooks entregam eventos de
+  auditoria por HTTPS; a assinatura conta os documentos que aguardam assinatura.
+- **Só é dito «simulado» o que é simulado.** O lado de lá do ERP, do CRM e do correio é fixo e
+  local, e esses três dizem-no no cartão; os outros três não se rotulam de demonstração por estarem
+  atrás de um adaptador (ADR-007).
+- Registo por integração, consultável e filtrável por nível, com a divergência concreta e os
+  documentos afetados em cada linha.
+- Ver e gerir são permissões distintas: `integrations.view` mostra cartões e registos,
+  `integrations.manage` é que executa, ativa, desativa e configura.
+- O destino dos webhooks é validado **no servidor** — HTTPS obrigatório, *loopback* e gamas privadas
+  recusados — porque um endereço que este servidor vai chamar é uma superfície de SSRF.
+- O nó **`Integration`** do workflow passou a ser executável: enfileira o pedido, larga a transação
+  do motor e o worker retoma a instância quando a execução termina. Com ele, **nenhum tipo de nó do
+  desenhador falha já por não estar implementado**.
+
+### Portal externo e assinatura eletrónica
+
+**Portal externo**
+
+- Experiência separada em `/portal` para parceiros externos, com shell próprio: nenhuma navegação
+  interna, nenhum sino de notificações, nada pelo qual um convidado pudesse deduzir que ecrãs a
+  organização tem. O cabeçalho identifica a organização que o visitante representa.
+- Submeter um documento, acompanhar o estado, descarregar o que enviou e **responder a pedidos de
+  informação** — as capacidades que o briefing enumera.
+- **O portal não tem autorização própria.** Quem vê o quê é decidido pelo mesmo avaliador de acesso
+  da aplicação interna, que já dizia que um utilizador externo alcança um documento apenas por
+  propriedade ou concessão explícita (ADR-008).
+- Os contratos do portal são **tipos próprios, escritos à mão**, e não os internos com menos campos:
+  é isso que impede que um campo acrescentado do lado de dentro atravesse sozinho.
+- A separação corre **nos dois sentidos**: nenhum perfil interno tem `portal.access`, nem o de
+  administrador; um externo que escreva `/app/documents` volta ao portal, e o servidor recusa na
+  mesma.
+- Uma submissão é criada pelo `IDocumentService` — a mesma validação, referência, permissões e
+  auditoria de um carregamento manual — e entra no departamento que a recebe, com acesso de
+  contribuidor, para que alguém lhe possa realmente pegar.
+- O fornecedor vê **as perguntas que lhe foram dirigidas e as respostas que deu**, e nada mais da
+  cronologia. A lista é construída selecionando dois tipos de evento pelo nome, nunca por exclusão:
+  uma lista por exclusão deixaria entrar o tipo de evento que alguém acrescentar amanhã.
+- **Responder não faz o processo avançar.** Quem decide é quem perguntou — um fornecedor não aprova
+  a sua própria fatura respondendo a uma questão sobre ela. A resposta notifica quem perguntou.
+
+**Assinatura eletrónica**
+
+- **Demonstração de portefólio: não tem validade legal**, e o aviso está no topo do painel, antes de
+  tudo o resto. Não é uma assinatura qualificada nem avançada — nada é assinado com chave privada e
+  não há autoridade de certificação envolvida.
+- O que fica registado é verificável sem confiar na aplicação: o pedido **fixa a versão** e copia o
+  **resumo SHA-256** do conteúdo, e o painel mostra-o por extenso.
+- Assinar é **recusado se o conteúdo mudou** entretanto: consentir um documento é consentir o seu
+  conteúdo. E uma versão nova depois de assinado não apaga nem re-aponta o registo — fá-lo deixar de
+  corresponder, e o ecrã di-lo.
+- **Só a pessoa nomeada assina.** Nem o administrador da organização, que detém todas as permissões,
+  assina em nome de outra. Assinar também **não exige poder editar**: quem é chamado a assinar
+  precisa de ver o documento, não de o alterar.
+- Um pedido que ninguém poderia cumprir é recusado no momento em que se pede — seja porque o
+  signatário não vê o documento, seja porque não tem permissão para assinar.
+- Cada passo fica no **histórico do documento**, que é onde se procura: quem pediu, quem assinou ou
+  recusou, sobre que versão e com que resumo.
+- Nó **`SignatureRequest`** no desenhador de workflows, que espera por uma pessoa como qualquer
+  tarefa humana; um grupo é resolvido para um signatário concreto, porque «o departamento assinou»
+  não é uma afirmação sustentável.
+
+Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signature.md).
+
+### Análises e relatórios
+
+**Análises e relatórios** em `/app/reports`:
+
+- **Indicadores calculados por consulta, nunca guardados** — documentos criados, processos iniciados
+  e concluídos, tarefas em atraso, tempo médio de processamento, taxa de automação, tempo até
+  aprovação. O briefing é explícito: *«All analytics must be generated from actual database data»*.
+- **Cada painel é a fatia de quem o abre.** As consultas passam pelo mesmo predicado de visibilidade
+  da pesquisa e do portal — um total que incluísse documentos invisíveis revelaria por agregação
+  aquilo que a lista esconde.
+- **Uma medida sem base diz que não tem base**, em vez de dizer zero. Zero afirma que se mediu; num
+  período em que nada aconteceu é uma mentira com aspeto de facto.
+- Tendências por dia, distribuições por estado, tipo e departamento, e **onde os processos param** —
+  os passos com trabalho à espera e há quanto tempo.
+- Gráficos em SVG construídos à mão, um por medida. Medidas de escalas diferentes não partilham
+  eixo. Exportação para CSV atrás da permissão `reports.export`.
+
+**Administração** em `/app/admin`:
+
+- Criar contas com **palavra-passe inicial mostrada uma única vez** — o servidor guarda o resumo
+  criptográfico e não a sabe devolver. Atribuir perfis e departamentos, desativar e reativar.
+- **A própria conta não se edita a partir daqui.** Tirar a si mesmo a administração, ou desativar-se,
+  pode deixar a organização sem ninguém capaz de desfazer.
+- **Contas são desativadas, nunca eliminadas**: a auditoria e os documentos referem-se a elas.
+- `SystemAdmin` não é atribuível de dentro de uma organização, e a conta que administra a plataforma
+  não se gere a partir de uma organização — recusado no servidor, não apenas escondido.
+- Departamentos com código único por organização, criação e edição.
+
+**Catálogo de documentos** no separador Catálogo de `/app/admin`:
+
+- **Tipos de documento** com código, prefixo de referência, confidencialidade por omissão e política
+  de retenção. Dois tipos nunca partilham prefixo: a referência é o que as pessoas citam umas às
+  outras, e duas iguais para documentos diferentes tornam-na inútil.
+- **Campos de metadados por tipo** — texto, número, data, sim/não, montante e escolha com opções.
+- **As recusas são a funcionalidade.** Um campo que documentos já preenchem **não muda de tipo** (o
+  valor está na coluna do tipo atual e deixaria de ser legível) e **não se elimina** (apagaria o que
+  esses documentos dizem). Tornar um campo obrigatório é recusado se algum documento ficasse por
+  preencher: é uma afirmação sobre o que já existe, e seria falsa no momento em que fosse guardada.
+- **O tipo de entrada não se desativa nem aceita campos obrigatórios.** É por ele que entra um
+  ficheiro antes de alguém o ter lido — incluindo os que chegam por correio e pelo portal.
+- Cada recusa traz a contagem que a explica, e aparece **dentro do formulário** que a provocou.
+
+**Etiquetas e retenção** nos separadores Etiquetas e Retenção de `/app/admin`:
+
+- **Remover uma etiqueta é permitido e reversível**, e a distinção é deliberada: um valor de
+  metadados é o que o documento **afirma**, e por isso não se apaga; uma etiqueta é uma anotação
+  **colocada sobre** ele. As ligações aos documentos sobrevivem à remoção, e restaurar traz-lhes o
+  número de volta ao que era.
+- Nome único entre as que estão em circulação — um nome libertado por uma remoção volta a estar
+  livre. Cor validada como hexadecimal e **recusada**, não ignorada: uma cor que não chega é uma
+  cor que alguém escolheu e nunca viu aplicada.
+- **Mudar a duração de uma política de retenção é permitido**, ao contrário do que acontece no
+  catálogo. As obrigações mudam de facto — muda a lei, muda o contrato — e um catálogo incapaz de as
+  acompanhar é que seria a mentira. A mudança fica na auditoria com o valor antigo e o novo, porque
+  mexe na data de eliminação de todos os documentos que a política governa.
+- **Retirar uma política que tipos de documento adotam é recusado**, e a mensagem nomeia-os: esses
+  tipos continuariam a aplicar uma regra que a organização decidiu deixar de aplicar.
+- Gerir etiquetas é `admin.documenttypes`; decidir **quanto tempo se guardam documentos** é
+  `admin.settings` — é uma decisão de conformidade, não de classificação.
+
+**Editor de permissões** no separador Permissões de cada documento:
+
+- **Concessões por pessoa, departamento e perfil**, como o briefing pede. Os perfis vêm do servidor
+  (`GET /api/tenants/current/roles`) e não de uma lista escrita no ecrã: duas listas de perfis
+  divergem, e a que a interface mostra é a que ninguém repara que está errada. A administração da
+  plataforma não é oferecida — está acima da organização.
+- **Concessões com prazo**, para a janela de um auditor externo. Um prazo já passado é recusado: uma
+  janela de acesso que fechou antes de abrir não é uma janela.
+- **«Porque é que alguém alcança este documento»** — a peça que o briefing pede. Mostrar só o acesso
+  de quem está a olhar responde a metade da pergunta; quem concede precisa de saber porque é que
+  **outra** pessoa alcança, ou não alcança. O painel mostra a mesma avaliação que o servidor usa ao
+  decidir, regra a regra: o que cada uma concede e o que cada restrição retira.
+- O servidor só responde sobre outra pessoa a quem possa partilhar o documento. Perguntar «esta
+  pessoa conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
+
+**Saúde do sistema** no separador Sistema de `/app/admin`:
+
+- **O que cada trabalho em segundo plano andou a fazer** — última corrida, desfecho, corridas e
+  falhas nas últimas 24 horas, duração média. Os quatro aparecem sempre, mesmo os que nunca
+  correram: um trabalho ausente do ecrã e um trabalho que nunca correu parecem o mesmo a quem lê, e
+  não são a mesma coisa.
+- **Trabalho à espera** nesta organização: tarefas em atraso, integrações em fila, análises de IA
+  por correr, documentos a aguardar aprovação e assinaturas pendentes. Números, nunca
+  identificadores.
+- **As sondas anónimas continuam tersas.** `/health`, `/health/live` e `/health/ready` devolvem
+  nome, estado e duração — nunca uma mensagem de exceção, uma cadeia de ligação ou um nome de
+  máquina, que é o que transforma uma sonda de vida em reconhecimento. O detalhe fica atrás de
+  `admin.settings`.
