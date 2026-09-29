@@ -667,6 +667,17 @@ estado e duração; o `HealthReporter` nunca inclui descrições nem exceções.
 dizer com «do not expose sensitive health information», e foi confirmado por teste em vez de
 assumido.
 
+## 11.3 O que a leitura custa, medido
+
+O [ADR-010](adr/ADR-010-analytics-from-queries.md) escolheu calcular cada indicador no pedido, sem
+agregados nem cache, e assumiu a latência como preço. `ReportingLoadTests` mede esse preço com 5.033
+documentos, num contentor próprio: o painel responde em **30 ms** e a listagem em **9 ms**, com a
+página 100 a custar o mesmo que a primeira.
+
+O valor destes testes não é o portão — os limiares são de absurdo, para apanhar uma consulta que
+deixou de escalar e não uma máquina ocupada. É o número registado, e o que ele fará quando alguém
+acrescentar a décima terceira consulta agregada ao painel.
+
 ## 12. Preparação para a nuvem
 
 | Abstração | Implementação local | Implementação em Azure |
