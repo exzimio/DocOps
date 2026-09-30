@@ -18,6 +18,13 @@ test.describe('Capturas de ecrã', () => {
     await page.getByLabel('Palavra-passe').fill('Demo!Pass123')
     await page.getByRole('button', { name: 'Entrar' }).click()
     await page.waitForURL(/\/app\/dashboard$/)
+
+    // Esperar pelo conteúdo, e não só pelo endereço. `fullPage` fotografa a altura que a página tem
+    // no instante do disparo: com os cartões ainda por chegar, essa altura é a da janela, e o
+    // retrato sai cortado a meio de uma linha. Foi o que aconteceu — a captura clara media 853 px e
+    // a escura, da mesma página momentos depois, media 1224.
+    await page.getByRole('heading', { name: 'Departamentos' }).waitFor()
+    await page.waitForLoadState('networkidle')
     await page.screenshot({ path: 'screenshots/dashboard.png', fullPage: true })
 
     await page.evaluate(() => {

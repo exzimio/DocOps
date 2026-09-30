@@ -20,7 +20,16 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium-desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'chromium-mobile', use: { ...devices['Pixel 7'] } },
+    {
+      name: 'chromium-mobile',
+      use: { ...devices['Pixel 7'] },
+
+      // As capturas são o retrato de secretária, e os dois perfis escrevem nos mesmos ficheiros:
+      // corridas em ambos, o último a passar fica com a documentação — e a `dashboard.png` passou
+      // mesmo a ter 1082 px de largura. O que precisa de ser verificado ao tamanho do telemóvel são
+      // os testes funcionais, que correm nos dois perfis e continuam a correr.
+      testIgnore: /(-capture|screenshots)\.spec\.ts$/,
+    },
   ],
   webServer: [
     {

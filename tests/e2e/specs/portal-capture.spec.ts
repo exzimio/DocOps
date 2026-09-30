@@ -1,5 +1,6 @@
 import { test } from '@playwright/test'
 import { clickReliably } from '../support/interactions'
+import { askTheSupplier, undoTheQuestion } from '../support/portalQuestion'
 
 test.describe('Capturas do portal externo', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -43,14 +44,25 @@ test.describe('Capturas do portal externo', () => {
       fullPage: true,
     })
 
-    // Uma submissão com pergunta em aberto mostra o formulário de resposta.
-    await page.goto('/portal')
-    await clickReliably(page.getByRole('link').filter({ hasText: 'Aguarda a sua resposta' }).first())
-    await page.getByRole('heading', { name: /Perguntas e respostas/ }).waitFor()
-    await page.waitForTimeout(300)
-    await page.screenshot({
-      path: 'screenshots/portal-question.png',
-      fullPage: true,
-    })
+    // Uma submissão com pergunta em aberto mostra o formulário de resposta — e a pergunta tem de
+    // ser feita, porque a semente não traz nenhuma. Enquanto isto esperava por um estado que nunca
+    // existia, esta captura falhava sem que ninguém desse por isso: os ficheiros de captura são
+    // saltados na suíte normal, e nada mais os corria.
+    const documentId = page.url().split('/').pop()!
+
+    try {
+      await askTheSupplier(documentId, 'Falta o número de encomenda. Pode indicar?')
+
+      await page.goto('/portal')
+      await clickReliably(page.getByRole('link').filter({ hasText: 'Aguarda a sua resposta' }).first())
+      await page.getByRole('heading', { name: /Perguntas e respostas/ }).waitFor()
+      await page.getByLabel('A sua resposta').waitFor()
+      await page.screenshot({
+        path: 'screenshots/portal-question.png',
+        fullPage: true,
+      })
+    } finally {
+      await undoTheQuestion(documentId)
+    }
   })
 })

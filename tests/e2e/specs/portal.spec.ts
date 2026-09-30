@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { clickReliably } from '../support/interactions'
+import { askTheSupplier, undoTheQuestion } from '../support/portalQuestion'
 
 const supplier = { email: 'contacto@northstar.example', password: 'Demo!Pass123' }
 const admin = { email: 'admin@asteria.example', password: 'Demo!Pass123' }
@@ -117,5 +118,65 @@ test.describe('Portal externo', () => {
     await clickReliably(unmarked)
     await expect(page.getByRole('heading', { name: 'Perguntas e respostas' })).toBeVisible()
     await expect(page.getByLabel('A sua resposta')).toHaveCount(0)
+  })
+
+  test('uma pergunta em aberto chega ao fornecedor, e a resposta fecha-a', async ({ page }) => {
+    // O caminho de quem é perguntado nunca tinha sido percorrido num browser. O servidor já o tinha
+    // provado — `PortalTests` faz a ida e volta inteira —, mas a marca na lista e a caixa de
+    // resposta no detalhe são duas leituras da mesma coisa em sítios diferentes, e já divergiram
+    // uma vez: a lista dizia «aguarda resposta» a partir da tarefa em aberto e o detalhe a partir
+    // da última mensagem, pelo que a marca ficava acesa depois de o fornecedor já ter respondido.
+    await signIn(page, supplier)
+    await page.waitForURL(/\/portal$/)
+
+    const subject = `Fatura com pergunta ${Date.now()}`
+
+    await page.getByLabel('Assunto').fill(subject)
+    await page.setInputFiles('#portal-file', {
+      name: 'fatura-pergunta.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('FATURA\nNorthstar Supplies\nTotal: 320,00 EUR\n'),
+    })
+    await clickReliably(page.getByRole('button', { name: 'Submeter' }))
+
+    const linha = page
+      .getByRole('list', { name: 'Submissões' })
+      .getByRole('link')
+      .filter({ hasText: subject })
+    await expect(linha).toBeVisible({ timeout: 15_000 })
+
+    await clickReliably(linha)
+    await expect(page.getByRole('heading', { name: subject })).toBeVisible()
+
+    const documentId = page.url().split('/').pop()!
+
+    try {
+      await askTheSupplier(documentId, 'Falta o número de encomenda. Pode indicar?')
+
+      // A marca aparece na lista.
+      await page.goto('/portal')
+      await expect(linha).toContainText('Aguarda a sua resposta')
+
+      // E o detalhe mostra a pergunta e oferece onde responder — as duas leituras de acordo.
+      await clickReliably(linha)
+      await expect(page.getByText(/Falta o número de encomenda/)).toBeVisible()
+
+      const resposta = page.getByLabel('A sua resposta')
+      await expect(resposta).toBeVisible()
+      await resposta.fill('É a ENC-2026-00045.')
+      await clickReliably(page.getByRole('button', { name: 'Enviar resposta' }))
+
+      await expect(page.getByText('É a ENC-2026-00045.')).toBeVisible({ timeout: 15_000 })
+
+      // Respondida, a pergunta fecha-se nos dois sítios: sem caixa no detalhe, sem marca na lista.
+      await expect(page.getByLabel('A sua resposta')).toHaveCount(0)
+
+      await page.goto('/portal')
+      await expect(linha).not.toContainText('Aguarda a sua resposta')
+    } finally {
+      // O que este teste criou sai daqui, mesmo que uma asserção falhe: o catálogo de demonstração
+      // tem de ficar como estava.
+      await undoTheQuestion(documentId)
+    }
   })
 })
