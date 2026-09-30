@@ -508,6 +508,16 @@
     "actions": "Ações",
     "empty": "Sem tarefas para os filtros escolhidos",
     "emptyBody": "Quando um processo lhe atribuir trabalho, aparece aqui.",
+    "emptyNone": "Nenhum processo criou tarefas até agora.",
+    "emptyDelegated": "Ainda não delegou nenhuma tarefa a outra pessoa.",
+    "emptyFiltered": "Está a ver {{filtros}}. Pode não haver trabalho nenhum — ou podem ser os filtros a escondê-lo.",
+    "widenFilters": "Alargar os filtros",
+    "narrowed": {
+      "Mine": "só as suas tarefas",
+      "Delegated": "só as que delegou",
+      "overdue": "só as que estão em atraso",
+      "open": "só as que continuam por fechar"
+    },
     "overdue": "Em atraso",
     "escalated": "Escalada",
     "unassigned": "Por atribuir",

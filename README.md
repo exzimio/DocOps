@@ -575,6 +575,9 @@ As capacidades agrupadas pelo que são, não pela ordem em que foram construída
   elimina nada**: dispor do documento passa a ser permitido, e continua a ser decisão de uma pessoa.
 - Filtros da listagem escritos no endereço: uma vista filtrada recarrega-se, guarda-se nos favoritos
   e envia-se a um colega como uma ligação.
+- Estados vazios que não inventam a causa: o centro de tarefas nomeia os filtros que estão a
+  esconder trabalho e oferece desfazê-los; só afirma que não há trabalho quando não sobra nada
+  para alargar.
 - Pesquisa e filtros com paginação no servidor, aplicando as regras de acesso dentro da consulta SQL.
 - Concorrência otimista ponta a ponta: o cliente devolve o token recebido e uma gravação baseada numa
   leitura desatualizada é recusada.

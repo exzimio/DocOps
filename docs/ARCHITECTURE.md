@@ -609,6 +609,26 @@ sem hora como o fim desse dia, porque quem escreve «31 de dezembro» quer o dia
 é conceder o poder de redistribuir acesso a ele, e essa é uma decisão de administração da
 organização, não de partilha — quem a tem, tem-na pelo perfil.
 
+## 10.11 Estados vazios que não inventam a causa
+
+Uma lista vazia tem sempre pelo menos duas explicações — não há nada, ou os filtros escondem o que
+há — e o ecrã só conhece uma delas com certeza: a que ele próprio tem posta. O centro de tarefas
+decide pelo que **sobra para alargar**, e não por «há filtros postos»: quem não tem
+`tasks.view.all` já está a ver o seu universo inteiro, e um botão de alargar que não mudasse nada
+seria um botão sem ação. A frase nomeia exatamente os filtros que o botão desfaz, para o texto e a
+ação não poderem divergir.
+
+Quando não há nada para alargar, cada âmbito afirma só o que lhe compete: em toda a organização,
+que nenhum processo criou tarefas; nas delegadas, que ninguém delegou nada; nas próprias, a frase de
+sempre. A regra vive em `src/Web/src/features/workflows/emptyTasks.ts`, fora do componente, porque
+assim é exercitável por testes que não levantam uma página.
+
+**Um resultado mostrado não é necessariamente o resultado dos filtros em vigor.** As consultas usam
+`placeholderData: (previous) => previous` para a lista não piscar entre pedidos, e isso é o
+comportamento certo enquanto há linhas para mostrar. Sem linhas deixa de o ser: o ecrã vazio
+descreveria os filtros novos por cima de um resultado velho. Enquanto o resultado é o anterior e
+está vazio, espera-se.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

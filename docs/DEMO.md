@@ -910,6 +910,27 @@ Entre como `sofia.martins@asteria.example`. O separador **Sistema** não aparece
 plataforma exige `admin.settings`, e administrar pessoas é `admin.users`. São trabalhos diferentes, e
 o servidor recusa na mesma.
 
+## Demonstração disponível na Fase 10 — O ecrã vazio que não mente (≈2 minutos)
+
+Entre como `admin@asteria.example` e vá a **Tarefas**, sem tocar em filtro nenhum.
+
+O ecrã está vazio. Esta conta tem tarefas, mas nenhuma em aberto — e a organização tem oito à espera
+de alguém. Os dois filtros que vêm postos por omissão, «as minhas» e «apenas em aberto», bastavam
+para o ecrã dizer, até à Fase 10: *«Quando um processo lhe atribuir trabalho, aparece aqui.»* Quem o
+lia acreditava e saía.
+
+Agora a frase nomeia o que está posto — «está a ver só as suas tarefas e só as que continuam por
+fechar» — e admite as duas leituras possíveis: pode não haver trabalho, ou podem ser os filtros.
+Carregue em **Alargar os filtros**: aparecem trinta e três tarefas.
+
+Vale a pena dizer porque é que o botão só aparece a algumas pessoas. Entre como
+`ana.ferreira@asteria.example`, que não tem `tasks.view.all`, e vá a **Tarefas → Delegadas por mim**,
+tirando «apenas em aberto». Também está vazio, e **não há botão nenhum**: ela já está a ver tudo o
+que lhe é permitido, e um botão que não mudasse nada seria um botão sem ação. A frase muda em
+conformidade: «ainda não delegou nenhuma tarefa a outra pessoa».
+
+---
+
 ## Demonstração disponível na Fase 10 — Vistas partilháveis e retenção (≈3 minutos)
 
 Entre como `admin@asteria.example` e vá a **Documentos**.
@@ -990,3 +1011,4 @@ uma hora, e o documento ficaria por eliminar na mesma.
 | Ações da tarefa vindas do servidor | A interface reflete a autorização, não a define |
 | Endereço de uma vista filtrada | O estado da interface é partilhável, não preso a um separador |
 | Retenção que avisa e não elimina | Saber onde a automação tem de parar e devolver a decisão a uma pessoa |
+| Estado vazio que nomeia os filtros | Um ecrã não afirma uma causa que não conhece |

@@ -14,6 +14,7 @@ import {
   type TaskScope,
 } from '@/features/workflows/types'
 import { taskTone } from '@/features/workflows/presentation'
+import { emptyTasksBodyKey, narrowingFilterKeys, widestTaskFilters } from '@/features/workflows/emptyTasks'
 import { formatDateTime } from '@/features/documents/format'
 import { Button } from '@/components/ui/Button'
 import {
@@ -46,6 +47,16 @@ export function TasksPage() {
 
   const canViewAll = user?.permissions.includes('tasks.view.all') ?? false
   const result = tasksQuery.data
+
+  // O que uma lista vazia pode estar a esconder. Vazio significa que não há nada para alargar, e
+  // aí — e só aí — a ausência de tarefas é um facto sobre o trabalho e não sobre os filtros.
+  const narrowing = narrowingFilterKeys(filters, canViewAll)
+
+  // Enquanto a consulta nova está a caminho, a lista mostrada ainda é a anterior — é para isso que
+  // serve o `placeholderData`, e com linhas é o comportamento certo. Sem linhas não é: o ecrã
+  // vazio descreveria os filtros novos por cima de um resultado velho, e chegou a afirmar «nenhum
+  // processo criou tarefas até agora» no instante a seguir a alargar. Aí espera-se.
+  const staleAndEmpty = tasksQuery.isPlaceholderData && result?.items.length === 0
 
   const submitAction = async () => {
     if (!pending) {
@@ -181,7 +192,7 @@ export function TasksPage() {
       )}
 
       <Card>
-        {tasksQuery.isLoading && <LoadingState label={t('common.loading')} />}
+        {(tasksQuery.isLoading || staleAndEmpty) && <LoadingState label={t('common.loading')} />}
 
         {tasksQuery.isError && (
           <ErrorState
@@ -191,9 +202,30 @@ export function TasksPage() {
           />
         )}
 
-        {result && result.items.length === 0 && (
-          <EmptyState title={t('tasks.empty')} body={t('tasks.emptyBody')} />
-        )}
+        {result &&
+          !staleAndEmpty &&
+          result.items.length === 0 &&
+          (narrowing.length > 0 ? (
+            <EmptyState
+              title={t('tasks.empty')}
+              body={t('tasks.emptyFiltered', {
+                filtros: new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
+                  narrowing.map((chave) => t(chave)),
+                ),
+              })}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setFilters((current) => widestTaskFilters(current, canViewAll))}
+                >
+                  {t('tasks.widenFilters')}
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState title={t('tasks.empty')} body={t(emptyTasksBodyKey(filters.scope))} />
+          ))}
 
         {result && result.items.length > 0 && (
           <>

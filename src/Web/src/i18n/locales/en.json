@@ -508,6 +508,16 @@
     "actions": "Actions",
     "empty": "No tasks match the chosen filters",
     "emptyBody": "When a process assigns you work, it shows up here.",
+    "emptyNone": "No process has created any tasks yet.",
+    "emptyDelegated": "You have not delegated any task to anyone yet.",
+    "emptyFiltered": "You are seeing {{filtros}}. There may be no work at all — or the filters may be hiding it.",
+    "widenFilters": "Widen the filters",
+    "narrowed": {
+      "Mine": "only your own tasks",
+      "Delegated": "only the ones you delegated",
+      "overdue": "only the overdue ones",
+      "open": "only the ones still open"
+    },
     "overdue": "Overdue",
     "escalated": "Escalated",
     "unassigned": "Unassigned",
