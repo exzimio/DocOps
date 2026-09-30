@@ -39,6 +39,7 @@ using Microsoft.Extensions.DependencyInjection;
 using DocOps.Infrastructure.Observability;
 using DocOps.Infrastructure.Operations;
 using DocOps.Application.Operations;
+using DocOps.Infrastructure.Compliance;
 
 namespace DocOps.Infrastructure;
 
@@ -226,6 +227,7 @@ public static class DependencyInjection
         services.AddScoped<IAdministrationService, AdministrationService>();
         services.AddScoped<IDocumentCatalogueAdminService, DocumentCatalogueAdminService>();
         services.AddScoped<ISystemHealthService, SystemHealthService>();
+        services.AddScoped<RetentionChecker>();
     }
 
     private static void AddReporting(IServiceCollection services)

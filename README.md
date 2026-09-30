@@ -570,7 +570,11 @@ As capacidades agrupadas pelo que são, não pela ordem em que foram construída
   de **acesso efetivo** que explica cada decisão.
 - Máquina de estados do documento (rascunho → revisão → aprovação → aprovado/rejeitado → assinatura →
   arquivo), com arquivo, restauro e eliminação reversível.
-- Políticas de retenção por tipo de documento, com data de expiração calculada no arquivo.
+- Políticas de retenção por tipo de documento, com data de expiração calculada no arquivo — e uma
+  verificação periódica que, quando o prazo termina, **avisa quem administra a organização e não
+  elimina nada**: dispor do documento passa a ser permitido, e continua a ser decisão de uma pessoa.
+- Filtros da listagem escritos no endereço: uma vista filtrada recarrega-se, guarda-se nos favoritos
+  e envia-se a um colega como uma ligação.
 - Pesquisa e filtros com paginação no servidor, aplicando as regras de acesso dentro da consulta SQL.
 - Concorrência otimista ponta a ponta: o cliente devolve o token recebido e uma gravação baseada numa
   leitura desatualizada é recusada.

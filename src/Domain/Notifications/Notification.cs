@@ -10,7 +10,10 @@ public enum NotificationKind
     WorkflowCompleted = 3,
     WorkflowRejected = 4,
     DocumentShared = 5,
-    Information = 6
+    Information = 6,
+
+    /// <summary>O prazo de conservação de um documento terminou: pode ser eliminado, por decisão de alguém.</summary>
+    RetentionDue = 7
 }
 
 /// <summary>An in-application message for one user, produced by a workflow node or a background job.</summary>

@@ -14,8 +14,9 @@ public static class BackgroundJobNames
     public const string OverdueEscalation = "overdue-escalation";
     public const string AiQueue = "ai-queue";
     public const string Integrations = "integrations";
+    public const string RetentionChecks = "retention-checks";
 
     /// <summary>Every job the worker runs, so one that never ran still appears as unknown.</summary>
     public static readonly IReadOnlyList<string> All =
-        [WorkflowTimers, OverdueEscalation, AiQueue, Integrations];
+        [WorkflowTimers, OverdueEscalation, AiQueue, Integrations, RetentionChecks];
 }

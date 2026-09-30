@@ -619,7 +619,26 @@ deliberada, confinada a trabalho que nenhum pedido HTTP alcança.
 As integrações não correm a cada ciclo: `IntegrationEveryNCycles` espaça-as, porque sincronizar
 correio e reconciliar catálogos não tem a urgência de um prazo a expirar.
 
-A verificação de retenção junta-se a estes trabalhos na fase respetiva.
+## 11.2 Verificação de retenção
+
+`RetentionChecker` procura documentos cuja data de conservação passou e **avisa alguém**. Não
+elimina, e a decisão é essa: um prazo cumprido significa que a organização *pode* dispor do
+documento, não que deva. A base legal que obrigou a guardá-lo é a mesma que faz da destruição uma
+decisão que uma pessoa assina — a transição `Arquivado → Eliminado` do diagrama de estados existe,
+mas quem a percorre é sempre alguém, nunca um temporizador.
+
+O que já foi anunciado fica de fora pela existência da própria notificação, e não por uma coluna no
+documento: não há estado novo para manter sincronizado, e um aviso repetido a cada ciclo do worker
+deixaria de ser lido.
+
+Os destinatários são os administradores da organização, resolvidos por perfil. A retenção é
+obrigação da organização e não do dono do documento — quem carregou a fatura há dez anos pode já não
+trabalhar cá, que é justamente o motivo de o aviso fazer falta.
+
+A regra vive em `src/Infrastructure/Compliance` e não no worker. `RetentionCheckJob` só a invoca.
+Além de seguir o padrão do `AiProcessingJob`, isso permite exercitá-la a partir dos testes de
+integração sem que o projeto de testes referencie o worker — referência que punha duas classes
+`Program` ao alcance de `WebApplicationFactory<Program>` e impedia a compilação.
 
 ## 11.1 Observabilidade do trabalho em segundo plano
 

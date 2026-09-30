@@ -34,6 +34,7 @@ public static class AuditActions
     public const string RetentionPolicyUpdated = "retentionpolicy.updated";
     public const string RetentionPolicyActivationChanged = "retentionpolicy.activation.changed";
 
+    public const string DocumentRetentionDue = "document.retention.due";
     public const string DocumentCreated = "document.created";
     public const string DocumentViewed = "document.viewed";
     public const string DocumentDownloaded = "document.downloaded";

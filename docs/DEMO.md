@@ -910,6 +910,39 @@ Entre como `sofia.martins@asteria.example`. O separador **Sistema** não aparece
 plataforma exige `admin.settings`, e administrar pessoas é `admin.users`. São trabalhos diferentes, e
 o servidor recusa na mesma.
 
+## Demonstração disponível na Fase 10 — Vistas partilháveis e retenção (≈3 minutos)
+
+Entre como `admin@asteria.example` e vá a **Documentos**.
+
+Filtre: escreva «contrato» na pesquisa e carregue em **Aguarda aprovação**. **Olhe para a barra de
+endereço** — passou a `?q=contrato&statuses=…`. Copie o endereço, abra um separador novo e cole-o: a
+mesma vista abre lá, com os mesmos filtros marcados e os mesmos documentos.
+
+É a diferença entre uma ferramenta e um ecrã. «As faturas por aprovar do departamento financeiro» é
+uma coisa que se diz a um colega — e até aqui não havia nada para lhe enviar, porque os filtros
+viviam dentro daquele separador e recarregar perdia-os.
+
+Recarregue a página para ver que a vista sobrevive. Depois estrague o endereço de propósito
+(`?page=abc&statuses=nao-e-numero`): a listagem continua a ser uma listagem, na primeira página. Um
+endereço cortado a meio por um cliente de correio chega assim, e não é motivo para partir o ecrã.
+
+**A retenção, do outro lado, não se vê num botão — e é esse o ponto.** Em `/app/admin`, separador
+**Retenção**, estão as políticas que dizem quanto tempo cada tipo de documento se conserva; ao
+arquivar, a data de fim é calculada e guardada. Até à Fase 10 ninguém a voltava a ler: a política
+estava certa no ecrã e não produzia nada no dia em que o prazo passasse.
+
+Agora o worker verifica-as, e quando um prazo termina **notifica quem administra a organização e não
+elimina nada**. Vale a pena dizer isto em voz alta numa entrevista: a tentação é agendar a
+eliminação, e seria errado. Um prazo cumprido significa que a organização *pode* dispor do documento,
+não que deva — a base legal que obrigou a guardá-lo é a mesma que faz da destruição uma decisão que
+alguém assina. Fica notificação e fica auditoria; a pessoa decide.
+
+O mesmo documento não é anunciado duas vezes: o que já foi avisado reconhece-se pela existência da
+própria notificação. Um aviso que se repetisse a cada ciclo do worker deixaria de ser lido dentro de
+uma hora, e o documento ficaria por eliminar na mesma.
+
+---
+
 ## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.
@@ -955,3 +988,5 @@ o servidor recusa na mesma.
 | Cronologia do processo | O estado atual é explicável passo a passo, não apenas observável |
 | Nó de IA impede a ativação | Falhar explicitamente em vez de saltar um passo do processo |
 | Ações da tarefa vindas do servidor | A interface reflete a autorização, não a define |
+| Endereço de uma vista filtrada | O estado da interface é partilhável, não preso a um separador |
+| Retenção que avisa e não elimina | Saber onde a automação tem de parar e devolver a decisão a uma pessoa |

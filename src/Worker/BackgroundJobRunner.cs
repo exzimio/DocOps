@@ -24,6 +24,9 @@ public sealed class BackgroundJobOptions
     /// <summary>Runs the enabled integrations of every organisation.</summary>
     public bool RunIntegrations { get; set; } = true;
 
+    /// <summary>Avisa quando o prazo de conservação de um documento termina. Nunca elimina nada.</summary>
+    public bool CheckRetention { get; set; } = true;
+
     /// <summary>
     /// How often integrations run, as a multiple of the cycle. They talk to systems outside
     /// this one, so they run far less often than a timer check: a mailbox polled every minute
@@ -97,6 +100,14 @@ public sealed class BackgroundJobRunner(
         if (_options.RunIntegrations && _cycle % Math.Max(1, _options.IntegrationEveryNCycles) == 0)
         {
             await RunJobAsync(BackgroundJobNames.Integrations, cancellationToken);
+        }
+
+        // A retenção mede-se em meses: verificá-la com a mesma cadência das integrações é já muito
+        // mais do que suficiente, e poupa uma consulta por minuto a uma pergunta cuja resposta
+        // muda uma vez por ano.
+        if (_options.CheckRetention && _cycle % Math.Max(1, _options.IntegrationEveryNCycles) == 0)
+        {
+            await RunJobAsync(BackgroundJobNames.RetentionChecks, cancellationToken);
         }
 
         // Always: the cadence of the slower jobs is counted in cycles, and a cycle that failed still

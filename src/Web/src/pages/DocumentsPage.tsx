@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { FilterX, Plus, Search } from 'lucide-react'
@@ -20,6 +20,7 @@ import {
 } from '@/features/documents/types'
 import { Button } from '@/components/ui/Button'
 import { Badge, Card, EmptyState, ErrorState, LoadingState, TableScroller } from '@/components/ui/Surface'
+import { filtersFromSearchParams, filtersToSearchParams } from '@/features/documents/filterUrl'
 
 const statusOptions: DocumentStatusValue[] = [
   DocumentStatus.Draft,
@@ -37,8 +38,26 @@ export function DocumentsPage() {
   const navigate = useNavigate()
   const { data: user } = useSession()
 
-  const [filters, setFilters] = useState<DocumentFilters>(defaultFilters)
-  const [searchText, setSearchText] = useState('')
+  // Os filtros vivem no endereço, e não em estado privado do componente. A diferença aparece
+  // quando alguém copia a barra de endereços e a manda a um colega: o colega vê a mesma lista.
+  // Recarregar, voltar atrás e abrir noutro separador passam a funcionar pela mesma razão.
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const filters = useMemo(() => filtersFromSearchParams(searchParams), [searchParams])
+
+  const setFilters = useCallback(
+    (update: (current: DocumentFilters) => DocumentFilters) => {
+      setSearchParams(
+        (current: URLSearchParams) => filtersToSearchParams(update(filtersFromSearchParams(current))),
+        // Substituir em vez de empilhar: escrever numa caixa de pesquisa não são dez passos para
+        // trás. Mudar de página ou de filtro fica no histórico; escrever, não.
+        { replace: true },
+      )
+    },
+    [setSearchParams],
+  )
+
+  const [searchText, setSearchText] = useState(() => filters.query)
   const [uploadOpen, setUploadOpen] = useState(false)
 
   // Debounced: typing must not fire a request per keystroke. Returning the same object when the
@@ -51,7 +70,7 @@ export function DocumentsPage() {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [searchText])
+  }, [searchText, setFilters])
 
   const documentsQuery = useDocuments(filters)
   const typesQuery = useDocumentTypes()
@@ -86,7 +105,7 @@ export function DocumentsPage() {
 
   const resetFilters = () => {
     setSearchText('')
-    setFilters(defaultFilters)
+    setFilters(() => defaultFilters)
   }
 
   const result = documentsQuery.data

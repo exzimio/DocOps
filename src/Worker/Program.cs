@@ -55,6 +55,7 @@ builder.Services.AddKeyedScoped<IBackgroundJob, WorkflowTimerJob>(BackgroundJobN
 builder.Services.AddKeyedScoped<IBackgroundJob, OverdueTaskEscalationJob>(BackgroundJobNames.OverdueEscalation);
 builder.Services.AddKeyedScoped<IBackgroundJob, AiProcessingJob>(BackgroundJobNames.AiQueue);
 builder.Services.AddKeyedScoped<IBackgroundJob, IntegrationJob>(BackgroundJobNames.Integrations);
+builder.Services.AddKeyedScoped<IBackgroundJob, RetentionCheckJob>(BackgroundJobNames.RetentionChecks);
 builder.Services.AddHostedService<BackgroundJobRunner>();
 
 IHost host = builder.Build();
