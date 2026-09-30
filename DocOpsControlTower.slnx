@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/Analyzers/">
+    <Project Path="src/Analyzers/DocOps.Analyzers.csproj" />
+  </Folder>
   <Folder Name="/src/Api/">
     <Project Path="src/Api/DocOps.Api.csproj" />
   </Folder>

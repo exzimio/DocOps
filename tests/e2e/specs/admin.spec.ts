@@ -47,6 +47,14 @@ test.describe('Administração', () => {
     await page.reload()
     await expect(page.getByText(email).first()).toBeVisible()
     await expect(page.getByText('Palavra-passe inicial')).toHaveCount(0)
+
+    // A conta sai de circulação. Não se elimina — a auditoria e os documentos fazem-lhe referência,
+    // e é por isso que o produto só desativa — mas deixá-la ativa punha uma pessoa de ensaio na
+    // lista de quem trabalha aqui.
+    await clickReliably(
+      page.getByRole('row').filter({ hasText: email }).getByRole('button', { name: 'Desativar' }),
+    )
+    await expect(page.getByRole('row').filter({ hasText: email })).toHaveCount(0)
   })
 
   test('a própria conta não tem botões e uma conta desativada só aparece a pedido', async ({ page }) => {

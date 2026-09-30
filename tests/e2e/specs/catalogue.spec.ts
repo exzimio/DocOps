@@ -61,6 +61,14 @@ test.describe('Catálogo de tipos de documento', () => {
     // Ninguém o preencheu ainda, por isso apagá-lo não apaga o que documento nenhum diz.
     await clickReliably(field.getByRole('button', { name: 'Eliminar' }))
     await expect(page.getByRole('row').filter({ hasText: 'referencia' })).toHaveCount(0)
+
+    // O tipo sai de circulação. Não se elimina, porque um tipo com documentos nunca poderia
+    // desaparecer sem os deixar órfãos, e o produto por isso só desativa — mas um «Tipo de ensaio»
+    // na lista de quem carrega documentos não é o catálogo como estava.
+    await clickReliably(
+      page.getByRole('row').filter({ hasText: code }).getByRole('button', { name: 'Desativar' }),
+    )
+    await expect(page.getByRole('row').filter({ hasText: code })).toHaveCount(0)
   })
 
   test('um campo que documentos já preenchem não se apaga, e o ecrã diz em quantos está', async ({

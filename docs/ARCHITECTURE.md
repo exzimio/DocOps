@@ -609,6 +609,34 @@ sem hora como o fim desse dia, porque quem escreve «31 de dezembro» quer o dia
 é conceder o poder de redistribuir acesso a ele, e essa é uma decisão de administração da
 organização, não de partilha — quem a tem, tem-na pelo perfil.
 
+## 10.10.2 O analisador que torna a regra impossível de violar
+
+`DOCOPS001` recusa `IgnoreQueryFilters()` escrito dentro de uma projeção. É um analisador de Roslyn:
+corre dentro do compilador, sublinha a chamada no editor enquanto se escreve, e **falha a
+compilação** — não a suite de testes.
+
+A distinção importa, e durante meses esta documentação afirmou o contrário. Antes disto havia um
+teste que abria os ficheiros `.cs` como texto e contava parênteses para adivinhar se a chamada
+estava dentro de um `Select`. Funcionava, e tinha três fragilidades que se resolvem por construção
+quando se pergunta ao compilador em vez de ler texto:
+
+| O parser de texto | O analisador |
+| --- | --- |
+| Confunde-se com comentários e literais | Comentários não são nós de código |
+| Depende da formatação e das quebras de linha | A posição na árvore sintática é um facto |
+| Não sabe se aquele `IgnoreQueryFilters` é o do EF | O símbolo é resolvido pelo modelo semântico |
+| Só corre quando alguém corre os testes | Corre a cada compilação e a cada tecla no editor |
+
+O analisador foi validado como o teste anterior: a reintroduzir o defeito. Uma contagem com
+`IgnoreQueryFilters()` metida numa projeção da administração produz
+`error DOCOPS001`, com ficheiro, linha e coluna. Com o código correto, os 59 usos legítimos que
+existem no projeto compilam sem uma objeção — porque o uso no topo de uma consulta é deliberado e
+visível, e é só o enterrado numa projeção que engana.
+
+Viaja como analisador e não como dependência (`OutputItemType="Analyzer"`), portanto nada do que é
+compilado o referencia: só o compilador o carrega. Está ligado aos três projetos que consultam a
+base de dados: Infrastructure, Api e Worker.
+
 ## 10.10.1 Duas paredes entre organizações
 
 O isolamento entre organizações não vive numa camada só, e a razão é histórica: a camada de

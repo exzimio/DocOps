@@ -51,6 +51,17 @@ test.describe('Etiquetas', () => {
 
     await clickReliably(removed.getByRole('button', { name: 'Restaurar' }))
     await expect(page.getByRole('row').filter({ hasText: name })).toContainText('Editar')
+
+    // Provado que restaurar devolve o que tinha, a etiqueta sai de circulação: o catálogo de
+    // demonstração tem de ficar como estava, e uma etiqueta de ensaio na lista de quem organiza
+    // documentos não é como estava.
+    //
+    // Aqui a linha não desaparece, por uma razão que este teste acabou de demonstrar: «Incluir
+    // removidas» ficou ligado atrás. O que se afirma é o estado, não a ausência.
+    await clickReliably(
+      page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'Remover' }),
+    )
+    await expect(page.getByRole('row').filter({ hasText: name })).toContainText('Removida')
   })
 
   test('um nome de etiqueta repetido é recusado, e a recusa aparece no formulário', async ({ page }) => {
@@ -71,6 +82,12 @@ test.describe('Etiquetas', () => {
     await clickReliably(page.getByRole('button', { name: 'Criar etiqueta' }))
 
     await expect(tagForm(page).getByRole('alert')).toContainText('Já existe uma etiqueta com este nome.')
+
+    // A primeira foi criada de verdade, e sai de circulação. A segunda nunca chegou a existir.
+    await clickReliably(
+      page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'Remover' }),
+    )
+    await expect(page.getByRole('row').filter({ hasText: name })).toHaveCount(0)
   })
 
   test('uma cor inválida é recusada em vez de ser ignorada em silêncio', async ({ page }) => {
@@ -145,6 +162,17 @@ test.describe('Políticas de retenção', () => {
 
     // Ao contrário do catálogo, aqui mudar não é falsificar: é seguir a obrigação que mudou.
     await expect(page.getByRole('row').filter({ hasText: code })).toContainText('60 meses')
+
+    // E sai de circulação: retirar é o que o produto oferece, e é o que um utilizador faria a uma
+    // política que criou por engano.
+    // A linha continua listada: retirar não é apagar, e quem a retirou tem de poder repô-la. O que
+    // muda é deixar de estar disponível para um tipo de documento a adotar.
+    await clickReliably(
+      page.getByRole('row').filter({ hasText: code }).getByRole('button', { name: 'Retirar' }),
+    )
+    await expect(
+      page.getByRole('row').filter({ hasText: code }).getByRole('button', { name: 'Repor' }),
+    ).toBeVisible()
   })
 
   test('quem administra pessoas não decide por isso quanto tempo se guardam documentos', async ({ page }) => {

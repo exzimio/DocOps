@@ -109,9 +109,11 @@ diferentes para perguntas que parecem iguais.
 **5. Assinar não é editar.** O fluxo de assinatura exigia permissão de edição por reutilizar o
 caminho de mudança de estado — um signatário externo passaria a poder alterar o documento.
 
-**6. Testes que recusam padrões frágeis.** Três guardas leem o código-fonte e falham a
-compilação: entidades sem filtro de organização, testes que afirmam contagens fixas, e o
-operador que desliga filtros dentro de projeções. Cada uma nasceu de um defeito real.
+**6. Código que recusa padrões frágeis.** Um analisador de Roslyn falha a **compilação** quando
+alguém desliga os filtros de organização dentro de uma projeção — o defeito que causou uma fuga
+verdadeira entre organizações. Dois testes leem o código-fonte e falham a **suite**: entidades sem
+filtro de organização, e testes que afirmam contagens fixas. Cada um nasceu de um defeito real, e
+cada um foi validado a reintroduzir esse defeito.
 
 **7. O que nenhuma captura de ecrã mostrava.** O contraste de texto esteve 0,4 abaixo da norma
 durante nove fases. Renderiza perfeitamente; só um cálculo o distingue. Apareceu no dia em que
@@ -140,7 +142,7 @@ combinação possível.
 - 45 ficheiros de domínio, 29 tabelas, 12 migrações
 - **748 testes**: 330 unitários, 181 de integração contra SQL Server real, 59 de componentes e
   178 end-to-end em desktop e telemóvel
-- 3 guardas que leem o código-fonte e falham a suite de testes
+- 1 analisador de Roslyn que falha a compilação, e 2 guardas que leem o código-fonte e falham a suite de testes
 - 10 decisões de arquitetura registadas
 - 44 permissões distribuídas por 6 perfis
 

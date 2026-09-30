@@ -29,4 +29,16 @@
     <ProjectReference Include="..\Application\DocOps.Application.csproj" />
   </ItemGroup>
 
+
+  <!--
+    O analisador viaja como analisador e nao como dependencia: o codigo compilado nao o referencia,
+    so o compilador o carrega. E por isso que a violacao passa a ser um erro de compilacao a serio,
+    e aparece sublinhada no editor enquanto se escreve.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Analyzers\DocOps.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
 </Project>
