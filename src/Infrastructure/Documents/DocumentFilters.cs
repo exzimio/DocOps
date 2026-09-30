@@ -98,8 +98,9 @@ public static class DocumentFilters
             || d.MetadataValues.Any(v => v.TextValue != null && v.TextValue.Contains(term)));
     }
 
-    public static IQueryable<Document> ApplySort(IQueryable<Document> query, DocumentSearchRequest request) =>
-        (request.SortBy, request.SortDescending) switch
+    public static IQueryable<Document> ApplySort(IQueryable<Document> query, DocumentSearchRequest request)
+    {
+        IOrderedQueryable<Document> ordered = (request.SortBy, request.SortDescending) switch
         {
             (DocumentSortField.Title, true) => query.OrderByDescending(d => d.Title),
             (DocumentSortField.Title, false) => query.OrderBy(d => d.Title),
@@ -112,6 +113,12 @@ public static class DocumentFilters
             (_, false) => query.OrderBy(d => d.CreatedAtUtc),
             _ => query.OrderByDescending(d => d.CreatedAtUtc)
         };
+
+        // Desempate final pela chave. Nenhuma destas colunas e unica, e sem ultimo criterio o SQL
+        // Server e livre de devolver os empatados por qualquer ordem: duas paginas sao duas
+        // consultas independentes, logo um documento podia aparecer nas duas e outro em nenhuma.
+        return ordered.ThenBy(document => document.Id);
+    }
 
     /// <summary>
     /// A document is in a workflow state when the newest instance started on it is in that state —

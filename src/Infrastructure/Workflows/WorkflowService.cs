@@ -182,6 +182,10 @@ public sealed class WorkflowService(
 
         List<WorkflowInstanceListItemDto> items = await query
             .OrderByDescending(i => i.StartedAtUtc)
+
+            // Desempate final: varias instancias arrancam no mesmo instante quando um lote entra
+            // de uma vez, e sem ultimo criterio a paginacao pode repetir ou perder uma.
+            .ThenBy(i => i.Id)
             .Skip(request.Paging.Skip)
             .Take(request.Paging.NormalizedPageSize)
             .Select(InstanceProjection(dbContext, clock.UtcNow))

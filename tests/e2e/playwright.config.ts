@@ -42,11 +42,24 @@ export default defineConfig({
       stderr: 'pipe',
     },
     {
-      command: 'npm run dev',
+      // A suíte corre contra o que é entregue, e não contra o servidor de desenvolvimento. Um
+      // servidor que transforma módulos a pedido, mantém uma ligação de recarregamento aberta e
+      // reinicia sozinho quando a configuração muda não é o que ninguém publica, e uma suíte verde
+      // contra ele não diz nada sobre o que foi compilado. A pré-visualização serve ficheiros
+      // estáticos: nada disso existe. O build leva menos de um segundo, portanto não custa.
+      //
+      // `E2E_DEV=1` volta ao servidor de desenvolvimento, para quando se quer acompanhar um teste
+      // com o código a mudar por baixo.
+      command: process.env.E2E_DEV ? 'npm run dev' : 'npm run build && npm run preview',
       cwd: '../../src/Web',
       url: webBaseUrl,
-      reuseExistingServer: true,
-      timeout: 120_000,
+
+      // Em modo compilado, não reaproveitar nada: reutilizar um servidor de desenvolvimento que já
+      // esteja de pé desfazia exatamente o que esta opção existe para garantir, e um servidor de
+      // longa duração, com horas de recarregamentos acumulados, foi metade da instabilidade que
+      // esta suíte mostrou num dia. Quem pediu `E2E_DEV` pode reaproveitar o seu.
+      reuseExistingServer: !!process.env.E2E_DEV,
+      timeout: 180_000,
     },
   ],
 })

@@ -77,6 +77,10 @@ public class BackgroundJobIsolationTests
         services.AddMetrics();
         services.AddSingleton<DocOpsMetrics>();
 
+        // Sem varios processos a coordenar, o bloqueio concede sempre. Fica declarado em vez
+        // de ausente, para o que esta sob teste continuar a ser o isolamento entre trabalhos.
+        services.AddSingleton<IJobLock, NoJobLock>();
+
         // The runner resolves by key, which is what makes the jobs replaceable here at all.
         services.AddKeyedScoped(BackgroundJobNames.WorkflowTimers, (_, _) => timers);
         services.AddKeyedScoped(BackgroundJobNames.OverdueEscalation, (_, _) => escalation);

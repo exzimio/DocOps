@@ -65,6 +65,10 @@ public sealed class TaskService(
                 || t.Status == WorkflowTaskStatus.Cancelled)
             .ThenBy(t => t.DueAtUtc ?? DateTimeOffset.MaxValue)
             .ThenByDescending(t => t.Priority)
+
+            // Desempate final: sem ele, duas tarefas com o mesmo prazo e a mesma prioridade podem
+            // trocar de lugar entre paginas.
+            .ThenBy(t => t.Id)
             .Skip(request.Paging.Skip)
             .Take(request.Paging.NormalizedPageSize)
             .Select(TaskProjections.ToListItem(dbContext, now))

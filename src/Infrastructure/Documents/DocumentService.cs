@@ -168,7 +168,7 @@ public sealed class DocumentService(
     public async Task<DocumentDetailDto> CreateAsync(
         CreateDocumentRequest request, DocumentUpload upload, CancellationToken cancellationToken = default)
     {
-        ValidateUpload(upload);
+        await ValidateUploadAsync(upload, cancellationToken);
 
         Guid tenantId = tenantContext.TenantId;
         Guid ownerId = currentUser.UserId
@@ -300,7 +300,7 @@ public sealed class DocumentService(
     public async Task<DocumentDetailDto> AddVersionAsync(
         Guid documentId, DocumentUpload upload, string? comment, CancellationToken cancellationToken = default)
     {
-        ValidateUpload(upload);
+        await ValidateUploadAsync(upload, cancellationToken);
 
         Document document = await LoadAsync(documentId, cancellationToken);
         await accessResolver.EnsureAsync(document, DocumentAccessLevel.Edit, clock.UtcNow, cancellationToken);
@@ -583,11 +583,16 @@ public sealed class DocumentService(
     private async Task<DocumentVersion> StoreVersionAsync(
         Document document, DocumentUpload upload, int versionNumber, string? comment, CancellationToken cancellationToken)
     {
+        // Depois de os bytes confirmarem o formato, o que o cliente declarou deixa de servir para
+        // alguma coisa. Guardar o tipo derivado da extensão tira entrada não confiável do caminho
+        // que acaba num cabeçalho de resposta.
+        string contentType = FileSignatures.ContentTypeFor(Path.GetExtension(upload.FileName));
+
         StoredFile stored = await fileStorage.SaveAsync(
             upload.Content,
             document.TenantId,
             document.Id,
-            new FileDescriptor(upload.FileName, upload.ContentType),
+            new FileDescriptor(upload.FileName, contentType),
             cancellationToken);
 
         DocumentVersion version = new()
@@ -597,12 +602,12 @@ public sealed class DocumentService(
             VersionNumber = versionNumber,
             StorageKey = stored.StorageKey,
             FileName = SanitiseFileName(upload.FileName),
-            ContentType = upload.ContentType,
+            ContentType = contentType,
             FileSizeBytes = stored.SizeBytes,
             ContentHash = stored.ContentHash,
             Comment = comment?.Trim(),
             IsCurrent = true,
-            ExtractedText = await ExtractTextAsync(stored.StorageKey, upload.ContentType, cancellationToken)
+            ExtractedText = await ExtractTextAsync(stored.StorageKey, contentType, cancellationToken)
         };
 
         document.Versions.Add(version);
@@ -629,7 +634,7 @@ public sealed class DocumentService(
         return read == 0 ? null : new string(buffer, 0, read);
     }
 
-    private void ValidateUpload(DocumentUpload upload)
+    private async Task ValidateUploadAsync(DocumentUpload upload, CancellationToken cancellationToken)
     {
         if (upload.Length <= 0)
         {
@@ -654,6 +659,22 @@ public sealed class DocumentService(
         {
             throw new DomainException($"O tipo de conteúdo '{upload.ContentType}' não é permitido.", "content_type_not_allowed");
         }
+
+        // A extensão e o tipo de conteúdo vêm ambos do cliente, e ambos se forjam. Os primeiros
+        // bytes é que dizem o que o ficheiro realmente é.
+        if (!upload.Content.CanSeek)
+        {
+            throw new DomainException(
+                "O conteúdo do ficheiro não pode ser lido para verificação.", "content_not_verifiable");
+        }
+
+        byte[] amostra = new byte[FileSignatures.SampleSize];
+        long posicao = upload.Content.Position;
+        int lidos = await upload.Content.ReadAtLeastAsync(
+            amostra, amostra.Length, throwOnEndOfStream: false, cancellationToken);
+        upload.Content.Position = posicao;
+
+        FileSignatures.EnsureMatches(amostra.AsSpan(0, lidos), extension);
     }
 
     private async Task ApplyTagsAsync(Document document, IReadOnlyList<string> tagNames, CancellationToken cancellationToken)

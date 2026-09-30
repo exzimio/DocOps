@@ -94,6 +94,11 @@ public sealed class AiProcessingService(
         Guid? latest = await dbContext.AiProcessingRuns
             .Where(r => r.DocumentId == documentId && r.Status != AiRunStatus.Queued)
             .OrderByDescending(r => r.CreatedAtUtc)
+
+            // «A mais recente» tem de ser uma so: com duas corridas no mesmo instante, sem
+            // desempate a resposta muda de consulta para consulta. O identificador e da versao 7,
+            // ordenado pelo tempo, portanto o maior e mesmo o ultimo.
+            .ThenByDescending(r => r.Id)
             .Select(r => (Guid?)r.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -115,6 +120,10 @@ public sealed class AiProcessingService(
 
         var rows = await query
             .OrderByDescending(r => r.CreatedAtUtc)
+
+            // Desempate final: analisar varios documentos de seguida cria corridas no mesmo
+            // instante.
+            .ThenByDescending(r => r.Id)
             .Skip(request.Paging.Skip)
             .Take(request.Paging.NormalizedPageSize)
             .Select(r => new

@@ -87,14 +87,14 @@ produção. Todos foram encontrados durante a construção, e todos estão docum
 
 **1. Isolamento entre organizações imposto na persistência.** Cada consulta é filtrada pela
 organização de quem pede, vinda das *claims* do cookie e nunca do pedido. Existe um teste que
-falha a compilação se alguém acrescentar uma entidade sem esse filtro — a rede não depende de
+falha a suite de testes se alguém acrescentar uma entidade sem esse filtro — a rede não depende de
 ninguém se lembrar.
 
 **2. E uma fuga que aconteceu mesmo assim.** `IgnoreQueryFilters()` é um operador de consulta,
 não de subconsulta: escrito dentro de uma projeção, desliga os filtros da consulta inteira,
 incluindo o da organização. Um administrador passou a ver as etiquetas de outra empresa. Não
 falhava nada — nem exceção, nem aviso, nem teste vermelho. Hoje há uma guarda que lê o
-código-fonte e falha a compilação se o padrão reaparecer.
+código-fonte e falha a suite de testes se o padrão reaparecer.
 
 **3. Autorização em camadas, sempre no servidor.** As permissões do perfil funcionam como um
 teto sobre o que a posse de um documento concede: ser dono não dá mais do que o perfil permite.
@@ -140,7 +140,7 @@ combinação possível.
 - 45 ficheiros de domínio, 29 tabelas, 12 migrações
 - **748 testes**: 330 unitários, 181 de integração contra SQL Server real, 59 de componentes e
   178 end-to-end em desktop e telemóvel
-- 3 guardas que leem o código-fonte e falham a compilação
+- 3 guardas que leem o código-fonte e falham a suite de testes
 - 10 decisões de arquitetura registadas
 - 44 permissões distribuídas por 6 perfis
 
@@ -160,4 +160,4 @@ isolamento de dados entre clientes, testes que provam comportamento em vez de co
 implementação, e honestidade sobre o que o software é e o que não é.
 
 E que, quando um erro aparece, a correção vai à origem: três dos defeitos encontrados deixaram
-de ser possíveis, porque passaram a falhar a compilação.
+de ser possíveis, porque passaram a falhar a suite de testes.

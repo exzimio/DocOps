@@ -580,7 +580,7 @@ dessa consulta inteira — incluindo o da organização. A primeira versão da l
 documentos assim, e um administrador de uma organização passou a ver as etiquetas de outra. Não
 falhava nada: nem exceção, nem aviso, nem teste vermelho. A contagem passou a ser uma consulta
 própria com a condição de organização escrita à mão, e
-`tests/UnitTests/Persistence/QueryFilterUsageTests.cs` falha a compilação se o padrão reaparecer.
+`tests/UnitTests/Persistence/QueryFilterUsageTests.cs` falha a suite de testes se o padrão reaparecer.
 
 ## 10.11 Editor de permissões
 
@@ -608,6 +608,24 @@ sem hora como o fim desse dia, porque quem escreve «31 de dezembro» quer o dia
 **`Administer` não é oferecido no formulário.** Os outros seis níveis são. Administrar um documento
 é conceder o poder de redistribuir acesso a ele, e essa é uma decisão de administração da
 organização, não de partilha — quem a tem, tem-na pelo perfil.
+
+## 10.10.1 Duas paredes entre organizações
+
+O isolamento entre organizações não vive numa camada só, e a razão é histórica: a camada de
+aplicação já falhou aqui. A primeira parede são os filtros globais do EF Core, declarados por
+entidade, com um teste que falha a suite se alguma entidade com `TenantId` ficar sem filtro. A
+segunda é uma política de segurança ao nível da linha no SQL Server, sobre as mesmas tabelas.
+
+A diferença entre as duas não é redundância: é **alcance**. A primeira protege o que passa pelo EF.
+A segunda protege o que chega ao motor, venha de onde vier — EF, SQL cru, uma ferramenta ligada
+diretamente à base, ou um caminho que ainda não existe.
+
+A ligação entre elas é o `SESSION_CONTEXT`: o interceptor escreve nele a organização a cada abertura
+de ligação, e o predicado da política lê-o. Sem esse valor escrito, a política não sabe por quem
+filtrar — e deixa passar, que é o que permite ao worker correr acima de todas as organizações.
+
+O desenho completo, incluindo o que ficou deliberadamente por fazer, está em
+[`SECURITY.md`](SECURITY.md), secção 4.1.
 
 ## 10.11 Estados vazios que não inventam a causa
 

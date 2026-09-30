@@ -60,6 +60,49 @@ aplicação deve estar atrás de HSTS.
 | Escrita | `TenantGuardInterceptor` atribui a organização a novas linhas e recusa escritas cruzadas |
 | Testes | Testes de integração verificam ambos os sentidos com duas organizações reais em base de dados |
 
+## 4.1 Segunda parede: segurança ao nível da linha
+
+Os filtros globais do EF Core são uma defesa **na camada de aplicação**. Protegem as consultas que
+passam pelo EF, e só enquanto ninguém os desligar. Já falharam uma vez neste projeto: o defeito 52
+foi uma fuga verdadeira entre organizações, porque `IgnoreQueryFilters()` dentro de uma projeção
+desliga os filtros da consulta inteira. Existe desde então um guarda que impede esse padrão de
+voltar — mas um guarda trata o padrão que conhece. SQL escrito à mão não passa por ele. Uma
+ferramenta de relatórios ligada diretamente à base também não.
+
+Por baixo disso está uma **política de segurança ao nível da linha do SQL Server**, sobre as 26
+tabelas que têm `TenantId`:
+
+| Peça | O que faz |
+| --- | --- |
+| `TenantSessionContextInterceptor` | Escreve a organização em `SESSION_CONTEXT` a cada abertura de ligação, marcada como só de leitura |
+| `security.fn_TenantAccessPredicate` | Função *inline* com `SCHEMABINDING`: entra no plano da consulta em vez de ser chamada linha a linha |
+| `security.TenantIsolationPolicy` | Predicado de filtro nas 26 tabelas |
+
+O valor é escrito **em cada abertura de ligação**, e não uma vez por processo, porque o agrupamento
+de ligações entrega a mesma ligação física a pedidos de organizações diferentes. É marcado como só
+de leitura para que ninguém o reescreva a meio da sessão: se conseguisse, a política passaria a
+filtrar pela organização que essa pessoa escolhesse.
+
+**Isto aplica-se a quem se liga como `sa`.** A segurança ao nível da linha não isenta
+administradores, e é essa a diferença entre uma defesa na aplicação e uma defesa no motor. Foi
+verificado desligando a política e voltando a ligá-la com a mesma sessão: uma organização visível
+com ela ligada, duas com ela desligada.
+
+**Sem organização no contexto, a política deixa passar.** É deliberado, e é a mesma semântica dos
+filtros do EF: o worker corre acima de todas as organizações, e as migrações e a semeadura também. A
+variante mais forte seria negar por omissão e exigir uma chave de dispensa explícita para esses
+casos — fica por fazer, porque transformaria qualquer contexto em falta num ecrã vazio silencioso, e
+essa troca merece ser feita com a história de implantação já construída.
+
+**Só predicados de filtro, não de bloqueio.** A fuga que motivou isto era de leitura, e a atribuição
+da organização na escrita já é feita pelo `TenantGuardInterceptor`. O predicado de bloqueio na
+escrita é o passo seguinte natural.
+
+`RowLevelSecurityTests` prova as quatro coisas que interessam: que `IgnoreQueryFilters()` deixou de
+alcançar a outra organização, que SQL cru também não alcança, que **nenhuma tabela com `TenantId`
+ficou sem predicado** — lido da própria base de dados, não do código — e que sem organização no
+contexto tudo continua visível, para que mudar isso seja uma decisão e não um acidente.
+
 ## 5. Proteção contra CSRF
 
 O cookie é `SameSite=Lax`, o que impede o browser de o enviar em pedidos `POST` originados noutro
@@ -67,6 +110,12 @@ sítio. Adicionalmente, `CookieOriginValidationMiddleware` recusa qualquer méto
 (`POST`, `PUT`, `PATCH`, `DELETE`) cujo `Origin` — ou, na ausência deste, o `Referer` — não seja a
 própria aplicação ou uma origem explicitamente autorizada. A resposta é `403` com
 `code: origin_not_allowed` e fica registada.
+
+**Um pedido sem `Origin` nem `Referer` é recusado, não aceite.** Vale a pena dizê-lo porque é a
+falha habitual desta abordagem: uma verificação que só compara o `Origin` quando ele existe deixa
+passar tudo o que o omitir. Aqui a origem tem de estar presente **e** ser permitida; se nenhum dos
+dois cabeçalhos vier, a origem fica por determinar e o pedido leva `403`. Só os métodos que não
+alteram estado (`GET`, `HEAD`, `OPTIONS`, `TRACE`) passam sem verificação.
 
 Esta abordagem protege toda a superfície da API sem exigir gestão de *tokens* antifalsificação no
 cliente.
@@ -111,6 +160,17 @@ para 100; produção usa as predefinições.
   configurável, nome de ficheiro higienizado e chave de armazenamento gerada pelo servidor — um nome
   de ficheiro manipulado não consegue escapar da raiz de armazenamento, e o caminho resolvido é
   validado contra essa raiz antes de qualquer leitura ou escrita.
+- **Os primeiros bytes têm de corresponder à extensão.** A extensão e o tipo de conteúdo vêm ambos
+  do cliente e forjam-se os dois: um executável chamado `relatorio.pdf` e declarado como
+  `application/pdf` passava nas duas verificações anteriores. `FileSignatures` confere a assinatura
+  do formato (`%PDF`, `PK` para os formatos Office modernos, OLE2 para os antigos, e assim por
+  diante); para os formatos de texto, que não têm assinatura, a regra é a inversa — não podem
+  começar por nenhuma assinatura binária conhecida nem conter bytes nulos.
+- **O tipo de conteúdo guardado é derivado da extensão verificada, não o que o cliente declarou.**
+  Depois de os bytes confirmarem o formato, a declaração do cliente deixa de ter utilidade, e
+  continuar a guardá-la seria manter entrada não confiável a atravessar o sistema até ao cabeçalho
+  de uma resposta. Os descarregamentos são servidos como anexo, e `X-Content-Type-Options: nosniff`
+  impede o browser de adivinhar por sua conta.
 
 ## 9. Auditoria
 
@@ -213,7 +273,7 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 | Metadados de documentos apagados pela porta da configuração | Um campo com valores não se elimina nem muda de tipo: eliminar apagaria o que os documentos dizem, e mudar de tipo deixaria os valores na coluna errada — ilegíveis, não em erro |
 | Catálogo a afirmar o que os documentos não cumprem | Tornar um campo obrigatório é recusado se algum documento do tipo ficasse por preencher, com a contagem na resposta |
 | Entrada de documentos fechada por configuração | O tipo de entrada não se desativa nem aceita campos obrigatórios: fechá-lo travaria o correio e o portal, onde ninguém está a olhar para reparar |
-| **Filtros de organização desligados sem querer por uma subconsulta** | `IgnoreQueryFilters()` é um operador de consulta: dentro de uma projeção desliga os filtros da consulta toda, incluindo o da organização, sem falhar nada. Aconteceu na lista de etiquetas. Uma guarda lê o código-fonte e falha a compilação se o operador aparecer dentro de uma projeção |
+| **Filtros de organização desligados sem querer por uma subconsulta** | `IgnoreQueryFilters()` é um operador de consulta: dentro de uma projeção desliga os filtros da consulta toda, incluindo o da organização, sem falhar nada. Aconteceu na lista de etiquetas. Uma guarda lê o código-fonte e falha a suite de testes se o operador aparecer dentro de uma projeção |
 | Etiquetas de uma organização visíveis noutra | Contagens em consulta própria, com a condição de organização escrita à mão, e um teste de integração que verifica identidade — nenhuma etiqueta de uma aparece na outra |
 | Anotações de documentos destruídas por um clique | Remover uma etiqueta é reversível: as ligações sobrevivem e restaurar devolve o mesmo número de documentos. O que é irreversível — um campo de metadados com valores — continua a ser recusado |
 | Retenção encurtada sem rasto | Mudar a duração é permitido, porque as obrigações mudam, mas fica na auditoria com o valor antigo e o novo: move a data de eliminação de todos os documentos que a política governa |
@@ -301,10 +361,26 @@ O caminho que ignora os filtros de organização está confinado a esses serviç
 distinção é o que impede que um pedido HTTP alcance, por via de uma integração, dados que a sua
 sessão não alcançaria diretamente.
 
+**Um worker de cada vez por trabalho.** Nada impedia que houvesse dois processos, e dois a correr o
+mesmo trabalho não dão erro nenhum: dão trabalho repetido, que é pior porque não se vê. A fila de IA
+analisaria o mesmo documento duas vezes, as integrações varreriam a mesma caixa de correio em
+duplicado, e a verificação de retenção poderia anunciar o mesmo documento a duas velocidades. Cada
+trabalho toma um bloqueio antes de correr (`IJobLock`, implementado com `sp_getapplock` do SQL
+Server), **sem esperar**: quem não o consegue volta no ciclo seguinte, porque esperar seria juntar os
+dois worker no mesmo instante em vez de os manter separados. O bloqueio pertence à sessão, portanto
+desaparece sozinho se o processo morrer.
+
+A alternativa habitual seria eleição de líder com um serviço de coordenação à parte. Aqui não faz
+falta: a base de dados já é o ponto comum a todos os processos.
+
 ## 14. Limitações conhecidas
 
 - Sem autenticação multifator (fora do âmbito desta demonstração; a arquitetura de Identity suporta a
   adição).
+- **A CSP protege a API, não a interface.** Os cabeçalhos da secção 6 são emitidos pela API, que
+  serve apenas JSON. A interface é servida à parte e, em produção, precisaria da sua própria política
+  de segurança de conteúdo no servidor web que a entregasse. Isso não está resolvido, porque a
+  história de implantação não está construída.
 - Sem rotação automática das chaves de proteção de dados em ambiente distribuído — em produção seria
   necessário um repositório de chaves partilhado.
 - A assinatura eletrónica é uma demonstração funcional e **não tem qualquer validade legal**: não há

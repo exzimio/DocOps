@@ -70,8 +70,8 @@ e zero é um `decimal` perfeitamente válido.
 
 - Os testes do painel **não podem afirmar contagens fixas**: os números mudam com o que as outras
   suites criam. Afirmam relações — que uma janela mais curta devolve um painel diferente, que uma
-  medida sem base diz que não tem base — e a guarda em `TestSuiteConventionTests` falha a
-  compilação se alguém escrever uma contagem absoluta.
+  medida sem base diz que não tem base — e a guarda em `TestSuiteConventionTests` falha a suite de
+  testes se alguém escrever uma contagem absoluta.
 - Gráficos com medidas de escalas diferentes ficam em gráficos separados. Um eixo duplo faria
   parecer comparável o que não é, e o problema não é estético.
 - A exportação para CSV reconverte os estados para nomes legíveis: um ficheiro não tem quem o

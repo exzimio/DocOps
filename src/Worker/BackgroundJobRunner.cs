@@ -127,6 +127,19 @@ public sealed class BackgroundJobRunner(
 
         await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
 
+        // Um worker de cada vez por trabalho. Nada impedia que houvesse dois processos, e dois a
+        // correr o mesmo trabalho analisariam o mesmo documento duas vezes e varreriam a mesma
+        // caixa de correio em duplicado — sem erro nenhum, que e o que torna isto dificil de ver.
+        // Quem nao consegue o bloqueio nao espera: volta no ciclo seguinte.
+        IJobLock locking = scope.ServiceProvider.GetRequiredService<IJobLock>();
+        await using IAsyncDisposable? held = await locking.TryAcquireAsync(name, cancellationToken);
+
+        if (held is null)
+        {
+            logger.LogDebug("Background job {Job} skipped: another process holds it", name);
+            return;
+        }
+
         DocOpsMetrics metrics = scope.ServiceProvider.GetRequiredService<DocOpsMetrics>();
         long start = Stopwatch.GetTimestamp();
 

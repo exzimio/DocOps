@@ -228,6 +228,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentCatalogueAdminService, DocumentCatalogueAdminService>();
         services.AddScoped<ISystemHealthService, SystemHealthService>();
         services.AddScoped<RetentionChecker>();
+        services.AddScoped<IJobLock, SqlApplicationLock>();
     }
 
     private static void AddReporting(IServiceCollection services)
@@ -260,6 +261,7 @@ public static class DependencyInjection
 
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<TenantGuardInterceptor>();
+        services.AddScoped<TenantSessionContextInterceptor>();
         services.AddScoped<SoftDeleteInterceptor>();
         services.AddSingleton<AuditImmutabilityInterceptor>();
 
@@ -275,6 +277,7 @@ public static class DependencyInjection
             options.AddInterceptors(
                 serviceProvider.GetRequiredService<AuditableEntityInterceptor>(),
                 serviceProvider.GetRequiredService<TenantGuardInterceptor>(),
+                serviceProvider.GetRequiredService<TenantSessionContextInterceptor>(),
                 serviceProvider.GetRequiredService<SoftDeleteInterceptor>(),
                 serviceProvider.GetRequiredService<AuditImmutabilityInterceptor>());
 
