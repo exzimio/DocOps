@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas de pesquisa', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -13,7 +14,7 @@ test.describe('Capturas de pesquisa', () => {
     await page.goto('/app/search')
     await page.getByRole('heading', { name: 'Pesquisa' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/search-empty.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/search-empty.png')
 
     await page.getByRole('searchbox').fill('atlas tecnologia')
     await page
@@ -21,12 +22,12 @@ test.describe('Capturas de pesquisa', () => {
       .first()
       .waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/search-results.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/search-results.png')
 
     await page.getByRole('button', { name: 'Mostrar filtros' }).click()
     await page.getByRole('button', { name: 'A aguardar', exact: true }).waitFor()
     await page.waitForTimeout(300)
-    await page.screenshot({ path: 'screenshots/search-filters.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/search-filters.png')
 
     await page.getByRole('button', { name: 'Ocultar filtros' }).click()
     await page.getByRole('searchbox').fill('')
@@ -34,6 +35,6 @@ test.describe('Capturas de pesquisa', () => {
     await page.getByRole('button', { name: 'Perguntar' }).click()
     await page.getByText(/A pergunta foi lida como os filtros/).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/search-natural.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/search-natural.png')
   })
 })

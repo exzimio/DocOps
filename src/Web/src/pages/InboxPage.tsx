@@ -134,7 +134,7 @@ export function InboxPage() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
+      <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)]">
         <div className="flex flex-col gap-3">
           <Card className="p-3">
             <div className="flex flex-col gap-2.5">

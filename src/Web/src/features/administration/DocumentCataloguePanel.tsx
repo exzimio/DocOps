@@ -12,6 +12,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  TableScroller,
 } from '@/components/ui/Surface'
 import {
   FieldType,
@@ -174,7 +175,7 @@ export function DocumentCataloguePanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Card>
           <CardHeader
             title={t('admin.types.title')}
@@ -191,77 +192,79 @@ export function DocumentCataloguePanel() {
             {types.isError && <ErrorState title={t('errors.genericTitle')} body={types.error.message} />}
 
             {types.data && (
-              <table className="w-full text-sm">
-                <thead className="border-b border-subtle text-left text-xs text-ink-muted">
-                  <tr>
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      {t('admin.types.type')}
-                    </th>
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      {t('admin.types.prefix')}
-                    </th>
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      {t('admin.types.fields')}
-                    </th>
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      {t('admin.types.documents')}
-                    </th>
-                    <th scope="col" className="px-4 py-2" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-subtle">
-                  {types.data.map((type) => (
-                    <tr
-                      key={type.id}
-                      className={clsx(
-                        type.isActive ? undefined : 'opacity-60',
-                        type.id === selectedTypeId && 'bg-sunken',
-                      )}
-                    >
-                      <td className="px-4 py-2">
-                        <span className="block text-ink">{type.name}</span>
-                        <span className="block font-mono text-xs text-ink-muted">{type.code}</span>
-                        <span className="flex flex-wrap gap-1">
-                          {type.isIntakeType && <Badge tone="teal">{t('admin.types.intake')}</Badge>}
-                          {!type.isActive && <Badge tone="neutral">{t('admin.types.inactive')}</Badge>}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 font-mono text-xs text-ink-secondary">
-                        {type.referencePrefix}
-                      </td>
-                      <td className="px-4 py-2 tabular-nums text-ink">{type.fieldCount}</td>
-                      <td className="px-4 py-2 tabular-nums text-ink">{type.documentCount}</td>
-                      <td className="px-4 py-2">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedTypeId(type.id)}>
-                            {t('admin.types.manageFields')}
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => editType(type)}>
-                            <Pencil aria-hidden className="size-4" />
-                            {t('common.edit')}
-                          </Button>
-                          {type.isIntakeType ? (
-                            // Não é uma limitação da interface: o servidor recusa na mesma. É por
-                            // este tipo que entra um ficheiro antes de alguém saber o que é.
-                            <span className="self-center px-2 text-[11px] text-ink-muted">
-                              {t('admin.types.alwaysActive')}
-                            </span>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              loading={setActive.isPending}
-                              onClick={() => setActive.mutate({ id: type.id, isActive: !type.isActive })}
-                            >
-                              {type.isActive ? t('admin.types.deactivate') : t('admin.types.activate')}
-                            </Button>
-                          )}
-                        </div>
-                      </td>
+              <TableScroller label={t('admin.types.title')}>
+                <table className="w-full min-w-[40rem] text-sm">
+                  <thead className="border-b border-subtle text-left text-xs text-ink-muted">
+                    <tr>
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        {t('admin.types.type')}
+                      </th>
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        {t('admin.types.prefix')}
+                      </th>
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        {t('admin.types.fields')}
+                      </th>
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        {t('admin.types.documents')}
+                      </th>
+                      <th scope="col" className="px-4 py-2" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-subtle">
+                    {types.data.map((type) => (
+                      <tr
+                        key={type.id}
+                        className={clsx(
+                          type.isActive ? undefined : 'opacity-60',
+                          type.id === selectedTypeId && 'bg-sunken',
+                        )}
+                      >
+                        <td className="px-4 py-2">
+                          <span className="block text-ink">{type.name}</span>
+                          <span className="block font-mono text-xs text-ink-muted">{type.code}</span>
+                          <span className="flex flex-wrap gap-1">
+                            {type.isIntakeType && <Badge tone="teal">{t('admin.types.intake')}</Badge>}
+                            {!type.isActive && <Badge tone="neutral">{t('admin.types.inactive')}</Badge>}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 font-mono text-xs text-ink-secondary">
+                          {type.referencePrefix}
+                        </td>
+                        <td className="px-4 py-2 tabular-nums text-ink">{type.fieldCount}</td>
+                        <td className="px-4 py-2 tabular-nums text-ink">{type.documentCount}</td>
+                        <td className="px-4 py-2">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedTypeId(type.id)}>
+                              {t('admin.types.manageFields')}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => editType(type)}>
+                              <Pencil aria-hidden className="size-4" />
+                              {t('common.edit')}
+                            </Button>
+                            {type.isIntakeType ? (
+                              // Não é uma limitação da interface: o servidor recusa na mesma. É por
+                              // este tipo que entra um ficheiro antes de alguém saber o que é.
+                              <span className="self-center px-2 text-[11px] text-ink-muted">
+                                {t('admin.types.alwaysActive')}
+                              </span>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                loading={setActive.isPending}
+                                onClick={() => setActive.mutate({ id: type.id, isActive: !type.isActive })}
+                              >
+                                {type.isActive ? t('admin.types.deactivate') : t('admin.types.activate')}
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableScroller>
             )}
           </CardBody>
         </Card>
@@ -368,7 +371,7 @@ export function DocumentCataloguePanel() {
       </div>
 
       {selected && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+        <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_22rem]">
           <Card>
             <CardHeader
               title={t('admin.fields.title', { type: selected.name })}
@@ -386,66 +389,70 @@ export function DocumentCataloguePanel() {
               )}
 
               {fields.data && fields.data.length > 0 && (
-                <table className="w-full text-sm">
-                  <thead className="border-b border-subtle text-left text-xs text-ink-muted">
-                    <tr>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.fields.field')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.fields.kind')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.fields.filled')}
-                      </th>
-                      <th scope="col" className="px-4 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-subtle">
-                    {fields.data.map((field) => (
-                      <tr key={field.id}>
-                        <td className="px-4 py-2">
-                          <span className="block text-ink">{field.label}</span>
-                          <span className="block font-mono text-xs text-ink-muted">{field.code}</span>
-                          {field.isRequired && <Badge tone="amber">{t('admin.fields.required')}</Badge>}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-ink-secondary">
-                          {t(`admin.fields.kinds.${field.fieldType}`)}
-                          {field.options.length > 0 && (
-                            <span className="block text-ink-muted">{field.options.join(' · ')}</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-xs tabular-nums text-ink-secondary">
-                          {field.valueCount}
-                        </td>
-                        <td className="px-4 py-2">
-                          <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => editField(field)}>
-                              <Pencil aria-hidden className="size-4" />
-                              {t('common.edit')}
-                            </Button>
-                            {field.canDelete ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                loading={deleteField.isPending}
-                                onClick={() => deleteField.mutate({ typeId: selected.id, fieldId: field.id })}
-                              >
-                                <Trash2 aria-hidden className="size-4" />
-                                {t('common.delete')}
-                              </Button>
-                            ) : (
-                              // O número é a explicação. Sem ele, o botão ausente seria um mistério.
-                              <span className="self-center px-2 text-right text-[11px] text-ink-muted">
-                                {t('admin.fields.inUse', { count: field.valueCount })}
-                              </span>
-                            )}
-                          </div>
-                        </td>
+                <TableScroller label={t('admin.fields.title', { type: selected.name })}>
+                  <table className="w-full min-w-[40rem] text-sm">
+                    <thead className="border-b border-subtle text-left text-xs text-ink-muted">
+                      <tr>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.fields.field')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.fields.kind')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.fields.filled')}
+                        </th>
+                        <th scope="col" className="px-4 py-2" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-subtle">
+                      {fields.data.map((field) => (
+                        <tr key={field.id}>
+                          <td className="px-4 py-2">
+                            <span className="block text-ink">{field.label}</span>
+                            <span className="block font-mono text-xs text-ink-muted">{field.code}</span>
+                            {field.isRequired && <Badge tone="amber">{t('admin.fields.required')}</Badge>}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-ink-secondary">
+                            {t(`admin.fields.kinds.${field.fieldType}`)}
+                            {field.options.length > 0 && (
+                              <span className="block text-ink-muted">{field.options.join(' · ')}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-xs tabular-nums text-ink-secondary">
+                            {field.valueCount}
+                          </td>
+                          <td className="px-4 py-2">
+                            <div className="flex justify-end gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => editField(field)}>
+                                <Pencil aria-hidden className="size-4" />
+                                {t('common.edit')}
+                              </Button>
+                              {field.canDelete ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  loading={deleteField.isPending}
+                                  onClick={() =>
+                                    deleteField.mutate({ typeId: selected.id, fieldId: field.id })
+                                  }
+                                >
+                                  <Trash2 aria-hidden className="size-4" />
+                                  {t('common.delete')}
+                                </Button>
+                              ) : (
+                                // O número é a explicação. Sem ele, o botão ausente seria um mistério.
+                                <span className="self-center px-2 text-right text-[11px] text-ink-muted">
+                                  {t('admin.fields.inUse', { count: field.valueCount })}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TableScroller>
               )}
             </CardBody>
           </Card>

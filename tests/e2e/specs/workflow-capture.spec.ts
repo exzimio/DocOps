@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas de workflows', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -13,17 +14,17 @@ test.describe('Capturas de workflows', () => {
     await page.getByRole('link', { name: 'Tarefas' }).click()
     await page.waitForURL(/\/app\/tasks$/)
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/tasks.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/tasks.png')
 
     await page.getByRole('link', { name: 'Workflows' }).click()
     await page.waitForURL(/\/app\/workflows$/)
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/workflows.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/workflows.png')
 
     await page.locator('table tbody tr a').first().click()
     await page.waitForURL(/\/app\/workflows\/instances\/[0-9a-f-]+$/)
     await page.getByText('Cronologia').waitFor()
-    await page.screenshot({ path: 'screenshots/workflow-instance.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/workflow-instance.png')
   })
 
   test('desenhador de processos', async ({ page }) => {
@@ -39,6 +40,6 @@ test.describe('Capturas de workflows', () => {
     await page.getByRole('heading', { name: 'Desenhador de processos' }).waitFor()
     await page.locator('.react-flow__node').first().waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/workflow-designer.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/workflow-designer.png')
   })
 })

@@ -1,5 +1,6 @@
 import { test } from '@playwright/test'
 import { clickReliably } from '../support/interactions'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas da saúde do sistema', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -16,6 +17,6 @@ test.describe('Capturas da saúde do sistema', () => {
     await page.getByRole('heading', { name: 'Trabalho em segundo plano' }).waitFor()
     await page.getByRole('heading', { name: 'Trabalho à espera' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/admin-health.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/admin-health.png')
   })
 })

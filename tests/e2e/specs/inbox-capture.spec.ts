@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas da caixa de entrada', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -13,14 +14,14 @@ test.describe('Capturas da caixa de entrada', () => {
     await page.goto('/app/inbox')
     await page.getByRole('heading', { name: 'Caixa de entrada' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/inbox-list.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/inbox-list.png')
 
     // A fatura com anexo já vem selecionada por omissão (é a mensagem mais recente), mas clicamos
     // de qualquer forma para exercitar a seleção pela lista.
     await page.getByRole('list', { name: 'Mensagens' }).getByText('Mariana Quadros').click()
     await page.getByRole('button', { name: 'Guardar como documento' }).waitFor()
     await page.waitForTimeout(300)
-    await page.screenshot({ path: 'screenshots/inbox-detail.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/inbox-detail.png')
 
     await page.getByRole('button', { name: 'Guardar como documento' }).click()
     await page.getByRole('dialog', { name: 'Guardar anexo como documento' }).waitFor()

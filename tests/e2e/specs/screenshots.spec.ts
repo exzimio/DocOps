@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { fullPageShot } from '../support/fullPageShot'
 
 /**
  * Captures the current state of the interface. Not an assertion suite: it exists so the visual
@@ -9,10 +10,10 @@ test.describe('Capturas de ecrã', () => {
 
   test('landing, login e painel', async ({ page }) => {
     await page.goto('/')
-    await page.screenshot({ path: 'screenshots/landing.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/landing.png')
 
     await page.goto('/login')
-    await page.screenshot({ path: 'screenshots/login.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/login.png')
 
     await page.getByLabel('Endereço de e-mail').fill('ricardo.lopes@asteria.example')
     await page.getByLabel('Palavra-passe').fill('Demo!Pass123')
@@ -25,11 +26,11 @@ test.describe('Capturas de ecrã', () => {
     // a escura, da mesma página momentos depois, media 1224.
     await page.getByRole('heading', { name: 'Departamentos' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/dashboard.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/dashboard.png')
 
     await page.evaluate(() => {
       document.documentElement.dataset.theme = 'dark'
     })
-    await page.screenshot({ path: 'screenshots/dashboard-dark.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/dashboard-dark.png')
   })
 })

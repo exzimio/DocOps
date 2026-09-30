@@ -1,5 +1,6 @@
 import { test } from '@playwright/test'
 import { clickReliably } from '../support/interactions'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas de etiquetas e retenção', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -15,17 +16,17 @@ test.describe('Capturas de etiquetas e retenção', () => {
     await clickReliably(page.getByRole('tab', { name: 'Etiquetas' }))
     await page.getByRole('heading', { name: 'Etiquetas' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/admin-tags.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/admin-tags.png')
 
     await clickReliably(page.getByRole('tab', { name: 'Retenção' }))
     await page.getByRole('heading', { name: 'Políticas de retenção' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/admin-retention.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/admin-retention.png')
 
     // A recusa: retirar uma política que tipos ainda adotam.
     const adopted = page.getByRole('row').filter({ hasText: 'CTR-10A' })
     await clickReliably(adopted.getByRole('button', { name: 'Retirar' }))
     await page.getByRole('alert').waitFor()
-    await page.screenshot({ path: 'screenshots/admin-retention-refusal.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/admin-retention-refusal.png')
   })
 })

@@ -1,5 +1,6 @@
 import { test } from '@playwright/test'
 import { clickReliably } from '../support/interactions'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas do editor de permissões', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -17,11 +18,11 @@ test.describe('Capturas do editor de permissões', () => {
 
     await clickReliably(page.getByRole('tab', { name: 'Permissões' }))
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/permissions-editor.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/permissions-editor.png')
 
     // A peça central: explicar o acesso de outra pessoa.
     await page.getByLabel('Acesso de').selectOption({ index: 1 })
     await page.getByText('Não alcança este documento').waitFor()
-    await page.screenshot({ path: 'screenshots/permissions-why.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/permissions-why.png')
   })
 })

@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas de documentos', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -14,18 +15,18 @@ test.describe('Capturas de documentos', () => {
     await page.waitForURL(/\/app\/documents$/)
     await page.waitForSelector('table tbody tr td')
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/documents-list.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/documents-list.png')
 
     await page.locator('table tbody tr a').first().click()
     await page.waitForURL(/\/app\/documents\/[0-9a-f-]+$/)
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/document-detail.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/document-detail.png')
 
     await page.getByRole('tab', { name: /Versões/ }).click()
-    await page.screenshot({ path: 'screenshots/document-versions.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/document-versions.png')
 
     await page.getByRole('tab', { name: 'Auditoria' }).click()
     await page.waitForTimeout(500)
-    await page.screenshot({ path: 'screenshots/document-audit.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/document-audit.png')
   })
 })

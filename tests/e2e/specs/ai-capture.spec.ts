@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { fullPageShot } from '../support/fullPageShot'
 
 test.describe('Capturas de inteligência documental', () => {
   test.skip(!process.env.E2E_CAPTURE, 'Defina E2E_CAPTURE=1 para gerar capturas de ecrã.')
@@ -13,7 +14,7 @@ test.describe('Capturas de inteligência documental', () => {
     await page.goto('/app/ai')
     await page.getByRole('heading', { name: 'Inteligência documental' }).waitFor()
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'screenshots/ai-center.png', fullPage: true })
+    await fullPageShot(page, 'screenshots/ai-center.png')
 
     // Analysing takes the reviewer straight to the document, on the intelligence tab.
     await page.getByRole('button', { name: 'Analisar documento' }).first().click()

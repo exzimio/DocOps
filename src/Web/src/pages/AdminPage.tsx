@@ -22,7 +22,15 @@ import { RetentionPanel } from '@/features/administration/RetentionPanel'
 import { SystemHealthPanel } from '@/features/administration/SystemHealthPanel'
 import { Button } from '@/components/ui/Button'
 import { Checkbox, TextField } from '@/components/ui/Field'
-import { Badge, Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
+import {
+  Badge,
+  Card,
+  CardBody,
+  CardHeader,
+  ErrorState,
+  LoadingState,
+  TableScroller,
+} from '@/components/ui/Surface'
 
 type Tab = 'users' | 'departments' | 'catalogue' | 'tags' | 'retention' | 'health'
 
@@ -162,7 +170,7 @@ export function AdminPage() {
       )}
 
       {tab === 'users' && canAdminUsers && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+        <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_22rem]">
           <Card>
             <CardHeader
               title={t('admin.users.title')}
@@ -179,65 +187,67 @@ export function AdminPage() {
               {users.isError && <ErrorState title={t('errors.genericTitle')} body={users.error.message} />}
 
               {users.data && (
-                <table className="w-full text-sm">
-                  <thead className="border-b border-subtle text-left text-xs text-ink-muted">
-                    <tr>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.users.person')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.users.roles')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.users.departments')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.users.lastLogin')}
-                      </th>
-                      <th scope="col" className="px-4 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-subtle">
-                    {users.data.map((user) => (
-                      <tr key={user.id} className={user.isActive ? undefined : 'opacity-60'}>
-                        <td className="px-4 py-2">
-                          <span className="block text-ink">{user.fullName}</span>
-                          <span className="block text-xs text-ink-muted">{user.email}</span>
-                          {!user.isActive && <Badge tone="neutral">{t('admin.users.inactive')}</Badge>}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-ink-secondary">{user.roles.join(', ')}</td>
-                        <td className="px-4 py-2 text-xs text-ink-secondary">
-                          {user.departments.map((department) => department.code).join(', ') || '—'}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-ink-secondary">
-                          {user.lastLoginAtUtc ? formatDateTime(user.lastLoginAtUtc, i18n.language) : '—'}
-                        </td>
-                        <td className="px-4 py-2">
-                          {user.canEdit ? (
-                            <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => startEdit(user)}>
-                                <Pencil aria-hidden className="size-4" />
-                                {t('common.edit')}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                loading={setActive.isPending}
-                                onClick={() => setActive.mutate({ id: user.id, isActive: !user.isActive })}
-                              >
-                                {user.isActive ? t('admin.users.deactivate') : t('admin.users.activate')}
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="block text-right text-[11px] text-ink-muted">
-                              {t(user.isPlatformAccount ? 'admin.users.platform' : 'admin.users.self')}
-                            </span>
-                          )}
-                        </td>
+                <TableScroller label={t('admin.users.title')}>
+                  <table className="w-full min-w-[44rem] text-sm">
+                    <thead className="border-b border-subtle text-left text-xs text-ink-muted">
+                      <tr>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.users.person')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.users.roles')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.users.departments')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.users.lastLogin')}
+                        </th>
+                        <th scope="col" className="px-4 py-2" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-subtle">
+                      {users.data.map((user) => (
+                        <tr key={user.id} className={user.isActive ? undefined : 'opacity-60'}>
+                          <td className="px-4 py-2">
+                            <span className="block text-ink">{user.fullName}</span>
+                            <span className="block text-xs text-ink-muted">{user.email}</span>
+                            {!user.isActive && <Badge tone="neutral">{t('admin.users.inactive')}</Badge>}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-ink-secondary">{user.roles.join(', ')}</td>
+                          <td className="px-4 py-2 text-xs text-ink-secondary">
+                            {user.departments.map((department) => department.code).join(', ') || '—'}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-ink-secondary">
+                            {user.lastLoginAtUtc ? formatDateTime(user.lastLoginAtUtc, i18n.language) : '—'}
+                          </td>
+                          <td className="px-4 py-2">
+                            {user.canEdit ? (
+                              <div className="flex justify-end gap-1">
+                                <Button variant="ghost" size="sm" onClick={() => startEdit(user)}>
+                                  <Pencil aria-hidden className="size-4" />
+                                  {t('common.edit')}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  loading={setActive.isPending}
+                                  onClick={() => setActive.mutate({ id: user.id, isActive: !user.isActive })}
+                                >
+                                  {user.isActive ? t('admin.users.deactivate') : t('admin.users.activate')}
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="block text-right text-[11px] text-ink-muted">
+                                {t(user.isPlatformAccount ? 'admin.users.platform' : 'admin.users.self')}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TableScroller>
               )}
             </CardBody>
           </Card>
@@ -352,58 +362,62 @@ export function AdminPage() {
       {tab === 'health' && canAdminRetention && <SystemHealthPanel />}
 
       {tab === 'departments' && canAdminDepartments && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+        <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_22rem]">
           <Card>
             <CardHeader title={t('admin.departments.title')} />
             <CardBody className="p-0">
               {departments.data && (
-                <table className="w-full text-sm">
-                  <thead className="border-b border-subtle text-left text-xs text-ink-muted">
-                    <tr>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.departments.name')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.departments.code')}
-                      </th>
-                      <th scope="col" className="px-4 py-2 font-medium">
-                        {t('admin.departments.members')}
-                      </th>
-                      <th scope="col" className="px-4 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-subtle">
-                    {departments.data.map((department) => (
-                      <tr key={department.id}>
-                        <td className="px-4 py-2">
-                          <span className="block text-ink">{department.name}</span>
-                          {department.description && (
-                            <span className="block text-xs text-ink-muted">{department.description}</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 font-mono text-xs text-ink-secondary">{department.code}</td>
-                        <td className="px-4 py-2 tabular-nums text-ink">{department.memberCount}</td>
-                        <td className="px-4 py-2 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              setDepartmentDraft({
-                                id: department.id,
-                                name: department.name,
-                                code: department.code,
-                                description: department.description ?? '',
-                              })
-                            }
-                          >
-                            <Pencil aria-hidden className="size-4" />
-                            {t('common.edit')}
-                          </Button>
-                        </td>
+                <TableScroller label={t('admin.departments.title')}>
+                  <table className="w-full min-w-[40rem] text-sm">
+                    <thead className="border-b border-subtle text-left text-xs text-ink-muted">
+                      <tr>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.departments.name')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.departments.code')}
+                        </th>
+                        <th scope="col" className="px-4 py-2 font-medium">
+                          {t('admin.departments.members')}
+                        </th>
+                        <th scope="col" className="px-4 py-2" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-subtle">
+                      {departments.data.map((department) => (
+                        <tr key={department.id}>
+                          <td className="px-4 py-2">
+                            <span className="block text-ink">{department.name}</span>
+                            {department.description && (
+                              <span className="block text-xs text-ink-muted">{department.description}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 font-mono text-xs text-ink-secondary">
+                            {department.code}
+                          </td>
+                          <td className="px-4 py-2 tabular-nums text-ink">{department.memberCount}</td>
+                          <td className="px-4 py-2 text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setDepartmentDraft({
+                                  id: department.id,
+                                  name: department.name,
+                                  code: department.code,
+                                  description: department.description ?? '',
+                                })
+                              }
+                            >
+                              <Pencil aria-hidden className="size-4" />
+                              {t('common.edit')}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TableScroller>
               )}
             </CardBody>
           </Card>

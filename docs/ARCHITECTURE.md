@@ -629,6 +629,19 @@ comportamento certo enquanto há linhas para mostrar. Sem linhas deixa de o ser:
 descreveria os filtros novos por cima de um resultado velho. Enquanto o resultado é o anterior e
 está vazio, espera-se.
 
+## 10.12 Largura: nenhum ecrã é mais largo do que a janela
+
+Uma tabela larga num ecrã estreito tem de rolar dentro do seu cartão, nunca levar a página atrás.
+Isso não sai de graça do `overflow-x-auto`: um item de grelha tem `min-width: auto` e recusa-se a
+encolher abaixo do conteúdo, portanto a tabela empurra o cartão, o cartão empurra a página, e o
+`overflow` nunca chega a entrar em ação. Daí `minmax(0, 1fr)` nas colunas que contêm tabelas, e
+`TableScroller` à volta de cada tabela — o contentor rola e alcança-se pelo teclado, que é o que
+falta a um `overflow` simples.
+
+`tests/e2e/specs/horizontal-overflow.spec.ts` mede-o nas dez rotas e nos seis separadores da
+administração, nos dois perfis. A auditoria de acessibilidade não cobre isto: uma página que rola de
+lado passa em todos os critérios do `axe`, e no telemóvel é dos defeitos que mais se sente.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

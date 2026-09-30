@@ -12,6 +12,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  TableScroller,
 } from '@/components/ui/Surface'
 import {
   useDeleteTag,
@@ -71,7 +72,7 @@ export function TagsPanel() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+    <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_22rem]">
       <Card>
         <CardHeader
           title={t('admin.tags.title')}
@@ -105,70 +106,72 @@ export function TagsPanel() {
           )}
 
           {tags.data && visible.length > 0 && (
-            <table className="w-full text-sm">
-              <thead className="border-b border-subtle text-left text-xs text-ink-muted">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    {t('admin.tags.tag')}
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    {t('admin.tags.documents')}
-                  </th>
-                  <th scope="col" className="px-4 py-2" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-subtle">
-                {visible.map((tag) => (
-                  <tr key={tag.id} className={tag.isDeleted ? 'opacity-60' : undefined}>
-                    <td className="px-4 py-2">
-                      <span className="flex items-center gap-2">
-                        {tag.colour && (
-                          <span
-                            aria-hidden
-                            className="size-3 shrink-0 rounded-full border border-subtle"
-                            style={{ backgroundColor: tag.colour }}
-                          />
-                        )}
-                        <span className="text-ink">{tag.name}</span>
-                        {tag.isDeleted && <Badge tone="neutral">{t('admin.tags.removed')}</Badge>}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-ink">{tag.documentCount}</td>
-                    <td className="px-4 py-2">
-                      <div className="flex justify-end gap-1">
-                        {tag.isDeleted ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            loading={restoreTag.isPending}
-                            onClick={() => restoreTag.mutate(tag.id)}
-                          >
-                            <RotateCcw aria-hidden className="size-4" />
-                            {t('admin.tags.restore')}
-                          </Button>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={() => edit(tag)}>
-                              <Pencil aria-hidden className="size-4" />
-                              {t('common.edit')}
-                            </Button>
+            <TableScroller label={t('admin.tags.title')}>
+              <table className="w-full min-w-[34rem] text-sm">
+                <thead className="border-b border-subtle text-left text-xs text-ink-muted">
+                  <tr>
+                    <th scope="col" className="px-4 py-2 font-medium">
+                      {t('admin.tags.tag')}
+                    </th>
+                    <th scope="col" className="px-4 py-2 font-medium">
+                      {t('admin.tags.documents')}
+                    </th>
+                    <th scope="col" className="px-4 py-2" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-subtle">
+                  {visible.map((tag) => (
+                    <tr key={tag.id} className={tag.isDeleted ? 'opacity-60' : undefined}>
+                      <td className="px-4 py-2">
+                        <span className="flex items-center gap-2">
+                          {tag.colour && (
+                            <span
+                              aria-hidden
+                              className="size-3 shrink-0 rounded-full border border-subtle"
+                              style={{ backgroundColor: tag.colour }}
+                            />
+                          )}
+                          <span className="text-ink">{tag.name}</span>
+                          {tag.isDeleted && <Badge tone="neutral">{t('admin.tags.removed')}</Badge>}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 tabular-nums text-ink">{tag.documentCount}</td>
+                      <td className="px-4 py-2">
+                        <div className="flex justify-end gap-1">
+                          {tag.isDeleted ? (
                             <Button
                               variant="ghost"
                               size="sm"
-                              loading={deleteTag.isPending}
-                              onClick={() => deleteTag.mutate(tag.id)}
+                              loading={restoreTag.isPending}
+                              onClick={() => restoreTag.mutate(tag.id)}
                             >
-                              <Trash2 aria-hidden className="size-4" />
-                              {t('admin.tags.remove')}
+                              <RotateCcw aria-hidden className="size-4" />
+                              {t('admin.tags.restore')}
                             </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          ) : (
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => edit(tag)}>
+                                <Pencil aria-hidden className="size-4" />
+                                {t('common.edit')}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                loading={deleteTag.isPending}
+                                onClick={() => deleteTag.mutate(tag.id)}
+                              >
+                                <Trash2 aria-hidden className="size-4" />
+                                {t('admin.tags.remove')}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroller>
           )}
         </CardBody>
       </Card>

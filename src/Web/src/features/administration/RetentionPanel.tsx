@@ -4,7 +4,15 @@ import { Pencil } from 'lucide-react'
 import clsx from 'clsx'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
-import { Badge, Card, CardBody, CardHeader, ErrorState, LoadingState } from '@/components/ui/Surface'
+import {
+  Badge,
+  Card,
+  CardBody,
+  CardHeader,
+  ErrorState,
+  LoadingState,
+  TableScroller,
+} from '@/components/ui/Surface'
 import { useRetentionPolicies, type AdminRetentionPolicy } from './catalogue'
 import {
   RetentionTrigger,
@@ -79,7 +87,7 @@ export function RetentionPanel() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+    <div className="grid gap-4 [grid-template-columns:minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_22rem]">
       <Card>
         <CardHeader title={t('admin.retention.title')} description={t('admin.retention.subtitle')} />
         <CardBody className="p-0">
@@ -89,62 +97,64 @@ export function RetentionPanel() {
           {policies.isError && <ErrorState title={t('errors.genericTitle')} body={policies.error.message} />}
 
           {policies.data && (
-            <table className="w-full text-sm">
-              <thead className="border-b border-subtle text-left text-xs text-ink-muted">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    {t('admin.retention.policy')}
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    {t('admin.retention.duration')}
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    {t('admin.retention.trigger')}
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    {t('admin.retention.types')}
-                  </th>
-                  <th scope="col" className="px-4 py-2" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-subtle">
-                {policies.data.map((policy) => (
-                  <tr key={policy.id} className={policy.isActive ? undefined : 'opacity-60'}>
-                    <td className="px-4 py-2">
-                      <span className="block text-ink">{policy.name}</span>
-                      <span className="block font-mono text-xs text-ink-muted">{policy.code}</span>
-                      {policy.legalBasis && (
-                        <span className="block text-xs text-ink-muted">{policy.legalBasis}</span>
-                      )}
-                      {!policy.isActive && <Badge tone="neutral">{t('admin.retention.withdrawn')}</Badge>}
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-ink">
-                      {t('admin.retention.months', { count: policy.retentionMonths })}
-                    </td>
-                    <td className="px-4 py-2 text-xs text-ink-secondary">
-                      {t(`admin.retention.triggers.${policy.trigger}`)}
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-ink">{policy.typeCount}</td>
-                    <td className="px-4 py-2">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => edit(policy)}>
-                          <Pencil aria-hidden className="size-4" />
-                          {t('common.edit')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          loading={setActive.isPending}
-                          onClick={() => setActive.mutate({ id: policy.id, isActive: !policy.isActive })}
-                        >
-                          {policy.isActive ? t('admin.retention.withdraw') : t('admin.retention.reinstate')}
-                        </Button>
-                      </div>
-                    </td>
+            <TableScroller label={t('admin.retention.title')}>
+              <table className="w-full min-w-[34rem] text-sm">
+                <thead className="border-b border-subtle text-left text-xs text-ink-muted">
+                  <tr>
+                    <th scope="col" className="px-4 py-2 font-medium">
+                      {t('admin.retention.policy')}
+                    </th>
+                    <th scope="col" className="px-4 py-2 font-medium">
+                      {t('admin.retention.duration')}
+                    </th>
+                    <th scope="col" className="px-4 py-2 font-medium">
+                      {t('admin.retention.trigger')}
+                    </th>
+                    <th scope="col" className="px-4 py-2 font-medium">
+                      {t('admin.retention.types')}
+                    </th>
+                    <th scope="col" className="px-4 py-2" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-subtle">
+                  {policies.data.map((policy) => (
+                    <tr key={policy.id} className={policy.isActive ? undefined : 'opacity-60'}>
+                      <td className="px-4 py-2">
+                        <span className="block text-ink">{policy.name}</span>
+                        <span className="block font-mono text-xs text-ink-muted">{policy.code}</span>
+                        {policy.legalBasis && (
+                          <span className="block text-xs text-ink-muted">{policy.legalBasis}</span>
+                        )}
+                        {!policy.isActive && <Badge tone="neutral">{t('admin.retention.withdrawn')}</Badge>}
+                      </td>
+                      <td className="px-4 py-2 tabular-nums text-ink">
+                        {t('admin.retention.months', { count: policy.retentionMonths })}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-ink-secondary">
+                        {t(`admin.retention.triggers.${policy.trigger}`)}
+                      </td>
+                      <td className="px-4 py-2 tabular-nums text-ink">{policy.typeCount}</td>
+                      <td className="px-4 py-2">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => edit(policy)}>
+                            <Pencil aria-hidden className="size-4" />
+                            {t('common.edit')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            loading={setActive.isPending}
+                            onClick={() => setActive.mutate({ id: policy.id, isActive: !policy.isActive })}
+                          >
+                            {policy.isActive ? t('admin.retention.withdraw') : t('admin.retention.reinstate')}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroller>
           )}
         </CardBody>
       </Card>
