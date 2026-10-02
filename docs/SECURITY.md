@@ -391,14 +391,30 @@ desaparece sozinho se o processo morrer.
 A alternativa habitual seria eleição de líder com um serviço de coordenação à parte. Aqui não faz
 falta: a base de dados já é o ponto comum a todos os processos.
 
+## 13.1 A interface tem a sua própria política de segurança de conteúdo
+
+Os cabeçalhos da secção 6 são emitidos pela API, que serve apenas JSON, e nunca chegavam à interface.
+Era uma limitação registada. Deixou de o ser: a interface é servida por nginx
+(`src/Web/nginx.conf`), com política própria.
+
+```
+default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
+img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none';
+frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+```
+
+Sem scripts de terceiros, sem iframes, sem formulários para fora, e `connect-src` limitado à própria
+origem, que é para onde a API é encaminhada. **O `style-src` aceita estilos em linha**, e vale a pena
+dizer porquê em vez de deixar a exceção calada: o desenhador de processos posiciona os nós por
+atributo `style`, calculado a partir das coordenadas guardadas na base de dados.
+
+A API e a interface ficam na mesma origem de propósito. A sessão vive num cookie `HttpOnly`,
+`SameSite=Lax`, e o browser só o manda a quem estiver na mesma origem.
+
 ## 14. Limitações conhecidas
 
 - Sem autenticação multifator (fora do âmbito desta demonstração; a arquitetura de Identity suporta a
   adição).
-- **A CSP protege a API, não a interface.** Os cabeçalhos da secção 6 são emitidos pela API, que
-  serve apenas JSON. A interface é servida à parte e, em produção, precisaria da sua própria política
-  de segurança de conteúdo no servidor web que a entregasse. Isso não está resolvido, porque a
-  história de implantação não está construída.
 - Sem rotação automática das chaves de proteção de dados em ambiente distribuído — em produção seria
   necessário um repositório de chaves partilhado.
 - A assinatura eletrónica é uma demonstração funcional e **não tem qualquer validade legal**: não há

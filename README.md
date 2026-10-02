@@ -32,6 +32,18 @@ prova.
 
 ## 3. Começar
 
+**Ver o produto a funcionar, sem instalar .NET nem Node:**
+
+```bash
+docker compose -f docker-compose.full.yml up --build   # → http://localhost:8080
+```
+
+Entrar com `admin@asteria.example` e `Demo!Pass123`. A base de dados, as migrações, o catálogo de
+demonstração, a API, o worker e a interface sobem num comando, pela ordem certa: a base fica
+saudável, o passo de migração corre até ao fim, e só então a aplicação arranca.
+
+**Desenvolver:**
+
 ```bash
 docker compose up -d                                  # SQL Server
 dotnet run --project src/Api/DocOps.Api.csproj        # API    → http://localhost:5180

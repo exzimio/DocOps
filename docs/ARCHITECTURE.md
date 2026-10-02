@@ -694,6 +694,50 @@ falta a um `overflow` simples.
 administração, nos dois perfis. A auditoria de acessibilidade não cobre isto: uma página que rola de
 lado passa em todos os critérios do `axe`, e no telemóvel é dos defeitos que mais se sente.
 
+## 10.13 Implantação
+
+Cinco peças, num `docker-compose.full.yml`: base de dados, um passo de migração que corre uma vez e
+termina, a API, o worker e a interface servida por nginx.
+
+**As migrações saíram do arranque da aplicação.** Com uma instância era cómodo; com várias, duas a
+arrancar ao mesmo tempo correm as migrações em paralelo sobre a mesma base. Agora é um serviço
+próprio (`DOCOPS_MIGRATE_ONLY`), e a API só arranca depois de ele terminar bem
+(`service_completed_successfully`). É também o que permite, no passo seguinte, a aplicação deixar de
+precisar de privilégios para alterar o esquema: quem migra passa a ser outro processo, e pode
+ligar-se com outra identidade.
+
+**A interface tem agora a sua própria política de segurança de conteúdo.** Os cabeçalhos que a API
+emite protegem respostas JSON e nunca chegavam à interface, o que estava registado como limitação. O
+`style-src` aceita estilos em linha por um motivo concreto: o desenhador de processos posiciona os
+nós por atributo `style`, calculado a partir das coordenadas guardadas.
+
+**O nginx reencaminha o `Origin` tal como veio.** Reescrevê-lo seria a interface a responder pela API
+na verificação de CSRF, e essa verificação deixaria de valer alguma coisa. Confirmado contra a pilha
+a correr: um `POST` sem `Origin` leva `403`, e o cookie de sessão chega ao browser com `HttpOnly`.
+
+### Três defeitos que só a implantação mostrou
+
+Nenhum deles aparece em desenvolvimento, e é por isso que este trabalho vale por si.
+
+**Os documentos de exemplo não entravam na imagem.** Vivem em `samples/` na raiz, e a Infrastructure
+embebe-os com um caminho relativo que sai de `src/`. Um `EmbeddedResource` cujo padrão não encontra
+nada **não dá erro**: a imagem compila, e só falha ao semear.
+
+**O volume de armazenamento nascia de root.** Um volume nomeado herda dono e permissões do que a
+imagem tiver nesse caminho na primeira utilização; sem criar e atribuir a pasta antes de trocar de
+utilizador, o processo sem privilégios não conseguia escrever. E o passo de migração semeia
+documentos, portanto precisa do mesmo volume que a API, senão os ficheiros morrem com o contentor e
+ficam linhas a apontar para nada.
+
+**O cabeçalho da resposta de autenticação não cabia no buffer do nginx.** O cookie de sessão leva as
+claims cifradas e passa dos 4 KB por omissão. O nginx responde `502` e regista «upstream sent too big
+header», o que parece uma avaria da API e não é: a API respondeu bem, quem não conseguiu ler foi o
+proxy. O proxy do Vite não tem este limite, portanto isto nunca apareceria em desenvolvimento.
+
+**E um quarto, do instrumento e não do produto:** a sonda de saúde usava `wget`, que a imagem de
+execução do .NET não traz. A aplicação respondia, e o compose dava-a como doente. Mesma classe dos
+ficheiros de captura que apodreciam: o instrumento a acusar o que não devia.
+
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento

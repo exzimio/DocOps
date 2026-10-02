@@ -1,0 +1,114 @@
+# A aplicação inteira, num comando.
+#
+#   docker compose -f docker-compose.full.yml up --build
+#
+# Depois: http://localhost:8080, com `admin@asteria.example` e a palavra-passe de demonstração.
+#
+# O `docker-compose.yml` ao lado deste levanta só a base de dados, para desenvolvimento com a API e
+# o Vite a correr na máquina. Este serve o caso contrário: ver o produto a funcionar sem instalar
+# .NET nem Node.
+#
+# A ordem importa e está declarada: a base de dados fica saudável, depois o passo de migração corre
+# até ao fim, e só então a API e o worker arrancam. Migrar no arranque da aplicação é cómodo com uma
+# instância e errado com várias.
+
+name: docops
+
+services:
+  sqlserver:
+    build:
+      context: ./docker/sql-server
+    image: docops-sqlserver-fts:2022
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!}"
+      MSSQL_PID: "Developer"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # Corre uma vez, aplica as migrações, semeia o catálogo de demonstração e termina.
+  migrator:
+    build:
+      context: .
+      dockerfile: src/Api/Dockerfile
+    image: docops-api
+    environment:
+      DOCOPS_MIGRATE_ONLY: "true"
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      Seed__ApplyMigrations: "true"
+      Seed__Enabled: "true"
+
+    # Semear cria documentos, e documentos sao ficheiros. Sem o mesmo volume, os ficheiros ficavam
+    # no sistema de ficheiros deste contentor e morriam com ele, deixando as linhas da base a
+    # apontar para nada.
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: docops-api
+    environment:
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+
+      # A aplicação não migra nem semeia: isso foi feito pelo passo acima.
+      Seed__ApplyMigrations: "false"
+      Seed__Enabled: "false"
+
+      # A verificação de origem recusa pedidos de origens que não conhece. Quem fala com a API é o
+      # nginx, que reencaminha o `Origin` do browser tal como veio.
+      Cors__AllowedOrigins__0: "${DOCOPS_PUBLIC_ORIGIN:-http://localhost:8080}"
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: src/Worker/Dockerfile
+    image: docops-worker
+    environment:
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: src/Web/Dockerfile
+    image: docops-web
+    ports:
+      - "${DOCOPS_PUBLIC_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sqldata:
+  storage:

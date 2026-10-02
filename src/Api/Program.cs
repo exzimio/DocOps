@@ -175,6 +175,20 @@ if (isDevelopment)
 
 await ApplyDatabaseStartupTasksAsync(app);
 
+// Modo de migração: aplica o que falta e termina, sem servir pedido nenhum.
+//
+// Migrar no arranque da aplicação é cómodo com uma instância e errado com várias: duas a arrancar
+// ao mesmo tempo correm as migrações em paralelo sobre a mesma base. Com isto, a implantação tem um
+// passo próprio que corre uma vez, e a aplicação arranca já com a base no sítio.
+//
+// É também o que permite à aplicação deixar de precisar de privilégios para alterar o esquema: quem
+// migra é outro processo, e pode ligar-se com outra identidade.
+if (app.Configuration.GetValue<bool>("DOCOPS_MIGRATE_ONLY"))
+{
+    app.Logger.LogInformation("Migration-only run finished; the application will not start");
+    return;
+}
+
 await app.RunAsync();
 
 static async Task ApplyDatabaseStartupTasksAsync(WebApplication app)
