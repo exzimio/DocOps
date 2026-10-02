@@ -4,6 +4,7 @@ using DocOps.Infrastructure.Compliance;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -21,8 +22,8 @@ public class RetentionCheckTests(DocOpsApiFactory factory)
     [Fact]
     public async Task A_document_past_its_retention_is_announced_and_left_where_it_is()
     {
-        using IServiceScope scope = factory.Services.CreateScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Document document = await GivenAnExpiredDocumentAsync(context);
 
@@ -50,8 +51,8 @@ public class RetentionCheckTests(DocOpsApiFactory factory)
     [Fact]
     public async Task The_same_document_is_not_announced_twice()
     {
-        using IServiceScope scope = factory.Services.CreateScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Document document = await GivenAnExpiredDocumentAsync(context);
 
@@ -75,8 +76,8 @@ public class RetentionCheckTests(DocOpsApiFactory factory)
     [Fact]
     public async Task A_document_still_inside_its_period_is_left_alone()
     {
-        using IServiceScope scope = factory.Services.CreateScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Document document = await GivenAnExpiredDocumentAsync(context, expired: false);
 
@@ -89,8 +90,8 @@ public class RetentionCheckTests(DocOpsApiFactory factory)
         Assert.False(announced);
     }
 
-    private static async Task<int> RunJobAsync(IServiceScope scope) =>
-        await scope.ServiceProvider
+    private static async Task<int> RunJobAsync(ISystemScope scope) =>
+        await scope.Services
             .GetRequiredService<RetentionChecker>()
             .AnnounceExpiredAsync(CancellationToken.None);
 

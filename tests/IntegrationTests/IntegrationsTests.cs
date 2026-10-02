@@ -8,6 +8,7 @@ using DocOps.Infrastructure.Integrations;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -157,8 +158,8 @@ public class IntegrationsTests(DocOpsApiFactory factory)
 
         // The count is the number of supplier values in this repository, not a number the adapter
         // made up: it matches what the database holds.
-        using IServiceScope scope = factory.Services.CreateScope();
-        DocOpsDbContext dbContext = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext dbContext = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         int suppliers = await dbContext.DocumentMetadataValues
             .IgnoreQueryFilters()
@@ -307,8 +308,8 @@ public class IntegrationsTests(DocOpsApiFactory factory)
     {
         HttpClient admin = await factory.SignInAsync(TenantAdmin);
 
-        using IServiceScope scope = factory.Services.CreateScope();
-        DocOpsDbContext dbContext = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext dbContext = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Guid tenantId = await dbContext.Tenants
             .IgnoreQueryFilters()
@@ -343,16 +344,18 @@ public class IntegrationsTests(DocOpsApiFactory factory)
 
         await dbContext.SaveChangesAsync();
 
-        using IServiceScope workerScope = factory.Services.CreateScope();
+        // O processador da fila e componente de worker: corre acima de todas as organizacoes, e
+        // com a politica a negar por omissao tem de o declarar.
+        using ISystemScope workerScope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
         IntegrationQueueProcessor processor =
-            workerScope.ServiceProvider.GetRequiredService<IntegrationQueueProcessor>();
+            workerScope.Services.GetRequiredService<IntegrationQueueProcessor>();
 
         int processed = await processor.ProcessQueuedAsync(default);
 
         Assert.True(processed > 0);
 
-        using IServiceScope readScope = factory.Services.CreateScope();
-        DocOpsDbContext reader = readScope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope readScope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext reader = readScope.Services.GetRequiredService<DocOpsDbContext>();
 
         List<IntegrationRunRequest> requests = await reader.IntegrationRunRequests
             .IgnoreQueryFilters()
@@ -368,8 +371,8 @@ public class IntegrationsTests(DocOpsApiFactory factory)
     [Fact]
     public async Task The_scheduled_runner_serves_every_organisation_without_a_user()
     {
-        using IServiceScope scope = factory.Services.CreateScope();
-        IIntegrationRunner runner = scope.ServiceProvider.GetRequiredService<IIntegrationRunner>();
+        using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        IIntegrationRunner runner = scope.Services.GetRequiredService<IIntegrationRunner>();
 
         int ran = await runner.RunDueAsync(default);
 

@@ -16,15 +16,19 @@ namespace DocOps.IntegrationTests;
 public static class TenantScopedContext
 {
     public static DocOpsDbContext Create(
-        IServiceScope scope, string connectionString, Guid tenantId, Guid? actingUserId = null)
+        ISystemScope scope, string connectionString, Guid tenantId, Guid? actingUserId = null)
     {
         FixedPrincipal principal = new(tenantId, actingUserId);
-        IDateTimeProvider clock = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
-        ILoggerFactory loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        IDateTimeProvider clock = scope.Services.GetRequiredService<IDateTimeProvider>();
+        ILoggerFactory loggerFactory = scope.Services.GetRequiredService<ILoggerFactory>();
 
         DbContextOptions<DocOpsDbContext> options = new DbContextOptionsBuilder<DocOpsDbContext>()
             .UseSqlServer(connectionString)
             .AddInterceptors(
+                // Sem este, a organizacao nunca chega ao contexto da sessao e a politica de
+                // seguranca ao nivel da linha nega tudo. Faltava aqui porque, enquanto o predicado
+                // deixava passar sem organizacao, a ausencia nao se notava.
+                new TenantSessionContextInterceptor(principal),
                 new AuditableEntityInterceptor(principal, clock),
                 new TenantGuardInterceptor(principal, loggerFactory.CreateLogger<TenantGuardInterceptor>()),
                 new SoftDeleteInterceptor(principal, clock),

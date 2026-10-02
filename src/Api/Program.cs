@@ -6,7 +6,6 @@ using DocOps.Infrastructure;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -15,6 +14,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using DocOps.Infrastructure.Observability;
+using DocOps.Application.Abstractions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -200,19 +200,24 @@ static async Task ApplyDatabaseStartupTasksAsync(WebApplication app)
         return;
     }
 
-    using IServiceScope scope = app.Services.CreateScope();
-    ILogger<Program> logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    // Migrar e semear não pertence a organização nenhuma, e com a política a negar por omissão uma
+    // ligação sem organização não vê nada. O âmbito de sistema diz isso em vez de o deixar implícito.
+    await using ISystemScope scope = app.Services.GetRequiredService<ISystemScopeFactory>().Create();
+    ILogger<Program> logger = scope.Services.GetRequiredService<ILogger<Program>>();
 
     if (seedOptions.ApplyMigrations)
     {
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        // Migrar com `docops_migrator`, e não com a ligação da aplicação. As duas identidades com
+        // que a aplicação fala com a base não têm DDL, de propósito: quem pode alterar o esquema
+        // também pode largar a política de segurança, e por isso é outra identidade, usada num
+        // passo que corre uma vez.
         logger.LogInformation("Applying database migrations");
-        await context.Database.MigrateAsync();
+        await DatabaseMigrator.MigrateAsync(DatabaseMigrator.ResolveConnectionString(app.Configuration));
     }
 
     if (seedOptions.Enabled)
     {
-        DemoDataSeeder seeder = scope.ServiceProvider.GetRequiredService<DemoDataSeeder>();
+        DemoDataSeeder seeder = scope.Services.GetRequiredService<DemoDataSeeder>();
         await seeder.SeedAsync();
     }
 }

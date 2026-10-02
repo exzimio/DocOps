@@ -30,10 +30,18 @@ namespace DocOps.Infrastructure.Persistence;
 /// <c>sp_reset_connection</c> que o agrupamento dispara limpa o contexto de sessão, mas escrever
 /// sempre torna isso irrelevante: a ligação sai daqui com o valor certo ou com nenhum.
 /// </summary>
-public sealed class TenantSessionContextInterceptor(ITenantContext? tenantContext) : DbConnectionInterceptor
+public sealed class TenantSessionContextInterceptor(
+    ITenantContext? tenantContext,
+    IDatabaseModeAccessor? modeAccessor = null) : DbConnectionInterceptor
 {
-    /// <summary>A chave lida pela função de predicado da política de segurança.</summary>
+    /// <summary>A chave com a organização, lida pelo predicado da política.</summary>
     public const string Key = "docops.tenant";
+
+    /// <summary>
+    /// A chave da dispensa. O predicado só a aceita quando a ligação também se faz com a identidade
+    /// de base de dados própria: saber o nome da chave não chega para a obter.
+    /// </summary>
+    public const string SystemKey = "docops.system";
 
     public override async Task ConnectionOpenedAsync(
         DbConnection connection,
@@ -57,17 +65,27 @@ public sealed class TenantSessionContextInterceptor(ITenantContext? tenantContex
             return;
         }
 
+        bool sistema = modeAccessor?.Mode == DatabaseMode.System;
+
         await using DbCommand command = connection.CreateCommand();
-        command.CommandText = "EXEC sp_set_session_context @key = N'" + Key + "', @value = @tenant, @read_only = 1;";
+        command.CommandText =
+            "EXEC sp_set_session_context @key = N'" + Key + "', @value = @tenant, @read_only = 1;" +
+            "EXEC sp_set_session_context @key = N'" + SystemKey + "', @value = @system, @read_only = 1;";
 
-        DbParameter parameter = command.CreateParameter();
-        parameter.ParameterName = "@tenant";
+        DbParameter organizacao = command.CreateParameter();
+        organizacao.ParameterName = "@tenant";
 
-        // Sem organização no contexto — o worker, as migrações, a semeadura — o valor fica nulo, e
-        // a política deixa passar tudo. É a mesma semântica dos filtros do EF, que também não
-        // filtram quando não há organização: o trabalho periódico corre acima de todas, de propósito.
-        parameter.Value = (object?)tenantContext?.TenantIdOrNull ?? DBNull.Value;
-        command.Parameters.Add(parameter);
+        // Em modo de sistema a organização fica por escrever de propósito: quem corre acima de todas
+        // não tem uma, e escrever uma seria restringir o que não se quer restringido.
+        organizacao.Value = sistema
+            ? DBNull.Value
+            : (object?)tenantContext?.TenantIdOrNull ?? DBNull.Value;
+        command.Parameters.Add(organizacao);
+
+        DbParameter dispensa = command.CreateParameter();
+        dispensa.ParameterName = "@system";
+        dispensa.Value = sistema ? 1 : DBNull.Value;
+        command.Parameters.Add(dispensa);
 
         // Só de leitura: depois de posto, ninguém o muda no meio da sessão. Se alguém conseguisse
         // reescrever esta chave, a política passaria a filtrar pela organização que essa pessoa

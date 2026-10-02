@@ -10,6 +10,7 @@ using DocOps.Domain.Documents;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -150,8 +151,8 @@ public class DocumentsTests(DocOpsApiFactory factory)
         Assert.True(document.Versions[0].FileSizeBytes > 0);
         Assert.Equal(64, document.Versions[0].ContentHash.Length);
 
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         bool created = await context.AuditEvents
             .IgnoreQueryFilters()
@@ -194,8 +195,8 @@ public class DocumentsTests(DocOpsApiFactory factory)
         Assert.Contains("FATURA", body, StringComparison.OrdinalIgnoreCase);
         Assert.Equal($"\"{document.Versions[0].ContentHash}\"", response.Headers.ETag?.ToString());
 
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Assert.True(await context.AuditEvents
             .IgnoreQueryFilters()
@@ -303,8 +304,8 @@ public class DocumentsTests(DocOpsApiFactory factory)
             HttpStatusCode.NotFound,
             (await approver.GetAsync($"/api/documents/{document.Summary.Id}")).StatusCode);
 
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Assert.True(await context.Documents
             .IgnoreQueryFilters()

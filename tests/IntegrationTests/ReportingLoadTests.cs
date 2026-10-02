@@ -10,6 +10,7 @@ using DocOps.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -161,8 +162,8 @@ public class ReportingLoadTests(ITestOutputHelper output) : IAsyncLifetime
     /// </summary>
     private async Task SeedBulkDocumentsAsync()
     {
-        using IServiceScope scope = _factory.Services.CreateScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = _factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Tenant tenant = await context.Tenants.IgnoreQueryFilters().FirstAsync(t => t.Slug == DemoDataSeeder.AsteriaSlug);
 

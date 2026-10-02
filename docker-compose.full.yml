@@ -8,9 +8,14 @@
 # o Vite a correr na máquina. Este serve o caso contrário: ver o produto a funcionar sem instalar
 # .NET nem Node.
 #
-# A ordem importa e está declarada: a base de dados fica saudável, depois o passo de migração corre
-# até ao fim, e só então a API e o worker arrancam. Migrar no arranque da aplicação é cómodo com uma
-# instância e errado com várias.
+# A ordem importa e está declarada: a base de dados fica saudável, as três identidades são criadas,
+# depois o passo de migração corre até ao fim, e só então a API e o worker arrancam. Migrar no
+# arranque da aplicação é cómodo com uma instância e errado com várias.
+#
+# Nada aqui fala com a base como administrador. A política de segurança ao nível da linha nega por
+# omissão, e a dispensa exige a identidade `app_system`: ligar-se como `sa` daria uma aplicação a
+# funcionar e a ver zero linhas. Quem altera o esquema é `docops_migrator`, e só o passo de
+# migração o usa.
 
 name: docops
 
@@ -36,6 +41,38 @@ services:
       retries: 12
       start_period: 30s
 
+  # Cria a base de dados e as três identidades, e termina. Corre como administrador porque é a
+  # única coisa que precisa de o ser: criar uma base de dados e dar permissões não é trabalho da
+  # aplicação, e é por isso que está num passo separado que acaba antes de ela existir.
+  #
+  # Repetível: voltar a subir a pilha com o volume da base intacto encontra tudo no sítio e não faz
+  # nada. As palavras-passe por omissão valem para ver o produto a correr na própria máquina; uma
+  # implantação a sério passa as três variáveis.
+  identities:
+    image: docops-sqlserver-fts:2022
+    entrypoint:
+      - /opt/mssql-tools18/bin/sqlcmd
+      - -S
+      - sqlserver,1433
+      - -U
+      - sa
+      - -P
+      - "${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!}"
+      - -C
+      - -b
+      - -v
+      - AppTenantPassword=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!}
+      - AppSystemPassword=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!}
+      - MigratorPassword=${DOCOPS_MIGRATOR_PASSWORD:-Mg5_Container_73!}
+      - -i
+      - /scripts/create-database-identities.sql
+    volumes:
+      - ./scripts:/scripts:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+
   # Corre uma vez, aplica as migrações, semeia o catálogo de demonstração e termina.
   migrator:
     build:
@@ -44,7 +81,13 @@ services:
     image: docops-api
     environment:
       DOCOPS_MIGRATE_ONLY: "true"
-      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+
+      # Três cadeias, e cada passo usa a que lhe compete: o esquema muda com `docops_migrator`, e a
+      # semeadura escreve com `app_system`, que é a identidade que o predicado aceita para dispensa.
+      # A cadeia normal está aqui porque o arranque a exige, e não porque este passo a use.
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsMigrator: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=docops_migrator;Password=${DOCOPS_MIGRATOR_PASSWORD:-Mg5_Container_73!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
       Seed__ApplyMigrations: "true"
       Seed__Enabled: "true"
 
@@ -54,14 +97,17 @@ services:
     volumes:
       - storage:/data/storage
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      identities:
+        condition: service_completed_successfully
     restart: "no"
 
   api:
     image: docops-api
     environment:
-      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      # Sem a cadeia do migrador, de propósito: a aplicação não altera o esquema, e não poder
+      # alterá-lo é o que impede um pedido de largar a política de segurança.
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
 
       # A aplicação não migra nem semeia: isso foi feito pelo passo acima.
       Seed__ApplyMigrations: "false"
@@ -89,7 +135,10 @@ services:
       dockerfile: src/Worker/Dockerfile
     image: docops-worker
     environment:
-      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      # O worker corre acima de todas as organizações, e isso é uma declaração feita com
+      # `app_system`, não a ausência de contexto que antes bastava.
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
     volumes:
       - storage:/data/storage
     depends_on:

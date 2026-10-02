@@ -11,6 +11,7 @@ using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -286,8 +287,8 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         TaskListItemDto validation = await SingleOpenTaskAsync(buyer, instance.Summary.Id);
         await ActAsync(buyer, validation.Id, "complete", "Conferido.");
 
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Assert.True(await context.AuditEvents
             .IgnoreQueryFilters()

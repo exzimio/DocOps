@@ -43,7 +43,7 @@ public sealed class BackgroundJobOptions
 /// share a thread with them.
 /// </summary>
 public sealed class BackgroundJobRunner(
-    IServiceScopeFactory scopeFactory,
+    ISystemScopeFactory systemScopes,
     IOptions<BackgroundJobOptions> options,
     IDateTimeProvider clock,
     ILogger<BackgroundJobRunner> logger) : BackgroundService
@@ -125,13 +125,16 @@ public sealed class BackgroundJobRunner(
     {
         using Activity? activity = DocOpsMetrics.ActivitySource.StartActivity($"job {name}");
 
-        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+        // O worker corre acima de todas as organizações, de propósito: escalonar prazos e processar
+        // a fila de IA não pertence a nenhuma. Com a política a negar por omissão, isso deixou de
+        // ser o que acontece por ausência de contexto e passou a ser uma declaração.
+        await using ISystemScope scope = systemScopes.Create();
 
         // Um worker de cada vez por trabalho. Nada impedia que houvesse dois processos, e dois a
         // correr o mesmo trabalho analisariam o mesmo documento duas vezes e varreriam a mesma
         // caixa de correio em duplicado — sem erro nenhum, que e o que torna isto dificil de ver.
         // Quem nao consegue o bloqueio nao espera: volta no ciclo seguinte.
-        IJobLock locking = scope.ServiceProvider.GetRequiredService<IJobLock>();
+        IJobLock locking = scope.Services.GetRequiredService<IJobLock>();
         await using IAsyncDisposable? held = await locking.TryAcquireAsync(name, cancellationToken);
 
         if (held is null)
@@ -140,14 +143,14 @@ public sealed class BackgroundJobRunner(
             return;
         }
 
-        DocOpsMetrics metrics = scope.ServiceProvider.GetRequiredService<DocOpsMetrics>();
+        DocOpsMetrics metrics = scope.Services.GetRequiredService<DocOpsMetrics>();
         long start = Stopwatch.GetTimestamp();
 
         DateTimeOffset startedAt = clock.UtcNow;
 
         try
         {
-            IBackgroundJob job = scope.ServiceProvider.GetRequiredKeyedService<IBackgroundJob>(name);
+            IBackgroundJob job = scope.Services.GetRequiredKeyedService<IBackgroundJob>(name);
             int handled = await job.RunAsync(cancellationToken);
 
             metrics.JobFinished(name, succeeded: true, Stopwatch.GetElapsedTime(start));
@@ -183,7 +186,7 @@ public sealed class BackgroundJobRunner(
     /// its own errors after saying so once.
     /// </summary>
     private async Task RecordAsync(
-        AsyncServiceScope scope,
+        ISystemScope scope,
         string name,
         DateTimeOffset startedAt,
         long start,
@@ -193,7 +196,7 @@ public sealed class BackgroundJobRunner(
     {
         try
         {
-            DocOpsDbContext dbContext = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+            DocOpsDbContext dbContext = scope.Services.GetRequiredService<DocOpsDbContext>();
 
             dbContext.BackgroundJobRuns.Add(new BackgroundJobRun
             {

@@ -58,9 +58,14 @@ aplicação deve estar atrás de HSTS.
 | Sessão | O identificador da organização existe apenas como *claim*; nenhuma rota o aceita como parâmetro |
 | Leitura | Filtros globais de consulta em todas as entidades com organização |
 | Escrita | `TenantGuardInterceptor` atribui a organização a novas linhas e recusa escritas cruzadas |
-| Testes | Testes de integração verificam ambos os sentidos com duas organizações reais em base de dados |
+| Motor | Política de segurança ao nível da linha do SQL Server, que **nega por omissão**: sem organização declarada não se vê nada |
+| Identidade | Três identidades de base de dados, e a dispensa da política exige uma delas, não apenas uma chave |
+| Testes | Testes de integração verificam ambos os sentidos com duas organizações reais em base de dados, com identidades reais |
 
 ## 4.1 Segunda parede: segurança ao nível da linha
+
+> A decisão, com as alternativas rejeitadas e o que foi medido antes de escolher, está no
+> [ADR-011](adr/ADR-011-row-level-security-deny-by-default.md).
 
 Os filtros globais do EF Core são uma defesa **na camada de aplicação**. Protegem as consultas que
 passam pelo EF, e só enquanto ninguém os desligar. Já falharam uma vez neste projeto: o defeito 52
@@ -83,43 +88,113 @@ de ligações entrega a mesma ligação física a pedidos de organizações dife
 de leitura para que ninguém o reescreva a meio da sessão: se conseguisse, a política passaria a
 filtrar pela organização que essa pessoa escolhesse.
 
-**Isto aplica-se a quem se liga como `sa`.** A segurança ao nível da linha não isenta
-administradores, e é essa a diferença entre uma defesa na aplicação e uma defesa no motor. Foi
-verificado desligando a política e voltando a ligá-la com a mesma sessão: uma organização visível
-com ela ligada, duas com ela desligada.
+**Nega por omissão.** O predicado exige uma de duas coisas, e nada mais passa:
 
-**Sem organização no contexto, a política deixa passar, e isso tem uma consequência que é preciso
-dizer por extenso.** É deliberado — o worker corre acima de todas as organizações, e as migrações e
-a semeadura também —, mas significa que **a política só protege quem se liga através da aplicação**.
-Uma ferramenta de relatórios, um cliente de SQL ou qualquer processo que abra a sua própria ligação
-não escreve `SESSION_CONTEXT`, e vê todas as organizações.
+```sql
+WHERE @TenantId = CAST(SESSION_CONTEXT(N'docops.tenant') AS uniqueidentifier)
+   OR (CAST(SESSION_CONTEXT(N'docops.system') AS bit) = 1
+       AND USER_NAME() = N'app_system');
+```
 
-Dito de outra forma: a segunda parede estende o alcance da primeira a caminhos que ela não cobria
-(SQL cru dentro da aplicação, procedimentos armazenados, código futuro que não passe pelo EF), e
-**não** fecha o acesso direto à base de dados. Quem tem a cadeia de ligação continua a ver tudo.
+Uma ligação que não declara nada vê zero linhas. **A dispensa não é uma chave que se escreva: é uma
+chave mais a identidade certa.** Quem conhecer o nome `docops.system` e o escrever, ligado com outra
+identidade, continua sem ver nada.
 
-As duas formas de fechar isso, por ordem de força:
+Isto aplica-se a `sa`. A segurança ao nível da linha não isenta administradores, e `sa` mapeia para
+`dbo` em qualquer base de dados, portanto `USER_NAME()` devolve `dbo` e a comparação falha. Foi
+medido, não deduzido:
 
-1. **Negar por omissão:** o predicado passa a exigir organização **ou** uma chave de dispensa
-   explícita, escrita pela aplicação nos casos que precisam dela. Quem se liga por fora não escreve
-   nenhuma das duas e deixa de ver seja o que for. Não protege contra quem conheça a chave e a
-   escreva, mas tira do caminho o caso realista: a ligação inocente que vê tudo sem querer.
-2. **Separar por utilizador de base de dados:** a dispensa passa a depender de pertencer a um perfil
-   do SQL Server que a aplicação tem e um utilizador de relatórios não tem. É a resposta completa, e
-   só faz sentido com contas de serviço a sério, que é trabalho de implantação e não existe aqui.
+| Quem se liga | O que declara | Vê |
+| --- | --- | --- |
+| `sa` | Nada | **0 linhas** |
+| `sa` | Escreve a chave da dispensa à mão | **0 linhas** |
+| `app_tenant` | Nada | **0 linhas** |
+| `app_tenant` | A organização | só a dela |
+| `app_system` | O modo de sistema | todas |
 
-A primeira está por fazer porque transformaria qualquer contexto em falta num ecrã vazio silencioso,
-e exigiria dispensa explícita em caminhos que correm antes de haver organização, a começar pela
-própria autenticação, que procura a conta por e-mail antes de saber a que organização pertence.
+Isto fecha o que a versão anterior desta secção dizia em letra miúda e que o projeto chegou a
+afirmar ao contrário: a política deixava passar quando não havia organização no contexto, logo
+**uma ferramenta de relatórios ligada diretamente à base via todas as organizações** — ela nunca
+escreve `SESSION_CONTEXT`. A segunda parede só protegia quem já estava protegido pela primeira.
 
-**Só predicados de filtro, não de bloqueio.** A fuga que motivou isto era de leitura, e a atribuição
-da organização na escrita já é feita pelo `TenantGuardInterceptor`. O predicado de bloqueio na
-escrita é o passo seguinte natural.
+### Três identidades, e nenhuma faz o trabalho das outras
 
-`RowLevelSecurityTests` prova as quatro coisas que interessam: que `IgnoreQueryFilters()` deixou de
-alcançar a outra organização, que SQL cru também não alcança, que **nenhuma tabela com `TenantId`
-ficou sem predicado** — lido da própria base de dados, não do código — e que sem organização no
-contexto tudo continua visível, para que mudar isso seja uma decisão e não um acidente.
+Negar por omissão só vale se a dispensa não estiver ao alcance de quem atende pedidos, e isso é uma
+questão de com quem a aplicação se liga. Passou a haver três identidades
+(`scripts/create-database-identities.sql`):
+
+| Identidade | Quem a usa | O que pode | O que não pode |
+| --- | --- | --- | --- |
+| `app_tenant` | Todos os pedidos normais | Ler e escrever dados | Alterar o esquema. Obter dispensa |
+| `app_system` | Autenticação, worker, semeadura | O mesmo, e é o nome que o predicado aceita | Alterar o esquema |
+| `docops_migrator` | Só o passo de migração | Alterar o esquema | Atender pedidos: a aplicação não tem esta cadeia |
+
+A separação entre as duas primeiras é o que torna a dispensa inalcançável a partir de um pedido: o
+código pode pedir um âmbito de sistema, mas esse âmbito liga-se por outra cadeia, e é a identidade
+da ligação que a base verifica. A terceira é o que permite às outras duas **não** poderem alterar o
+esquema, porque quem pode alterar o esquema também pode largar a política. Por isso a migração é um
+passo separado, que corre e termina antes de a aplicação arrancar.
+
+`IMPERSONATE` fica negado explicitamente: quem o tivesse sobre `app_system` ganhava a dispensa com um
+`EXECUTE AS`, e a parede deixava de ser parede.
+
+**Porquê `USER_NAME()` e não a pertença a um perfil.** Também foi medido, porque havia aqui uma
+suposição escrita neste documento que estava errada: um membro de `sysadmin` obtém `0` em
+`IS_ROLEMEMBER` de um perfil de que não é membro. Qualquer das duas formas serviria; ficou a
+comparação direta por ser mais fácil de verificar ao ler o predicado, sem depender de quem foi
+acrescentado a que perfil ao longo do tempo.
+
+### A falha silenciosa que esta proteção poderia criar
+
+Negar por omissão tem um modo de falhar pior do que não ter política nenhuma: código que **julga**
+ter dispensa e não tem devolve listas vazias, sem erro. Aconteceu durante a implementação — a
+semeadura correu num âmbito normal e o ASP.NET Core Identity leu a ausência de linhas como conflito
+de concorrência, uma mensagem que não aponta para causa nenhuma.
+
+Três coisas fecham isso:
+
+- A cadeia de sistema é **obrigatória**. Já caía para a cadeia normal quando faltava; agora a
+  aplicação recusa arrancar, porque cair em silêncio significaria exatamente o cenário acima.
+- O âmbito de sistema eleva-se **antes** de qualquer ligação abrir. O contexto da sessão fica só de
+  leitura depois de escrito, e por isso o modo não pode mudar a meio.
+- `RowLevelSecurityTests` corre contra identidades reais. Os testes de integração criam as mesmas
+  três no seu contentor: com `sa` em todo o lado, passariam com ou sem política.
+
+### O que isto continua a não fechar
+
+Quem se liga como `sa` pode largar a política. Não há predicado que impeça isso, e não é esse o
+trabalho de um predicado: fecha-se não dando essa credencial a ninguém, e fica aqui escrito como
+limite assumido em vez de ficar implícito. O que a política fecha é o caso realista, que é a ligação
+com a cadeia da aplicação, ou com a de uma ferramenta de leitura, a ver o que não lhe pertence.
+
+**E predicados de bloqueio na escrita, não só de filtro na leitura.** A fuga que motivou tudo isto
+era de leitura, e a atribuição da organização na escrita era feita só pelo
+`TenantGuardInterceptor` — código da aplicação, a mesma classe de defesa que já falhou aqui uma vez.
+Cada uma das 26 tabelas tem três predicados de bloqueio, e a função que decide quem lê é a mesma que
+decide quem escreve, de forma que as duas regras não podem divergir:
+
+| Predicado | O que fecha |
+| --- | --- |
+| `AFTER INSERT` | Gravar uma linha para outra organização |
+| `AFTER UPDATE` | **Mover** uma linha para outra organização, que é o caso mais difícil de ver depois de acontecer |
+| `BEFORE UPDATE` | Alterar uma linha que não se vê. O filtro já a esconde, e a atualização afetaria zero linhas em silêncio; com isto, levanta erro |
+
+Não há `BEFORE DELETE`: o predicado de filtro já torna invisível o que não pertence à organização, e
+o que não se vê não se apaga.
+
+**Uma migração que mexa em dados é filtrada como qualquer outra ligação.** O contexto usado para
+migrar não leva interceptores, porque uma migração não pertence a organização nenhuma: o que isso
+implica é que uma migração de dados sobre uma tabela com `TenantId` vê zero linhas, em silêncio.
+Fica escrito em `DatabaseMigrator` para quem escrever a próxima; desligar a política no próprio `Up`
+é a forma de o fazer.
+
+`RowLevelSecurityTests` prova nove coisas, todas com ligações e identidades reais: que uma ligação
+que não declara nada não vê nada; que **saber a chave da dispensa não chega sem a identidade
+certa**; que `IgnoreQueryFilters()` deixou de alcançar a outra organização; que SQL cru também não
+alcança; que SQL cru não consegue **gravar** numa organização alheia; que não consegue **mover** uma
+linha para ela; que não consegue alterar nem apagar um registo de auditoria; que o modo de sistema
+continua a alcançar todas as organizações; e que **nenhuma tabela com `TenantId` ficou sem
+predicado** — lido da própria base de dados, não do código.
 
 ## 5. Proteção contra CSRF
 
@@ -199,11 +274,21 @@ para 100; produção usa as predefinições.
 - Campos com `password`, `secret`, `token`, `apikey` ou `connectionstring` no nome são redigidos
   antes de serem serializados.
 
-Em produção, complemente com uma restrição ao nível da base de dados:
+**E não só na aplicação.** As duas identidades com que a aplicação fala com a base têm `UPDATE` e
+`DELETE` recusados nesta tabela, em `scripts/create-database-identities.sql`:
 
 ```sql
-DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
+DENY UPDATE, DELETE ON dbo.[AuditEvents] TO [app_tenant];
+DENY UPDATE, DELETE ON dbo.[AuditEvents] TO [app_system];
 ```
+
+Isto esteve escrito aqui como recomendação para produção durante oito fases, e valia pouco: enquanto
+a aplicação se ligava com privilégios altos não havia a quem recusar. Com identidades próprias há.
+A aplicação só insere registos de auditoria, portanto a recusa não lhe tira nada; o que tira é a
+possibilidade de um caminho futuro alterar um registo sem que ninguém repare.
+
+Quem migra continua a poder, porque alterar o esquema implica poder: o `AuditEvents` é tão alcançável
+a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de toda esta secção.
 
 ## 10. Registos e dados sensíveis
 
@@ -216,8 +301,14 @@ DENY UPDATE, DELETE ON dbo.AuditEvents TO [docops_app];
 ## 11. Gestão de segredos
 
 - O repositório não contém segredos de produção.
-- A única credencial versionada é a do container SQL Server de desenvolvimento, ligado apenas a
-  `127.0.0.1` e documentada como tal.
+- As credenciais versionadas são as do SQL Server de desenvolvimento, e são quatro desde que a
+  aplicação deixou de se ligar como administrador: a do contentor e as das três identidades
+  (`app_tenant`, `app_system`, `docops_migrator`). O contentor publica só em `127.0.0.1`, e as
+  palavras-passe estão nos ficheiros de desenvolvimento, no `docker-compose.full.yml` e na integração
+  contínua, cada um com valores próprios e nenhum deles usado fora da máquina ou do executor.
+- **Em produção, as três passam por variáveis de ambiente.** O `docker-compose.full.yml` lê
+  `DOCOPS_TENANT_PASSWORD`, `DOCOPS_SYSTEM_PASSWORD` e `DOCOPS_MIGRATOR_PASSWORD`, e os valores por
+  omissão existem para ver o produto a correr na própria máquina, não para implantar.
 - Em desenvolvimento, use *user secrets* ou `.env` (ambos ignorados pelo Git); em produção, use as
   variáveis de ambiente da plataforma ou um cofre de segredos.
 

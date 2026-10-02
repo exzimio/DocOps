@@ -10,6 +10,7 @@ using DocOps.Domain.Intelligence;
 using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Intelligence;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -345,8 +346,8 @@ public class AiProcessingTests(DocOpsApiFactory factory)
     private async Task RunWorkerAsync()
     {
         // The scope has no signed-in user and no tenant, exactly like the worker process.
-        using IServiceScope scope = factory.CreateServiceScope();
-        await scope.ServiceProvider.GetRequiredService<AiQueueProcessor>().ProcessQueuedAsync(CancellationToken.None);
+        using ISystemScope scope = factory.CreateServiceScope();
+        await scope.Services.GetRequiredService<AiQueueProcessor>().ProcessQueuedAsync(CancellationToken.None);
     }
 
     /// <summary>Start → AI classification → AI extraction → end, with a "failed" exit to its own end.</summary>

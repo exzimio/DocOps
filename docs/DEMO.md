@@ -54,17 +54,36 @@ organização vem da sessão e não há rota que a aceite como parâmetro.
 
 ### 5. Trilho de auditoria (40 s)
 
-Cada tentativa de autenticação ficou registada:
+Cada tentativa de autenticação ficou registada. Para as ler de fora da aplicação é preciso
+declarar o modo de sistema **e** ligar-se como `app_system`: a política de segurança ao nível da
+linha nega por omissão.
+
+```bash
+docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U app_system -P 'Vb3_Local_Dev_42!' -C -d DocOpsControlTower -h -1 -W \
+  -Q "SET NOCOUNT ON;
+      EXEC sp_set_session_context @key = N'docops.system', @value = 1;
+      SELECT TOP 10 CONVERT(varchar(19),OccurredAtUtc,120)+' | '+Action+' | '+ActorDisplayName
+      FROM AuditEvents ORDER BY OccurredAtUtc DESC;"
+```
+
+Mostrar `user.login.failed` (severidade de segurança), `user.login.succeeded` e `user.logout`.
+
+**E a mesma consulta como `sa` devolve zero linhas**, o que vale a pena mostrar porque é o ponto:
 
 ```bash
 docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P 'Local_Dev_Passw0rd!' -C -d DocOpsControlTower -h -1 -W \
-  -Q "SET NOCOUNT ON; SELECT TOP 10 CONVERT(varchar(19),OccurredAtUtc,120)+' | '+Action+' | '+ActorDisplayName+' | '+ISNULL(Summary,'') FROM AuditEvents ORDER BY OccurredAtUtc DESC;"
+  -Q "SELECT COUNT(*) FROM AuditEvents;"     # 0
 ```
 
-Mostrar `user.login.failed` (severidade de segurança), `user.login.succeeded` e `user.logout`, cada um
-com identificador de correlação. Tentar alterar uma dessas linhas pela aplicação resulta em exceção:
-a auditoria é imutável por construção.
+A segurança ao nível da linha não isenta administradores, e `sa` mapeia para `dbo`: a dispensa exige
+`USER_NAME() = 'app_system'`, e saber o nome da chave não chega. Ver
+[`SECURITY.md`](SECURITY.md), secção 4.1.
+
+Alterar uma dessas linhas pela aplicação resulta em exceção, e **em SQL cru resulta em recusa do
+motor**: as identidades da aplicação têm `UPDATE` e `DELETE` negados nesta tabela. A auditoria é
+imutável nas duas camadas.
 
 ### 6. Superfície da API e saúde do sistema (40 s)
 

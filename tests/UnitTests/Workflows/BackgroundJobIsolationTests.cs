@@ -7,6 +7,7 @@ using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using DocOps.Domain.Operations;
+using DocOps.Infrastructure.Persistence;
 
 namespace DocOps.UnitTests.Workflows;
 
@@ -81,6 +82,10 @@ public class BackgroundJobIsolationTests
         // de ausente, para o que esta sob teste continuar a ser o isolamento entre trabalhos.
         services.AddSingleton<IJobLock, NoJobLock>();
 
+        // A fabrica de ambitos de sistema precisa de encontrar o acessor do modo no ambito que cria.
+        services.AddScoped<DatabaseModeAccessor>();
+        services.AddScoped<IDatabaseModeAccessor>(sp => sp.GetRequiredService<DatabaseModeAccessor>());
+
         // The runner resolves by key, which is what makes the jobs replaceable here at all.
         services.AddKeyedScoped(BackgroundJobNames.WorkflowTimers, (_, _) => timers);
         services.AddKeyedScoped(BackgroundJobNames.OverdueEscalation, (_, _) => escalation);
@@ -92,7 +97,7 @@ public class BackgroundJobIsolationTests
 
     private static BackgroundJobRunner RunnerFor(ServiceProvider provider) =>
         new(
-            provider.GetRequiredService<IServiceScopeFactory>(),
+            new SystemScopeFactory(provider.GetRequiredService<IServiceScopeFactory>()),
             Options.Create(new BackgroundJobOptions { IntegrationEveryNCycles = 1 }),
             new FrozenClock(new DateTimeOffset(2026, 9, 28, 9, 0, 0, TimeSpan.Zero)),
             NullLogger<BackgroundJobRunner>.Instance);

@@ -80,7 +80,12 @@ jobs:
         ports:
           - 14330:1433
     env:
-      ConnectionStrings__DocOpsDatabase: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=sa;Password=Local_Dev_Passw0rd!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
+      # As três identidades, como na implantação. A política de segurança ao nível da linha nega por
+      # omissão e a dispensa exige `app_system`: uma corrida como `sa` veria zero linhas, e a suíte
+      # falharia por uma razão que não é a que se quer testar.
+      ConnectionStrings__DocOpsDatabase: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=app_tenant;Password=Qx7_Ci_91!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
+      ConnectionStrings__DocOpsSystem: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=app_system;Password=Vb3_Ci_42!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
+      ConnectionStrings__DocOpsMigrator: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=docops_migrator;Password=Mg5_Ci_73!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
       Seed__Enabled: 'true'
       Seed__ApplyMigrations: 'true'
     steps:
@@ -93,6 +98,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+
+      # Cria a base de dados e as três identidades, como o passo `identities` da implantação. A
+      # imagem das ferramentas traz o `sqlcmd`, e `--network host` alcança o porto que o serviço
+      # publica no executor.
+      - name: Create the three database identities
+        run: |
+          for try in $(seq 1 30); do
+            docker run --rm --network host \
+              -v "${{ github.workspace }}/scripts:/scripts:ro" \
+              mcr.microsoft.com/mssql-tools:latest \
+              /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1,14330 -U sa -P "$MSSQL_SA_PASSWORD" -b \
+                -v AppTenantPassword="Qx7_Ci_91!" AppSystemPassword="Vb3_Ci_42!" \
+                   MigratorPassword="Mg5_Ci_73!" \
+                -i /scripts/create-database-identities.sql && exit 0
+            echo "SQL Server ainda não responde; nova tentativa em 5s ($try/30)"
+            sleep 5
+          done
+          exit 1
+        env:
+          MSSQL_SA_PASSWORD: Local_Dev_Passw0rd!
 
       - name: Install web dependencies
         run: npm ci

@@ -644,22 +644,25 @@ aplicação já falhou aqui. A primeira parede são os filtros globais do EF Cor
 entidade, com um teste que falha a suite se alguma entidade com `TenantId` ficar sem filtro. A
 segunda é uma política de segurança ao nível da linha no SQL Server, sobre as mesmas tabelas.
 
-A diferença entre as duas não é redundância: é **alcance dentro da aplicação**. A primeira protege o
-que passa pelo EF. A segunda protege tudo o que corre numa ligação da aplicação, incluindo SQL
-escrito à mão, procedimentos armazenados e qualquer caminho novo que não passe pelo EF.
-
-**O que ela não protege, e vale a pena ser exato:** uma ferramenta externa ligada diretamente à base
-de dados não escreve `SESSION_CONTEXT`, e o predicado deixa passar quando ele está vazio. Logo vê
-todas as organizações. A segunda parede estende o alcance da primeira a caminhos que ela não cobria,
-mas não alcança quem se liga por fora. Ver [`SECURITY.md`](SECURITY.md), secção 4.1, para o que
-seria preciso para a fechar também.
+A diferença entre as duas não é redundância: é **alcance**. A primeira protege o que passa pelo EF.
+A segunda protege qualquer ligação à base de dados, incluindo SQL escrito à mão, procedimentos
+armazenados, caminhos novos que não passem pelo EF, e também um cliente de SQL ou uma ferramenta de
+relatórios que abra a sua própria ligação.
 
 A ligação entre elas é o `SESSION_CONTEXT`: o interceptor escreve nele a organização a cada abertura
-de ligação, e o predicado da política lê-o. Sem esse valor escrito, a política não sabe por quem
-filtrar — e deixa passar, que é o que permite ao worker correr acima de todas as organizações.
+de ligação, e o predicado da política lê-o. **Sem esse valor escrito não se vê nada**, e isso é uma
+mudança recente com uma história: a política deixava passar quando o contexto estava vazio, o que a
+tornava inútil contra quem se liga por fora, porque quem se liga por fora nunca o escreve. Era uma
+contradição que este documento afirmava ao contrário, e foi um revisor externo que a apanhou.
 
-O desenho completo, incluindo o que ficou deliberadamente por fazer, está em
-[`SECURITY.md`](SECURITY.md), secção 4.1.
+O worker, a autenticação e a semeadura correm acima de todas as organizações, e isso deixou de
+acontecer por ausência de contexto: agora é uma declaração, e a declaração só é aceite a quem se
+liga com a identidade `app_system`. São três as identidades de base de dados, com `docops_migrator`
+a ser a única que pode alterar o esquema — porque quem pode alterar o esquema pode largar a política.
+
+O desenho completo, o que foi medido e o que fica por fechar está em
+[`SECURITY.md`](SECURITY.md), secção 4.1, e a decisão com as alternativas rejeitadas no
+[ADR-011](adr/ADR-011-row-level-security-deny-by-default.md).
 
 ## 10.11 Estados vazios que não inventam a causa
 
@@ -696,15 +699,24 @@ lado passa em todos os critérios do `axe`, e no telemóvel é dos defeitos que 
 
 ## 10.13 Implantação
 
-Cinco peças, num `docker-compose.full.yml`: base de dados, um passo de migração que corre uma vez e
-termina, a API, o worker e a interface servida por nginx.
+Seis peças, num `docker-compose.full.yml`: base de dados, um passo que cria as identidades, um passo
+de migração, a API, o worker e a interface servida por nginx. Os dois passos do meio correm uma vez
+e terminam; os três últimos ficam de pé.
 
 **As migrações saíram do arranque da aplicação.** Com uma instância era cómodo; com várias, duas a
 arrancar ao mesmo tempo correm as migrações em paralelo sobre a mesma base. Agora é um serviço
 próprio (`DOCOPS_MIGRATE_ONLY`), e a API só arranca depois de ele terminar bem
-(`service_completed_successfully`). É também o que permite, no passo seguinte, a aplicação deixar de
-precisar de privilégios para alterar o esquema: quem migra passa a ser outro processo, e pode
-ligar-se com outra identidade.
+(`service_completed_successfully`).
+
+**Nada aqui fala com a base de dados como administrador.** A API e o worker ligam-se como
+`app_tenant`, e os caminhos que não pertencem a organização nenhuma como `app_system`; quem altera o
+esquema é `docops_migrator`, e só o passo de migração tem essa cadeia. Era isto que o passo de
+migração separado permitia, e deixou de ser trabalho futuro: com a política a negar por omissão, uma
+pilha ligada como `sa` arrancaria saudável e veria zero linhas.
+
+O passo das identidades corre como administrador, porque criar uma base de dados e dar permissões é
+a única coisa que precisa de o ser. Termina antes de a aplicação existir, e voltar a subir a pilha
+com o volume intacto encontra tudo no sítio e não faz nada.
 
 **A interface tem agora a sua própria política de segurança de conteúdo.** Os cabeçalhos que a API
 emite protegem respostas JSON e nunca chegavam à interface, o que estava registado como limitação. O

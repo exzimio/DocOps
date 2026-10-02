@@ -3,13 +3,16 @@ using DocOps.Application.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
 [Produces("application/json")]
-public sealed class AuthController(IUserSessionService sessionService) : ControllerBase
+public sealed class AuthController(
+    IUserSessionService sessionService,
+    ISystemScopeFactory systemScopes) : ControllerBase
 {
     /// <summary>Signs in with e-mail and password and issues the HTTP-only session cookie.</summary>
     [HttpPost("login")]
@@ -21,7 +24,17 @@ public sealed class AuthController(IUserSessionService sessionService) : Control
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status423Locked)]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
     {
-        LoginOutcome outcome = await sessionService.LoginAsync(request, cancellationToken);
+        // A autenticação é o caminho que corre **antes** de haver organização: procura a conta pelo
+        // e-mail sem saber a que organização pertence. Com a política a negar por omissão, uma
+        // ligação sem organização não vê conta nenhuma, e ninguém conseguiria entrar.
+        //
+        // Daí o âmbito de sistema, declarado aqui e visível: é o único sítio de um pedido HTTP que
+        // o abre. Depois de a sessão existir, tudo o resto corre no modo normal.
+        await using ISystemScope scope = systemScopes.Create();
+
+        LoginOutcome outcome = await scope.Services
+            .GetRequiredService<IUserSessionService>()
+            .LoginAsync(request, cancellationToken);
 
         if (outcome is { Succeeded: true, User: { } user })
         {

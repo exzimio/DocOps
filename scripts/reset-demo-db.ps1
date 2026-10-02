@@ -16,6 +16,11 @@
 
     Não arranca a API: o Playwright faz isso por si, e ao arrancar ela remigra e semeia de novo.
 
+    Recria as três identidades depois de largar a base. Os utilizadores de base de dados vivem
+    dentro dela, e largá-la leva-os com ela: a suíte deixou de arrancar por isto, com a API a
+    procurar `app_system` numa base onde já não havia nenhum. Os logins ficam, porque são do
+    servidor; os utilizadores não.
+
 .EXAMPLE
     pwsh scripts/reset-demo-db.ps1
     cd tests/e2e; npm run test:clean
@@ -42,6 +47,28 @@ docker exec -u root $container bash -c `
     "rm -f /var/opt/mssql/data/$database.mdf /var/opt/mssql/data/${database}_log.ldf" 2>&1 |
     Out-String |
     Write-Verbose
+
+# As identidades, outra vez. O guião é repetível e cria a base de dados se ela faltar, que é o
+# caso aqui: a API liga-se como `app_tenant` e `app_system`, e nenhum dos dois existe numa base
+# recém-criada. As palavras-passe são as mesmas do `appsettings.Development.json`, e valem só nesta
+# máquina.
+Write-Host 'A recriar as identidades da base de dados...'
+
+$identidades = Join-Path $PSScriptRoot 'create-database-identities.sql'
+
+docker cp $identidades "${container}:/tmp/create-database-identities.sql" | Out-Null
+
+docker exec $container /opt/mssql-tools18/bin/sqlcmd `
+    -S localhost -U sa -P 'Local_Dev_Passw0rd!' -C -b `
+    -v AppTenantPassword='Qx7_Local_Dev_91!' AppSystemPassword='Vb3_Local_Dev_42!' `
+    MigratorPassword='Mg5_Local_Dev_73!' `
+    -i /tmp/create-database-identities.sql |
+    Out-String |
+    Write-Verbose
+
+if ($LASTEXITCODE -ne 0) {
+    throw "A criação das identidades falhou (código $LASTEXITCODE). Sem elas a API não arranca."
+}
 
 $storage = Join-Path $root 'src/Api/storage'
 

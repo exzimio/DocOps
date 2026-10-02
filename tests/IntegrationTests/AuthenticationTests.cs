@@ -7,6 +7,7 @@ using DocOps.Domain.Identity;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -133,8 +134,8 @@ public class AuthenticationTests(DocOpsApiFactory factory)
         await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, "Wrong!Password9"));
         await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, DocOpsApiFactory.SeedPassword));
 
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         List<AuditEvent> events = await context.AuditEvents
             .IgnoreQueryFilters()

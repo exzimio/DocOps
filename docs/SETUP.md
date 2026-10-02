@@ -49,6 +49,33 @@ Um servidor **sem** o componente também serve: a migração que cria os índice
 aplicação arranca na mesma, e a pesquisa passa a comparar por subcadeia — dizendo-o em cada
 resposta e no ecrã. É o que acontece nos testes de integração, que levantam a imagem oficial.
 
+## 3.1 As três identidades da base de dados
+
+**Sem este passo a API não arranca**, e é de propósito. A política de segurança ao nível da linha
+nega por omissão: uma ligação que não declara organização não vê linha nenhuma, e a dispensa exige a
+identidade `app_system`, não apenas uma chave no contexto da sessão. Ligar-se como `sa` daria uma
+aplicação saudável a ver zero linhas, que é a pior falha possível aqui.
+
+```bash
+docker cp scripts/create-database-identities.sql docops-sqlserver:/tmp/
+docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b \
+  -v AppTenantPassword='Qx7_Local_Dev_91!' AppSystemPassword='Vb3_Local_Dev_42!' \
+     MigratorPassword='Mg5_Local_Dev_73!' \
+  -i /tmp/create-database-identities.sql
+```
+
+As palavras-passe acima são as que o `appsettings.Development.json` já traz, e valem só nesta
+máquina. O guião cria a base de dados se ela faltar e pode voltar a correr sem efeito.
+
+| Identidade | Quem a usa | O que pode |
+| --- | --- | --- |
+| `app_tenant` | Todos os pedidos normais | Ler e escrever dados |
+| `app_system` | Autenticação, worker, semeadura | O mesmo, e é o nome que a política aceita para dispensa |
+| `docops_migrator` | Só o passo de migração | Alterar o esquema, e é o único que pode |
+
+Em [`SECURITY.md`](SECURITY.md), secção 4.1, está o que foi medido e o que fica por fechar.
+
 ## 4. Migrações e dados de demonstração
 
 Em ambiente de desenvolvimento a API aplica as migrações e semeia os dados no arranque
@@ -56,13 +83,16 @@ Em ambiente de desenvolvimento a API aplica as migrações e semeia os dados no 
 idempotente: pode arrancar as vezes que quiser sem duplicar dados nem perder alterações feitas na
 interface.
 
-Para executar as migrações manualmente:
+Para executar as migrações manualmente. **A cadeia tem de ser indicada**: sem `--connection`, o
+`dotnet ef` liga-se pela configuração da API, que é `app_tenant`, e essa identidade não altera o
+esquema.
 
 ```bash
 dotnet tool restore
 dotnet ef database update \
   --project src/Infrastructure/DocOps.Infrastructure.csproj \
-  --startup-project src/Api/DocOps.Api.csproj
+  --startup-project src/Api/DocOps.Api.csproj \
+  --connection "Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=docops_migrator;Password=Mg5_Local_Dev_73!;TrustServerCertificate=True;Encrypt=True"
 ```
 
 Criar uma nova migração:
@@ -80,6 +110,10 @@ Recomeçar do zero (apaga os dados locais, incluindo os ficheiros carregados):
 docker compose down -v && docker compose up -d
 rm -rf src/Api/storage
 ```
+
+Depois disso, as identidades da secção 3.1 outra vez: os utilizadores de base de dados vivem dentro
+dela, e largá-la leva-os com ela. O `scripts/reset-demo-db.ps1`, que a suíte end-to-end corre antes
+de cada execução, faz as duas coisas de seguida.
 
 Os ficheiros dos documentos ficam em `src/Api/storage`, organizados por organização e por documento.
 A pasta é ignorada pelo Git.
@@ -160,7 +194,9 @@ npm --prefix src/Web run format:check
 
 | Variável | Predefinição | Para que serve |
 | --- | --- | --- |
-| `ConnectionStrings__DocOpsDatabase` | ver `appsettings.Development.json` | Ligação ao SQL Server |
+| `ConnectionStrings__DocOpsDatabase` | ver `appsettings.Development.json` | Ligação como `app_tenant`, para os pedidos normais |
+| `ConnectionStrings__DocOpsSystem` | ver `appsettings.Development.json` | Ligação como `app_system`. **Obrigatória**: sem ela a aplicação recusa arrancar, porque cair para a cadeia normal faria os caminhos de sistema ver zero linhas sem erro |
+| `ConnectionStrings__DocOpsMigrator` | ver `appsettings.Development.json` | Ligação como `docops_migrator`. Exigida só por quem migra |
 | `Cors__AllowedOrigins__0` | `http://localhost:5173` | Origens autorizadas a chamar a API com credenciais |
 | `Seed__ApplyMigrations` | `true` em desenvolvimento | Aplicar migrações no arranque |
 | `Seed__Enabled` | `true` em desenvolvimento | Criar os dados de demonstração |

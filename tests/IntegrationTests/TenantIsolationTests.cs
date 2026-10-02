@@ -6,6 +6,7 @@ using DocOps.Domain.Tenancy;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using DocOps.Application.Abstractions;
 
 namespace DocOps.IntegrationTests;
 
@@ -61,7 +62,7 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
     {
         (Guid asteriaId, Guid verticeId) = await GetTenantIdsAsync();
 
-        using IServiceScope scope = factory.CreateServiceScope();
+        using ISystemScope scope = factory.CreateServiceScope();
         DocOpsDbContext scopedContext = CreateContextFor(scope, asteriaId);
 
         List<Department> visible = await scopedContext.Departments.ToListAsync();
@@ -76,7 +77,7 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
     {
         (Guid asteriaId, Guid verticeId) = await GetTenantIdsAsync();
 
-        using IServiceScope scope = factory.CreateServiceScope();
+        using ISystemScope scope = factory.CreateServiceScope();
         DocOpsDbContext scopedContext = CreateContextFor(scope, asteriaId);
 
         scopedContext.Departments.Add(new Department
@@ -97,7 +98,7 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
     {
         (Guid asteriaId, _) = await GetTenantIdsAsync();
 
-        using IServiceScope scope = factory.CreateServiceScope();
+        using ISystemScope scope = factory.CreateServiceScope();
         DocOpsDbContext scopedContext = CreateContextFor(scope, asteriaId);
 
         Department department = new() { Name = "Quality Assurance", Code = $"QA{Random.Shared.Next(1000, 9999)}" };
@@ -116,7 +117,7 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
     {
         (Guid asteriaId, _) = await GetTenantIdsAsync();
 
-        using IServiceScope scope = factory.CreateServiceScope();
+        using ISystemScope scope = factory.CreateServiceScope();
         DocOpsDbContext scopedContext = CreateContextFor(scope, asteriaId);
 
         Department department = new() { Name = "Temporary Unit", Code = $"TMP{Random.Shared.Next(1000, 9999)}" };
@@ -140,8 +141,8 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
     [Fact]
     public async Task Audit_rows_cannot_be_modified_or_deleted_by_the_application()
     {
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         AuditEvent existing = await context.AuditEvents.IgnoreQueryFilters().FirstAsync();
 
@@ -162,8 +163,8 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
 
     private async Task<(Guid Asteria, Guid Vertice)> GetTenantIdsAsync()
     {
-        using IServiceScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.ServiceProvider.GetRequiredService<DocOpsDbContext>();
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 
         Guid asteria = await context.Tenants.Where(t => t.Slug == "asteria-group").Select(t => t.Id).SingleAsync();
         Guid vertice = await context.Tenants.Where(t => t.Slug == "vertice-industrial").Select(t => t.Id).SingleAsync();
@@ -175,6 +176,6 @@ public class TenantIsolationTests(DocOpsApiFactory factory)
     /// Builds a context bound to a specific tenant, wired with the same interceptors the application
     /// uses — otherwise the test would exercise a pipeline the product does not run.
     /// </summary>
-    private DocOpsDbContext CreateContextFor(IServiceScope scope, Guid tenantId) =>
+    private DocOpsDbContext CreateContextFor(ISystemScope scope, Guid tenantId) =>
         TenantScopedContext.Create(scope, factory.DatabaseConnectionString, tenantId);
 }

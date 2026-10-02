@@ -151,14 +151,19 @@ Documentação detalhada: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
   o frontend apenas esconde o que o utilizador não pode usar.
 - **Tenant nunca vem do cliente.** O identificador da organização é lido exclusivamente das *claims*
   do cookie de sessão. Não existe rota, cabeçalho ou campo que o aceite.
-- **Isolamento em duas camadas.** Filtros globais de consulta impedem leituras cruzadas;
-  `TenantGuardInterceptor` recusa escritas cruzadas com exceção explícita e registo de erro.
+- **Isolamento na aplicação e no motor.** Filtros globais de consulta impedem leituras cruzadas e
+  o `TenantGuardInterceptor` recusa escritas cruzadas; por baixo, uma política de segurança ao nível
+  da linha do SQL Server **nega por omissão**, de forma que uma ligação que não declara organização
+  não vê linha nenhuma. Vale para quem se liga por fora, e vale para `sa`.
+- **Três identidades de base de dados.** `app_tenant` atende pedidos, `app_system` é o nome que a
+  política aceita para dispensa, e `docops_migrator` é o único que altera o esquema. A dispensa não é
+  uma chave que se escreva: é uma chave **mais** a identidade certa.
 - **Permissões, não perfis.** Os *endpoints* exigem permissões (`documents.approve`), guardadas como
   *claims* de perfil na base de dados e editáveis sem novo *deploy*.
 - **Sessão em cookie `HttpOnly`, `SameSite=Lax`.** Nenhum token é acessível a JavaScript. CSRF é
   mitigado pelo `SameSite` e por validação de `Origin`/`Referer` em todos os métodos que alteram estado.
 - **Auditoria imutável.** A aplicação recusa alterar ou apagar registos de auditoria; a base de dados
-  revoga `UPDATE`/`DELETE` ao *login* aplicacional.
+  revoga `UPDATE`/`DELETE` aos utilizadores da aplicação.
 
 Detalhe completo: [`docs/SECURITY.md`](docs/SECURITY.md).
 
@@ -532,6 +537,7 @@ necessário para correr o projeto localmente.
 | Worker em processo separado | Trabalho em segundo plano dentro da API | Trabalho periódico e lento não partilha recursos com pedidos de utilizadores |
 | Indicadores calculados no momento | Tabela de agregados mantida por um processo à parte, ou cache | Paga-se latência para nunca haver um painel que discorda da lista ao lado; ver [ADR-010](docs/adr/ADR-010-analytics-from-queries.md) |
 | Medida sem base devolve `null` | Devolver zero, como quase todos os painéis | Zero afirma que se mediu; num período sem nada para medir é uma mentira com aspeto de facto |
+| Negar por omissão no motor, com três identidades | Confiar nos filtros do EF Core e documentar a limitação | Uma ligação que não declara organização vê zero linhas, e a dispensa exige a identidade `app_system`; ver [ADR-011](docs/adr/ADR-011-row-level-security-deny-by-default.md) |
 
 ## 19. Melhorias futuras
 

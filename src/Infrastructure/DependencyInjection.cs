@@ -47,6 +47,13 @@ public static class DependencyInjection
 {
     public const string ConnectionStringName = "DocOpsDatabase";
 
+    /// <summary>
+    /// A cadeia que se liga com <c>app_system</c>, a identidade que o predicado da política aceita
+    /// para dispensa. Separada da normal porque a dispensa não é uma chave que se escreva: é uma
+    /// chave mais a identidade certa.
+    /// </summary>
+    public const string SystemConnectionStringName = "DocOpsSystem";
+
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
     {
@@ -253,21 +260,53 @@ public static class DependencyInjection
         services.AddScoped<IPortalService, PortalService>();
     }
 
+    private static string? Optional(IConfiguration configuration, string name)
+    {
+        string? value = configuration.GetConnectionString(name);
+
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static string Required(IConfiguration configuration, string name) =>
+        Optional(configuration, name)
+        ?? throw new InvalidOperationException(
+            $"Connection string '{name}' is not configured. See SETUP.md.");
+
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration, bool isDevelopment)
     {
-        string connectionString = configuration.GetConnectionString(ConnectionStringName)
-            ?? throw new InvalidOperationException(
-                $"Connection string '{ConnectionStringName}' is not configured. See SETUP.md.");
+        // `GetConnectionString` devolve a cadeia tal como está configurada, e os ficheiros base
+        // declaram os nomes em branco para dizer o que há a configurar. Em branco é ausência, e não
+        // cadeia: sem isso, o que chegaria ao SQL Server era uma cadeia vazia.
+        string connectionString = Required(configuration, ConnectionStringName);
+
+        // A cadeia de sistema liga-se com `app_system`, a identidade que o predicado da política
+        // aceita para dispensa. É obrigatória, e não tem alternativa por omissão.
+        //
+        // Já teve: caía para a cadeia normal. Com a política a negar por omissão, isso passou a ser
+        // o pior resultado possível. O código julgaria ter dispensa, `USER_NAME()` não seria
+        // `app_system`, a base continuaria a filtrar, e cada caminho de sistema devolveria uma lista
+        // vazia sem erro nenhum: a autenticação não encontraria o utilizador, o worker não veria
+        // tarefas, a semeadura semearia por cima do que não vê. Recusar arrancar diz o que falta.
+        string systemConnectionString = Required(configuration, SystemConnectionStringName);
 
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<TenantGuardInterceptor>();
+        services.AddScoped<DatabaseModeAccessor>();
+        services.AddScoped<IDatabaseModeAccessor>(sp => sp.GetRequiredService<DatabaseModeAccessor>());
+        services.AddSingleton<ISystemScopeFactory, SystemScopeFactory>();
         services.AddScoped<TenantSessionContextInterceptor>();
         services.AddScoped<SoftDeleteInterceptor>();
         services.AddSingleton<AuditImmutabilityInterceptor>();
 
         services.AddDbContext<DocOpsDbContext>((serviceProvider, options) =>
         {
-            options.UseSqlServer(connectionString, sql =>
+            // A fábrica corre por âmbito, e o modo já foi decidido quando o âmbito nasceu: um âmbito
+            // de sistema eleva-se antes de alguém resolver o contexto. O modo não pode mudar a meio,
+            // porque o contexto da sessão fica só de leitura depois de escrito.
+            bool sistema =
+                serviceProvider.GetRequiredService<IDatabaseModeAccessor>().Mode == DatabaseMode.System;
+
+            options.UseSqlServer(sistema ? systemConnectionString : connectionString, sql =>
             {
                 sql.MigrationsAssembly(typeof(DocOpsDbContext).Assembly.GetName().Name);
                 sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
