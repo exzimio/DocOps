@@ -11,12 +11,16 @@ namespace DocOps.Infrastructure.Persistence.Migrations
     /// ninguém os desligar. Já falharam uma vez neste projeto: <c>IgnoreQueryFilters()</c> dentro
     /// de uma projeção desligou-os para a consulta inteira e um administrador de uma organização
     /// viu etiquetas de outra. O guarda que impede esse padrão de voltar trata aquele padrão; SQL
-    /// escrito à mão, uma ferramenta de relatórios ligada diretamente à base, ou um caminho que
-    /// ninguém previu não passam por nenhum dos dois.
+    /// escrito à mão dentro da aplicação, um procedimento armazenado, ou um caminho que não passe
+    /// pelo EF não passam por nenhum dos dois.
     ///
-    /// Esta política está abaixo de tudo isso. Aplica-se a qualquer consulta que chegue ao motor,
-    /// venha de onde vier, e inclusive a quem entra como <c>sa</c>: a segurança ao nível da linha
-    /// não isenta administradores.
+    /// Esta política está abaixo de tudo isso. Aplica-se a qualquer consulta que corra numa ligação
+    /// da aplicação, e inclusive a quem entra como <c>sa</c>: a segurança ao nível da linha não
+    /// isenta administradores.
+    ///
+    /// <b>Não alcança quem se liga por fora.</b> Uma ferramenta externa não escreve
+    /// <c>SESSION_CONTEXT</c>, e o predicado deixa passar quando ele está vazio: vê todas as
+    /// organizações. É consequência direta da decisão descrita a seguir.
     ///
     /// <b>Sem organização no contexto, passa tudo.</b> É deliberado e é a mesma semântica dos
     /// filtros do EF: o worker corre acima de todas as organizações, e as migrações e a semeadura

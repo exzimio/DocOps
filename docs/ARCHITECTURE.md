@@ -644,9 +644,15 @@ aplicação já falhou aqui. A primeira parede são os filtros globais do EF Cor
 entidade, com um teste que falha a suite se alguma entidade com `TenantId` ficar sem filtro. A
 segunda é uma política de segurança ao nível da linha no SQL Server, sobre as mesmas tabelas.
 
-A diferença entre as duas não é redundância: é **alcance**. A primeira protege o que passa pelo EF.
-A segunda protege o que chega ao motor, venha de onde vier — EF, SQL cru, uma ferramenta ligada
-diretamente à base, ou um caminho que ainda não existe.
+A diferença entre as duas não é redundância: é **alcance dentro da aplicação**. A primeira protege o
+que passa pelo EF. A segunda protege tudo o que corre numa ligação da aplicação, incluindo SQL
+escrito à mão, procedimentos armazenados e qualquer caminho novo que não passe pelo EF.
+
+**O que ela não protege, e vale a pena ser exato:** uma ferramenta externa ligada diretamente à base
+de dados não escreve `SESSION_CONTEXT`, e o predicado deixa passar quando ele está vazio. Logo vê
+todas as organizações. A segunda parede estende o alcance da primeira a caminhos que ela não cobria,
+mas não alcança quem se liga por fora. Ver [`SECURITY.md`](SECURITY.md), secção 4.1, para o que
+seria preciso para a fechar também.
 
 A ligação entre elas é o `SESSION_CONTEXT`: o interceptor escreve nele a organização a cada abertura
 de ligação, e o predicado da política lê-o. Sem esse valor escrito, a política não sabe por quem

@@ -16,9 +16,14 @@ namespace DocOps.Infrastructure.Persistence;
 /// defesa na camada de aplicação: protegem as consultas que passam pelo EF, e só enquanto ninguém
 /// as desligar. Já falharam uma vez neste projeto — <c>IgnoreQueryFilters()</c> dentro de uma
 /// projeção desligou-os para a consulta inteira e um administrador de uma organização viu etiquetas
-/// de outra. O guarda que impede esse padrão de voltar é bom, mas trata aquele padrão. SQL escrito
-/// à mão, uma ferramenta de relatórios ligada diretamente à base, ou um caminho novo que ninguém
-/// previu, não passam por nenhum dos dois. Passam pelo motor, e é aí que esta segunda parede está.
+/// de outra. O guarda que impede esse padrão de voltar é bom, mas trata aquele padrão: SQL escrito
+/// à mão dentro da aplicação, um procedimento armazenado, ou um caminho novo que não passe pelo EF
+/// não passam por nenhum dos dois. Passam pelo motor, e é aí que esta segunda parede está.
+///
+/// <b>O que ela não alcança:</b> quem se liga à base por fora da aplicação nunca escreve este
+/// valor, e o predicado deixa passar quando ele está vazio. Uma ferramenta de relatórios ligada
+/// diretamente vê todas as organizações. Fechar isso obrigaria a negar por omissão, com uma chave
+/// de dispensa explícita para o worker e para a semeadura.
 ///
 /// O valor é escrito em cada abertura de ligação, e não uma vez por processo, porque o agrupamento
 /// de ligações entrega a mesma ligação física a pedidos de organizações diferentes. O

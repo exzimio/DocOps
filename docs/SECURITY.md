@@ -88,11 +88,29 @@ administradores, e é essa a diferença entre uma defesa na aplicação e uma de
 verificado desligando a política e voltando a ligá-la com a mesma sessão: uma organização visível
 com ela ligada, duas com ela desligada.
 
-**Sem organização no contexto, a política deixa passar.** É deliberado, e é a mesma semântica dos
-filtros do EF: o worker corre acima de todas as organizações, e as migrações e a semeadura também. A
-variante mais forte seria negar por omissão e exigir uma chave de dispensa explícita para esses
-casos — fica por fazer, porque transformaria qualquer contexto em falta num ecrã vazio silencioso, e
-essa troca merece ser feita com a história de implantação já construída.
+**Sem organização no contexto, a política deixa passar, e isso tem uma consequência que é preciso
+dizer por extenso.** É deliberado — o worker corre acima de todas as organizações, e as migrações e
+a semeadura também —, mas significa que **a política só protege quem se liga através da aplicação**.
+Uma ferramenta de relatórios, um cliente de SQL ou qualquer processo que abra a sua própria ligação
+não escreve `SESSION_CONTEXT`, e vê todas as organizações.
+
+Dito de outra forma: a segunda parede estende o alcance da primeira a caminhos que ela não cobria
+(SQL cru dentro da aplicação, procedimentos armazenados, código futuro que não passe pelo EF), e
+**não** fecha o acesso direto à base de dados. Quem tem a cadeia de ligação continua a ver tudo.
+
+As duas formas de fechar isso, por ordem de força:
+
+1. **Negar por omissão:** o predicado passa a exigir organização **ou** uma chave de dispensa
+   explícita, escrita pela aplicação nos casos que precisam dela. Quem se liga por fora não escreve
+   nenhuma das duas e deixa de ver seja o que for. Não protege contra quem conheça a chave e a
+   escreva, mas tira do caminho o caso realista: a ligação inocente que vê tudo sem querer.
+2. **Separar por utilizador de base de dados:** a dispensa passa a depender de pertencer a um perfil
+   do SQL Server que a aplicação tem e um utilizador de relatórios não tem. É a resposta completa, e
+   só faz sentido com contas de serviço a sério, que é trabalho de implantação e não existe aqui.
+
+A primeira está por fazer porque transformaria qualquer contexto em falta num ecrã vazio silencioso,
+e exigiria dispensa explícita em caminhos que correm antes de haver organização, a começar pela
+própria autenticação, que procura a conta por e-mail antes de saber a que organização pertence.
 
 **Só predicados de filtro, não de bloqueio.** A fuga que motivou isto era de leitura, e a atribuição
 da organização na escrita já é feita pelo `TenantGuardInterceptor`. O predicado de bloqueio na
