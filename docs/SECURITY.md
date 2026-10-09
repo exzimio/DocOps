@@ -31,7 +31,7 @@ aplicação deve estar atrás de HSTS.
 ## 3. Autorização
 
 - Os *endpoints* exigem **permissões**, não perfis: `[HasPermission(Permissions.DocumentsApprove)]`.
-- As permissões são *claims* de perfil guardadas em `AspNetRoleClaims` — administráveis sem novo
+- As permissões são *claims* de perfil guardadas em `AspNetRoleClaims`, administráveis sem novo
   *deploy* e auditáveis como qualquer outra alteração.
 - O `PermissionPolicyProvider` gera políticas a pedido; acrescentar uma permissão não exige alterar
   o arranque da aplicação.
@@ -47,7 +47,7 @@ aplicação deve estar atrás de HSTS.
   total e a paginação não revelem a existência de documentos que o utilizador não pode ver.
 - As tarefas seguem a mesma lógica: uma tarefa é visível a quem a tem atribuída e a quem pertence ao
   departamento ou perfil a que foi oferecida. Agir sobre ela exige `tasks.act`, e reatribuir exige
-  `tasks.reassign` — ver uma tarefa nunca basta para a decidir.
+  `tasks.reassign`: ver uma tarefa nunca basta para a decidir.
 - As ações disponíveis numa tarefa são calculadas no servidor e enviadas com ela; a interface
   apresenta o que lhe é dito, e cada *endpoint* volta a verificar a mesma regra antes de agir.
 
@@ -68,11 +68,11 @@ aplicação deve estar atrás de HSTS.
 > [ADR-011](adr/ADR-011-row-level-security-deny-by-default.md).
 
 Os filtros globais do EF Core são uma defesa **na camada de aplicação**. Protegem as consultas que
-passam pelo EF, e só enquanto ninguém os desligar. Já falharam uma vez neste projeto: o defeito 52
-foi uma fuga verdadeira entre organizações, porque `IgnoreQueryFilters()` dentro de uma projeção
-desliga os filtros da consulta inteira. Existe desde então um guarda que impede esse padrão de
-voltar — mas um guarda trata o padrão que conhece. SQL escrito à mão não passa por ele. Uma
-ferramenta de relatórios ligada diretamente à base também não.
+passam pelo EF, e só enquanto ninguém os desligar, e desligá-los por engano é fácil:
+`IgnoreQueryFilters()` dentro de uma projeção desliga os filtros da consulta inteira, incluindo o da
+organização. Um analisador de Roslyn impede esse padrão de entrar no código, mas um analisador trata
+o padrão que conhece. SQL escrito à mão não passa por ele, e uma ferramenta de relatórios ligada
+diretamente à base também não.
 
 Por baixo disso está uma **política de segurança ao nível da linha do SQL Server**, sobre as 26
 tabelas que têm `TenantId`:
@@ -81,7 +81,7 @@ tabelas que têm `TenantId`:
 | --- | --- |
 | `TenantSessionContextInterceptor` | Escreve a organização em `SESSION_CONTEXT` a cada abertura de ligação, marcada como só de leitura |
 | `security.fn_TenantAccessPredicate` | Função *inline* com `SCHEMABINDING`: entra no plano da consulta em vez de ser chamada linha a linha |
-| `security.TenantIsolationPolicy` | Predicado de filtro nas 26 tabelas |
+| `security.TenantIsolationPolicy` | Predicados de filtro e de bloqueio nas 26 tabelas |
 
 O valor é escrito **em cada abertura de ligação**, e não uma vez por processo, porque o agrupamento
 de ligações entrega a mesma ligação física a pedidos de organizações diferentes. É marcado como só
@@ -112,15 +112,13 @@ medido, não deduzido:
 | `app_tenant` | A organização | só a dela |
 | `app_system` | O modo de sistema | todas |
 
-Isto fecha o que a versão anterior desta secção dizia em letra miúda e que o projeto chegou a
-afirmar ao contrário: a política deixava passar quando não havia organização no contexto, logo
-**uma ferramenta de relatórios ligada diretamente à base via todas as organizações** — ela nunca
-escreve `SESSION_CONTEXT`. A segunda parede só protegia quem já estava protegido pela primeira.
+É isto que torna a política útil contra quem se liga por fora: uma ferramenta de relatórios ligada
+diretamente à base nunca escreve `SESSION_CONTEXT`, e por isso não vê organização nenhuma.
 
 ### Três identidades, e nenhuma faz o trabalho das outras
 
 Negar por omissão só vale se a dispensa não estiver ao alcance de quem atende pedidos, e isso é uma
-questão de com quem a aplicação se liga. Passou a haver três identidades
+questão de com quem a aplicação se liga. Há três identidades
 (`scripts/create-database-identities.sql`):
 
 | Identidade | Quem a usa | O que pode | O que não pode |
@@ -138,23 +136,21 @@ passo separado, que corre e termina antes de a aplicação arrancar.
 `IMPERSONATE` fica negado explicitamente: quem o tivesse sobre `app_system` ganhava a dispensa com um
 `EXECUTE AS`, e a parede deixava de ser parede.
 
-**Porquê `USER_NAME()` e não a pertença a um perfil.** Também foi medido, porque havia aqui uma
-suposição escrita neste documento que estava errada: um membro de `sysadmin` obtém `0` em
-`IS_ROLEMEMBER` de um perfil de que não é membro. Qualquer das duas formas serviria; ficou a
+**Porquê `USER_NAME()` e não a pertença a um perfil.** Um membro de `sysadmin` obtém `0` em
+`IS_ROLEMEMBER` de um perfil de que não é membro, por isso qualquer das duas formas serviria. Ficou a
 comparação direta por ser mais fácil de verificar ao ler o predicado, sem depender de quem foi
 acrescentado a que perfil ao longo do tempo.
 
 ### A falha silenciosa que esta proteção poderia criar
 
 Negar por omissão tem um modo de falhar pior do que não ter política nenhuma: código que **julga**
-ter dispensa e não tem devolve listas vazias, sem erro. Aconteceu durante a implementação — a
-semeadura correu num âmbito normal e o ASP.NET Core Identity leu a ausência de linhas como conflito
-de concorrência, uma mensagem que não aponta para causa nenhuma.
+ter dispensa e não tem devolve listas vazias, sem erro. O ASP.NET Core Identity, por exemplo, lê a
+ausência de linhas como um conflito de concorrência, uma mensagem que não aponta para causa nenhuma.
 
 Três coisas fecham isso:
 
-- A cadeia de sistema é **obrigatória**. Já caía para a cadeia normal quando faltava; agora a
-  aplicação recusa arrancar, porque cair em silêncio significaria exatamente o cenário acima.
+- A cadeia de sistema é **obrigatória**: sem ela a aplicação recusa arrancar, porque cair para a
+  cadeia normal seria exatamente o cenário acima.
 - O âmbito de sistema eleva-se **antes** de qualquer ligação abrir. O contexto da sessão fica só de
   leitura depois de escrito, e por isso o modo não pode mudar a meio.
 - `RowLevelSecurityTests` corre contra identidades reais. Os testes de integração criam as mesmas
@@ -167,9 +163,9 @@ trabalho de um predicado: fecha-se não dando essa credencial a ninguém, e fica
 limite assumido em vez de ficar implícito. O que a política fecha é o caso realista, que é a ligação
 com a cadeia da aplicação, ou com a de uma ferramenta de leitura, a ver o que não lhe pertence.
 
-**E predicados de bloqueio na escrita, não só de filtro na leitura.** A fuga que motivou tudo isto
-era de leitura, e a atribuição da organização na escrita era feita só pelo
-`TenantGuardInterceptor` — código da aplicação, a mesma classe de defesa que já falhou aqui uma vez.
+**E predicados de bloqueio na escrita, não só de filtro na leitura.** Na escrita, a organização é
+atribuída pelo `TenantGuardInterceptor`, que é código da aplicação e, como os filtros, não alcança
+SQL escrito à mão.
 Cada uma das 26 tabelas tem três predicados de bloqueio, e a função que decide quem lê é a mesma que
 decide quem escreve, de forma que as duas regras não podem divergir:
 
@@ -190,17 +186,17 @@ Fica escrito em `DatabaseMigrator` para quem escrever a próxima; desligar a pol
 
 `RowLevelSecurityTests` prova nove coisas, todas com ligações e identidades reais: que uma ligação
 que não declara nada não vê nada; que **saber a chave da dispensa não chega sem a identidade
-certa**; que `IgnoreQueryFilters()` deixou de alcançar a outra organização; que SQL cru também não
+certa**; que `IgnoreQueryFilters()` não alcança a outra organização; que SQL cru também não
 alcança; que SQL cru não consegue **gravar** numa organização alheia; que não consegue **mover** uma
 linha para ela; que não consegue alterar nem apagar um registo de auditoria; que o modo de sistema
 continua a alcançar todas as organizações; e que **nenhuma tabela com `TenantId` ficou sem
-predicado** — lido da própria base de dados, não do código.
+predicado**, lido da própria base de dados e não do código.
 
 ## 5. Proteção contra CSRF
 
 O cookie é `SameSite=Lax`, o que impede o browser de o enviar em pedidos `POST` originados noutro
 sítio. Adicionalmente, `CookieOriginValidationMiddleware` recusa qualquer método que altere estado
-(`POST`, `PUT`, `PATCH`, `DELETE`) cujo `Origin` — ou, na ausência deste, o `Referer` — não seja a
+(`POST`, `PUT`, `PATCH`, `DELETE`) cujo `Origin` (ou, na ausência deste, o `Referer`) não seja a
 própria aplicação ou uma origem explicitamente autorizada. A resposta é `403` com
 `code: origin_not_allowed` e fica registada.
 
@@ -234,11 +230,12 @@ no alojamento estático do frontend.
 | Global | 300 pedidos por minuto por utilizador autenticado ou endereço IP |
 | Autenticação | 10 tentativas por 5 minutos por endereço IP |
 
-Excedido o limite, a resposta é `429`. A limitação por IP complementa — não substitui — o bloqueio de
-conta do Identity, que é por conta e, por isso, imune à partilha de endereço.
+Excedido o limite, a resposta é `429`. A limitação por IP complementa o bloqueio de
+conta do Identity, e não o substitui: o bloqueio é por conta e, por isso, imune à partilha de endereço.
 
-Os limites são configuráveis (secção `RateLimiting`) porque num ambiente com endereço partilhado —
-escritório atrás de NAT, *runner* de CI, máquina local a correr toda a bateria de testes — um limite
+Os limites são configuráveis (secção `RateLimiting`) porque num ambiente com endereço partilhado,
+como um escritório atrás de NAT, um *runner* de CI ou uma máquina local a correr toda a bateria de
+testes, um limite
 por IP penaliza utilizadores legítimos. O ambiente de desenvolvimento eleva o limite de autenticação
 para 100; produção usa as predefinições.
 
@@ -250,14 +247,14 @@ para 100; produção usa as predefinições.
 - O comprimento da palavra-passe é limitado antes do cálculo de *hash*, o que evita trabalho
   criptográfico desnecessário com cargas grandes.
 - Carregamento de ficheiros: lista branca de extensões e de tipos de conteúdo, dimensão máxima
-  configurável, nome de ficheiro higienizado e chave de armazenamento gerada pelo servidor — um nome
+  configurável, nome de ficheiro higienizado e chave de armazenamento gerada pelo servidor: um nome
   de ficheiro manipulado não consegue escapar da raiz de armazenamento, e o caminho resolvido é
   validado contra essa raiz antes de qualquer leitura ou escrita.
 - **Os primeiros bytes têm de corresponder à extensão.** A extensão e o tipo de conteúdo vêm ambos
   do cliente e forjam-se os dois: um executável chamado `relatorio.pdf` e declarado como
   `application/pdf` passava nas duas verificações anteriores. `FileSignatures` confere a assinatura
   do formato (`%PDF`, `PK` para os formatos Office modernos, OLE2 para os antigos, e assim por
-  diante); para os formatos de texto, que não têm assinatura, a regra é a inversa — não podem
+  diante); para os formatos de texto, que não têm assinatura, a regra é a inversa: não podem
   começar por nenhuma assinatura binária conhecida nem conter bytes nulos.
 - **O tipo de conteúdo guardado é derivado da extensão verificada, não o que o cliente declarou.**
   Depois de os bytes confirmarem o formato, a declaração do cliente deixa de ter utilidade, e
@@ -282,9 +279,8 @@ DENY UPDATE, DELETE ON dbo.[AuditEvents] TO [app_tenant];
 DENY UPDATE, DELETE ON dbo.[AuditEvents] TO [app_system];
 ```
 
-Isto esteve escrito aqui como recomendação para produção durante oito fases, e valia pouco: enquanto
-a aplicação se ligava com privilégios altos não havia a quem recusar. Com identidades próprias há.
-A aplicação só insere registos de auditoria, portanto a recusa não lhe tira nada; o que tira é a
+A recusa só é possível porque a aplicação tem identidades próprias: com uma ligação de privilégios
+altos, não haveria a quem recusar. A aplicação só insere registos de auditoria, portanto a recusa não lhe tira nada; o que tira é a
 possibilidade de um caminho futuro alterar um registo sem que ninguém repare.
 
 Quem migra continua a poder, porque alterar o esquema implica poder: o `AuditEvents` é tão alcançável
@@ -301,9 +297,8 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 ## 11. Gestão de segredos
 
 - O repositório não contém segredos de produção.
-- As credenciais versionadas são as do SQL Server de desenvolvimento, e são quatro desde que a
-  aplicação deixou de se ligar como administrador: a do contentor e as das três identidades
-  (`app_tenant`, `app_system`, `docops_migrator`). O contentor publica só em `127.0.0.1`, e as
+- As credenciais versionadas são as do SQL Server de desenvolvimento: a do contentor e as das três
+  identidades (`app_tenant`, `app_system`, `docops_migrator`). O contentor publica só em `127.0.0.1`, e as
   palavras-passe estão nos ficheiros de desenvolvimento, no `docker-compose.full.yml` e na integração
   contínua, cada um com valores próprios e nenhum deles usado fora da máquina ou do executor.
 - **Em produção, as três passam por variáveis de ambiente.** O `docker-compose.full.yml` lê
@@ -343,21 +338,21 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 | Fuga de informação pela contagem de resultados | O predicado de permissões faz parte da consulta: o total é o total que quem pergunta pode conhecer, não o que existe |
 | Excerto a realçar o que o documento não diz | A posição do realce vem do servidor, que a encontrou no texto guardado; a interface não volta a procurar e recusa um intervalo que não caiba no excerto |
 | Exposição da lista de pessoas da organização | `/api/tenants/current/users` devolve nome e departamento, nada mais, só a quem já pode ver documentos, e apenas da própria organização |
-| Correio de uma organização visível noutra | Filtro de consulta por organização em `EmailMessage` e `EmailAttachment` — e um teste que enumera todas as entidades com `TenantId` e falha se alguma ficar sem filtro |
+| Correio de uma organização visível noutra | Filtro de consulta por organização em `EmailMessage` e `EmailAttachment`, e um teste que enumera todas as entidades com `TenantId` e falha se alguma ficar sem filtro |
 | Entrada de documentos por porta lateral | O que a caixa de entrada produz passa pelo `IDocumentService` e pelo `IWorkflowService`, com a validação, as permissões e a auditoria de sempre |
 | Associar uma mensagem a um documento que o utilizador não pode ver | O documento é carregado e verificado com `DocumentAccessLevel.View` antes de a ligação ser gravada; caso contrário a referência e o título apareceriam no ecrã de quem não lhes pode aceder |
 | Simulação de correio confundida com uma caixa ligada | A origem (`Demo`/`Microsoft365`) faz parte do contrato da API e é mostrada onde quer que as mensagens apareçam |
 | Integração a alterar o sistema de origem | O conetor só lê: não escreve na caixa, não envia e não apaga |
 | Mensagens duplicadas por sincronizações repetidas | Índice único `(TenantId, Mailbox, ExternalId)`; sincronizar de novo reconhece o que já existe em vez de o acrescentar |
 | Ação oferecida a quem o servidor vai recusar | As ações da caixa de entrada só aparecem com `inbox.process`, e o estado da própria mensagem (`canAct`, `canArchive`, `canReopen`) viaja no contrato para a interface espelhar as regras que o servidor aplica |
-| **Pedido forjado do lado do servidor (SSRF) pelo destino de um webhook** | O destino é validado **no servidor e antes de ser guardado**: só HTTPS, e recusam-se *loopback* e as gamas privadas. O diálogo do browser valida também, mas só para a mensagem — a verificação que conta é a que o cliente não pode contornar |
+| **Pedido forjado do lado do servidor (SSRF) pelo destino de um webhook** | O destino é validado **no servidor e antes de ser guardado**: só HTTPS, e recusam-se *loopback* e as gamas privadas. O diálogo do browser valida também, mas só para a mensagem: a verificação que conta é a que o cliente não pode contornar |
 | Credencial de terceiros exposta pelo ecrã de integrações | As definições de uma integração são explicitamente **não secretas**: nenhuma credencial é guardada em `SettingsJson`, e é isso que torna seguro mostrar o que lá está |
-| Quem só pode observar a alterar uma integração | Ver e mudar são permissões distintas: `integrations.view` mostra cartões e registos, `integrations.manage` é exigida para executar, ativar, desativar e configurar — no servidor, em cada ação |
+| Quem só pode observar a alterar uma integração | Ver e mudar são permissões distintas: `integrations.view` mostra cartões e registos, `integrations.manage` é exigida para executar, ativar, desativar e configurar, no servidor e em cada ação |
 | Integração de uma organização alcançada por outra | O serviço do pedido usa o `DbContext` filtrado pela organização: uma integração de outra organização não é encontrada, e um pedido por identificador devolve `404` em vez de admitir que existe |
-| Estado de integração inventado pelo próprio adaptador | Os contadores e o estado são escritos pelo executor a partir do resultado devolvido, nunca pelo adaptador — um adaptador não se pode declarar «Ligada» sem ter feito nada |
+| Estado de integração inventado pelo próprio adaptador | Os contadores e o estado são escritos pelo executor a partir do resultado devolvido, nunca pelo adaptador: um adaptador não se pode declarar «Ligada» sem ter feito nada |
 | Interior do servidor exposto pela falha de uma integração | A exceção de um adaptador vira uma linha de registo com a **mensagem**, nunca a pilha |
 | Trabalho simulado apresentado como real, ou trabalho real apresentado como simulação | `IsSimulated` é declarado adaptador a adaptador e o aviso diz **o que** é simulado; os três adaptadores que fazem trabalho verdadeiro não se rotulam de demonstração |
-| **Utilizador externo a ver documentos que não são seus** | O portal usa o mesmo avaliador de acesso da aplicação interna, que concede a um externo apenas o que ele possui ou lhe foi explicitamente concedido — nunca por classificação. O portal não tem regras próprias que pudessem divergir |
+| **Utilizador externo a ver documentos que não são seus** | O portal usa o mesmo avaliador de acesso da aplicação interna, que concede a um externo apenas o que ele possui ou lhe foi explicitamente concedido, e nunca por classificação. O portal não tem regras próprias que pudessem divergir |
 | Nota interna a chegar a um fornecedor por um DTO partilhado | Os contratos do portal são tipos próprios, escritos à mão. Um campo acrescentado a um DTO interno não é servido ao portal porque não é o mesmo tipo |
 | Evento interno novo a aparecer no portal por omissão | A conversa é construída selecionando dois tipos de evento pelo nome, nunca por exclusão: uma lista por exclusão falha aberta |
 | Fornecedor a aprovar a sua própria fatura | Responder a um pedido de informação acrescenta informação e não move o processo; a decisão é de quem perguntou |
@@ -370,7 +365,7 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 | Pedido de assinatura que ninguém pode cumprir | Recusado ao pedir, quer o signatário não veja o documento, quer não tenha permissão para assinar |
 | Dúvida sobre se um documento está assinado | No máximo um pedido em aberto por documento, garantido por índice único filtrado na base de dados |
 | Fuga de informação pelos números de um painel | As consultas do relatório passam pelo mesmo predicado de visibilidade da listagem e da pesquisa: um total conta o que quem pergunta pode abrir. Saber que existem catorze documentos confidenciais no jurídico é saber alguma coisa sobre eles |
-| Exportação de dados por quem só pode consultar | Ver e exportar são permissões distintas: `reports.view` mostra o painel, `reports.export` é exigida para o CSV — no servidor, não apenas escondendo o botão |
+| Exportação de dados por quem só pode consultar | Ver e exportar são permissões distintas: `reports.view` mostra o painel, `reports.export` é exigida para o CSV, no servidor e não apenas escondendo o botão |
 | **Administrador de uma organização a gerir a conta que administra a plataforma** | `IsPlatformAdministrator` exclui a conta da edição e da desativação, no DTO **e** no serviço. Sem isto, guardar uma edição demovia-a em silêncio, porque `SystemAdmin` não consta dos perfis que o ecrã oferece |
 | **Organização a promover-se para fora da sua fronteira** | `SystemAdmin` não é devolvido no catálogo de perfis atribuíveis **e** é recusado com `409` se o nome for enviado à mão. A primeira metade sozinha seria apenas uma interface discreta |
 | Administrador a trancar a organização fora de si própria | A própria conta não se edita nem se desativa a partir daqui: retirar-se o perfil de administração é a única avaria sem reparação possível de dentro do produto |
@@ -379,15 +374,15 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 | Administração de uma organização alcançada por outra | A organização vem das *claims*, nunca do pedido; uma conta de outra organização não é encontrada, e responde `404` em vez de admitir que existe |
 | Administrar pessoas a dar por arrasto o catálogo | `admin.users` e `admin.documenttypes` são permissões distintas, verificadas no servidor em cada ação: manter o esquema de classificação é outro trabalho que decidir quem tem conta |
 | Catálogo de uma organização alcançado por outra | O serviço usa o `DbContext` filtrado pela organização: um tipo de outra não é encontrado, e responde `404` em vez de admitir que existe |
-| Metadados de documentos apagados pela porta da configuração | Um campo com valores não se elimina nem muda de tipo: eliminar apagaria o que os documentos dizem, e mudar de tipo deixaria os valores na coluna errada — ilegíveis, não em erro |
+| Metadados de documentos apagados pela porta da configuração | Um campo com valores não se elimina nem muda de tipo: eliminar apagaria o que os documentos dizem, e mudar de tipo deixaria os valores na coluna errada, ilegíveis em vez de em erro |
 | Catálogo a afirmar o que os documentos não cumprem | Tornar um campo obrigatório é recusado se algum documento do tipo ficasse por preencher, com a contagem na resposta |
 | Entrada de documentos fechada por configuração | O tipo de entrada não se desativa nem aceita campos obrigatórios: fechá-lo travaria o correio e o portal, onde ninguém está a olhar para reparar |
 | **Filtros de organização desligados sem querer por uma subconsulta** | `IgnoreQueryFilters()` é um operador de consulta: dentro de uma projeção desliga os filtros da consulta toda, incluindo o da organização, sem falhar nada. Aconteceu na lista de etiquetas. Uma guarda lê o código-fonte e falha a suite de testes se o operador aparecer dentro de uma projeção |
-| Etiquetas de uma organização visíveis noutra | Contagens em consulta própria, com a condição de organização escrita à mão, e um teste de integração que verifica identidade — nenhuma etiqueta de uma aparece na outra |
-| Anotações de documentos destruídas por um clique | Remover uma etiqueta é reversível: as ligações sobrevivem e restaurar devolve o mesmo número de documentos. O que é irreversível — um campo de metadados com valores — continua a ser recusado |
+| Etiquetas de uma organização visíveis noutra | Contagens em consulta própria, com a condição de organização escrita à mão, e um teste de integração que verifica identidade: nenhuma etiqueta de uma aparece na outra |
+| Anotações de documentos destruídas por um clique | Remover uma etiqueta é reversível: as ligações sobrevivem e restaurar devolve o mesmo número de documentos. O que é irreversível, como eliminar um campo de metadados com valores, continua a ser recusado |
 | Retenção encurtada sem rasto | Mudar a duração é permitido, porque as obrigações mudam, mas fica na auditoria com o valor antigo e o novo: move a data de eliminação de todos os documentos que a política governa |
 | Regra de retenção abandonada a continuar a aplicar-se | Retirar uma política é recusado enquanto um tipo de documento a adotar por omissão, e a mensagem nomeia os tipos |
-| Quem classifica a decidir quanto tempo se guarda | `admin.documenttypes` gere etiquetas e tipos; alterar políticas de retenção exige `admin.settings` — conformidade e classificação são decisões diferentes |
+| Quem classifica a decidir quanto tempo se guarda | `admin.documenttypes` gere etiquetas e tipos; alterar políticas de retenção exige `admin.settings`, porque conformidade e classificação são decisões diferentes |
 | Explicação de acesso usada para sondar o alcance alheio | Perguntar pelo acesso de outra pessoa exige `Share` sobre o documento; sobre o próprio basta poder vê-lo. Quem não decide concessões não tem razão para conhecer o alcance dos outros |
 | Painel de autorização a divergir da regra que aplica | O painel não calcula: mostra o `EffectiveAccess` produzido pelo mesmo avaliador que decide quando alguém abre, edita ou descarrega |
 | Perfil inexistente ou de plataforma nomeado numa concessão | Os perfis oferecidos vêm de `RoleNames`, a lista que a autorização usa, e `SystemAdmin` é excluído: está acima da organização |
@@ -398,65 +393,53 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 | Sonda de vida usada para reconhecimento | `/health*` devolve nome, estado e duração e nada mais: nunca descrição da falha, exceção, cadeia de ligação ou nome de máquina. Verificado por teste, não assumido |
 | Detalhe operacional exposto a quem administra pessoas | O estado do trabalho em segundo plano exige `admin.settings`; `admin.users` não o alcança. Operar a plataforma e gerir contas são trabalhos diferentes |
 | Fuga por contagem no painel de operação | As contagens de documentos passam pelo predicado de visibilidade, não apenas pelo filtro por organização: a pergunta é quantos **quem está a ver** vê, não quantos existem |
-| Rasto de execução a revelar o interior do processo | A linha de uma corrida falhada guarda a **mensagem**, nunca a pilha, e está limitada a 1024 caracteres — não há onde caber uma |
+| Rasto de execução a revelar o interior do processo | A linha de uma corrida falhada guarda a **mensagem**, nunca a pilha, e está limitada a 1024 caracteres, onde uma pilha não cabe |
 | Escalada de privilégios | Autorização por permissão no servidor; *claims* do cookie assinadas e revalidadas |
 | Injeção SQL | EF Core com consultas parametrizadas; sem concatenação de SQL |
 | Adulteração de auditoria | Intercetor de imutabilidade + revogação de permissões na base de dados |
 | Divulgação em mensagens de erro | `ProblemDetails` uniformes, sem detalhe interno |
 
-## 12.1 Revisão da superfície de ataque (Fase 9)
+## 12.1 Controlos com prova automática
 
-A lista acima tem 89 entradas. Uma lista dessas envelhece de uma forma perigosa: cada linha continua
-a **parecer** verdade muito depois de o código ter mudado, e uma ameaça listada que já não descreve
-o produto é pior do que uma ameaça não listada, porque dá confiança em vez de a pedir.
+Uma lista de ameaças envelhece de uma forma perigosa: cada linha continua a **parecer** verdade muito
+depois de o código ter mudado, e uma ameaça listada que já não descreve o produto dá confiança em vez
+de a pedir. Por isso as afirmações cuja falsidade seria silenciosa têm um teste que as verifica
+contra o código a correr.
 
-A revisão foi, por isso, **confirmar afirmações**, não escrever linhas novas. O que se seguiu foi
-escolher as afirmações cuja falsidade seria silenciosa e verificá-las contra o código a correr.
+| Afirmação | Prova |
+| --- | --- |
+| **A sessão vive num cookie `HttpOnly` e em mais lado nenhum** | `tests/e2e/specs/session-storage.spec.ts` entra na aplicação, enumera tudo o que o browser guardou e recusa qualquer valor com ar de credencial, por nome, por conteúdo e pela forma de um JWT. E confirma que `document.cookie` não vê o cookie de sessão |
+| A resposta ao início de sessão não traz credenciais | O teste de autenticação verifica o corpo da resposta, e não só o cookie: o cookie ser `HttpOnly` não vale nada se a credencial vier no corpo, onde qualquer script a lê |
+| As sondas anónimas não descrevem falhas | `SystemHealthTests`: nome, estado e duração, e nunca exceção, cadeia de ligação ou nome de máquina |
 
-### O que passou a ter prova
-
-| Afirmação | Como estava | Como está |
-| --- | --- | --- |
-| **A sessão vive num cookie `HttpOnly` e em mais lado nenhum** | Regra não-negociável do projeto, **sem um único teste** | `tests/e2e/specs/session-storage.spec.ts` entra na aplicação, enumera tudo o que o browser guardou e recusa qualquer valor com ar de credencial — por nome, por conteúdo e pela forma de um JWT. E confirma que `document.cookie` não vê o cookie de sessão |
-| A resposta ao início de sessão não traz credenciais | O teste verificava o cookie, não o corpo | Passa a verificar o corpo. O cookie ser `HttpOnly` não vale nada se a credencial vier no corpo, onde qualquer script a lê |
-| As sondas anónimas não descrevem falhas | Assumido | Verificado em `SystemHealthTests`: nome, estado e duração, e nunca exceção, cadeia de ligação ou nome de máquina |
-
-Estas três partilham um modo de falhar, e é o que as torna dignas de teste: **perdem-se por alguém
-resolver um problema legítimo**. Uma sessão que não sobrevive a uma janela nova, um pedido que falha
-depois de recarregar — guardar o token no `localStorage` resolve os dois, passa a funcionar, e
-ninguém repara.
+Estas três partilham um modo de falhar: **perdem-se por alguém resolver um problema legítimo**. Uma
+sessão que não sobrevive a uma janela nova, ou um pedido que falha depois de recarregar, resolvem-se
+os dois guardando o token no `localStorage`, e a aplicação passa a funcionar sem ninguém reparar no
+que se perdeu.
 
 O teste de armazenamento tem um par que é preciso ler em conjunto: o segundo verifica que a sessão
 **sobrevive a recarregar a página**. Sem ele, o primeiro seria satisfeito por uma aplicação que não
-guarda a sessão em sítio nenhum — e que, por isso, também não a mantém.
+guarda a sessão em sítio nenhum, e que por isso também não a mantém.
 
-### O que já tinha prova, e continua a ter
+Têm também prova automática a imutabilidade da auditoria, na aplicação e na base de dados, os
+cabeçalhos de segurança e o identificador de correlação em cada resposta, as respostas
+indistinguíveis entre conta inexistente e palavra-passe errada, a recusa de pedidos que alteram
+estado sem origem permitida, a política de segurança ao nível da linha, a cobertura dos filtros por
+organização e a ausência de `IgnoreQueryFilters` dentro de projeções. Esta última não é um teste:
+falha a **compilação**.
 
-Imutabilidade da auditoria (a aplicação não altera nem apaga eventos), cabeçalhos de segurança e
-identificador de correlação em cada resposta, respostas indistinguíveis entre conta inexistente e
-palavra-passe errada, recusa de pedidos que alteram estado sem origem permitida, cobertura dos
-filtros por organização, e ausência de `IgnoreQueryFilters` dentro de projeções. As duas últimas
-não são testes: falham a **compilação**.
+### Duas coisas que estão no repositório de propósito
 
-### Duas coisas que estão no repositório de propósito, e que convém dizer
-
-Uma revisão honesta também nomeia o que parece um defeito e não é — senão a próxima pessoa a olhar
-gasta uma tarde a chegar à mesma conclusão, ou pior, «corrige-o».
+Há duas coisas que parecem um defeito e não são, e convém dizê-lo para ninguém as «corrigir».
 
 - **A cadeia de ligação de desenvolvimento está versionada**, com a palavra-passe do contentor
   local. É deliberado: o contentor é descartável, publica só em *loopback*, e a cadeia existe para
-  que o projeto arranque sem configuração. Em `appsettings.json` — o ficheiro que vale fora de
-  desenvolvimento — a cadeia está **vazia**, e o valor real vem do ambiente.
+  que o projeto arranque sem configuração. Em `appsettings.json`, o ficheiro que vale fora de
+  desenvolvimento, a cadeia está **vazia**, e o valor real vem do ambiente.
 - **A palavra-passe das contas de demonstração está no código do frontend** e é mostrada no ecrã de
   entrada. Também é deliberado: todas as contas são fictícias e o produto é uma demonstração de
-  portefólio. Escondê-la seria encenação — quem visita a demonstração precisa de entrar, e fingir
+  portefólio. Escondê-la seria encenação: quem visita a demonstração precisa de entrar, e fingir
   que aquilo é um segredo não protegeria nada.
-
-### O que a revisão não fez
-
-Não reescreveu a lista, não acrescentou ameaças novas, e não verificou as 89 uma a uma. Verificou as
-que **falham em silêncio** e as que a Fase 9 tocou. As restantes descrevem código que não mudou
-desde que foram escritas, e cada uma nasceu com o bloco que a tornou verdadeira.
 
 ## 13. Trabalho em segundo plano
 
@@ -506,10 +489,10 @@ A API e a interface ficam na mesma origem de propósito. A sessão vive num cook
 
 - Sem autenticação multifator (fora do âmbito desta demonstração; a arquitetura de Identity suporta a
   adição).
-- Sem rotação automática das chaves de proteção de dados em ambiente distribuído — em produção seria
+- Sem rotação automática das chaves de proteção de dados em ambiente distribuído: em produção seria
   necessário um repositório de chaves partilhado.
 - A assinatura eletrónica é uma demonstração funcional e **não tem qualquer validade legal**: não há
-  chave privada sob controlo do signatário, nem certificado, nem carimbo temporal independente — os
+  chave privada sob controlo do signatário, nem certificado, nem carimbo temporal independente, que são os
   três elementos que distinguem uma assinatura avançada de um registo. Ver
   [ADR-009](adr/ADR-009-electronic-signature.md), que explica também porque não se gerou um par de
   chaves na aplicação: seria mais convincente e igualmente sem valor.
