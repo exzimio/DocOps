@@ -174,8 +174,9 @@ integração lenta passaria a ser um problema de base de dados. `IntegrationNode
 chama `WorkflowEngine.ResumeAsync`. É a mesma forma dos nós de IA, replicada de
 propósito: dois mecanismos diferentes para o mesmo problema seriam duas coisas para depurar.
 
-Com isto, todos os tipos de nó que o desenhador oferece são executáveis, e o dicionário
-`NotYetExecutable` do validador está vazio.
+Com isto, todos os tipos de nó que o desenhador oferece são executáveis. Um teste de integração
+confirma que cada tipo tem exatamente um executor registado, porque um tipo sem executor passaria
+pelo validador e só falharia quando uma instância lá chegasse.
 
 ### O destino do webhook é validado no servidor porque é uma superfície de SSRF
 

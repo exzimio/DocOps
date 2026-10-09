@@ -291,20 +291,6 @@ public sealed class NotificationNodeExecutor(
     }
 }
 
-/// <summary>
-/// Explicit failure for node types that have no executor: the instance stops with a
-/// clear reason instead of silently skipping a step that the process depends on.
-/// </summary>
-public sealed class UnimplementedNodeExecutor(WorkflowNodeType nodeType, string phase) : INodeExecutor
-{
-    public WorkflowNodeType NodeType { get; } = nodeType;
-
-    public Task<NodeResult> ExecuteAsync(
-        WorkflowExecutionContext context, WorkflowNode node, CancellationToken cancellationToken) =>
-        throw new DomainException(
-            $"O tipo de nó '{NodeType}' ainda não é executável ({phase}).", "node_type_not_implemented");
-}
-
 /// <summary>Applies a document status change configured on a node, respecting the document state machine.</summary>
 public sealed class DocumentStatusEffect(DocOpsDbContext dbContext, IAuditService auditService)
 {

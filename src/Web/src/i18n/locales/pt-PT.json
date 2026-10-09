@@ -668,7 +668,6 @@
       "workflow_not_active": "Este workflow não está ativo.",
       "workflow_already_finished": "Este processo já terminou.",
       "workflow_validation_failed": "O workflow tem erros de validação e não pode ser ativado.",
-      "node_type_not_implemented": "O processo usa um tipo de nó que ainda não é executável.",
       "forbidden": "Não tem permissão para esta operação.",
       "workflow_has_running_instances": "Existem processos em curso com este workflow. Cancele-os ou aguarde a conclusão.",
       "workflow_version_superseded": "Existe uma versão mais recente deste workflow. Recarregue a página.",

@@ -9,6 +9,7 @@ using DocOps.Domain.Auditing;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Persistence;
+using DocOps.Infrastructure.Workflows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using DocOps.Application.Abstractions;
@@ -335,6 +336,24 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
             Assert.NotNull(issues);
             Assert.DoesNotContain(issues, issue => issue.Severity == "Error");
         }
+    }
+
+    /// <summary>
+    /// The designer offers every node type, and the validator lets any of them be activated. A type
+    /// without an executor would pass both and only fail when an instance reached it, so the
+    /// guarantee lives here, on the container the engine is actually built from.
+    /// </summary>
+    [Fact]
+    public void Every_node_type_has_exactly_one_registered_executor()
+    {
+        using IServiceScope scope = factory.Services.CreateScope();
+
+        List<WorkflowNodeType> registered =
+            [.. scope.ServiceProvider.GetServices<INodeExecutor>().Select(executor => executor.NodeType)];
+
+        Assert.Equal(
+            Enum.GetValues<WorkflowNodeType>().Order(),
+            registered.Order());
     }
 
     // -----------------------------------------------------------------------------------------

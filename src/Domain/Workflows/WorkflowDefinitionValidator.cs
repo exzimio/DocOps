@@ -15,15 +15,6 @@ public sealed record WorkflowValidationIssue(ValidationSeverity Severity, string
 /// </summary>
 public static class WorkflowDefinitionValidator
 {
-    /// <summary>
-    /// Node types the engine cannot execute yet. Designing with them is allowed; activating is not.
-    ///
-    /// Empty, because every type has an executor. It stays because the rule it encodes is the
-    /// useful part: a node type added before its executor is listed here, and the designer keeps saying so instead of letting a process be
-    /// activated onto a step that would stop it.
-    /// </summary>
-    private static readonly Dictionary<WorkflowNodeType, string> NotYetExecutable = [];
-
     public static IReadOnlyList<WorkflowValidationIssue> Validate(WorkflowDefinition definition)
     {
         List<WorkflowValidationIssue> issues = [];
@@ -100,13 +91,6 @@ public static class WorkflowDefinitionValidator
             issues.Add(new WorkflowValidationIssue(
                 ValidationSeverity.Warning, "end_with_exit",
                 $"O nó de fim '{node.Name}' tem ligações de saída, que nunca serão seguidas.", node.Key));
-        }
-
-        if (NotYetExecutable.TryGetValue(node.Type, out string? phase))
-        {
-            issues.Add(new WorkflowValidationIssue(
-                ValidationSeverity.Error, "node_type_not_implemented",
-                $"O nó '{node.Name}' usa um tipo que ainda não é executável ({phase}).", node.Key));
         }
 
         NodeConfiguration config = NodeConfiguration.Parse(node.ConfigJson);
