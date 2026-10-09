@@ -13,6 +13,24 @@ npm --prefix src/Web run dev                          # http://localhost:5173
 
 Palavra-passe de todas as contas: `Demo!Pass123`
 
+### O catálogo de demonstração
+
+A base semeada tem duas organizações sem nada em comum, a Asteria Group e a Vértice Industrial. O
+catálogo da Asteria tem 41 documentos, quatro dos quais são documentos de entrada **«Por
+classificar»**, com texto realista, para a demonstração da inteligência documental. Analisá-los e
+aplicar as sugestões reclassifica-os, e deixam de estar por classificar. As integrações começam
+**«Por configurar»**, com tudo a zero, porque nenhuma correu ainda.
+
+Tudo o que se faz numa demonstração é real, e por isso muda o catálogo. Para o repor no estado
+semeado antes de mostrar o produto a alguém:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/reset-demo-db.ps1
+```
+
+O guião para a API, larga a base de dados, recria as três identidades de base de dados e apaga os
+ficheiros carregados em `src/Api/storage`. A API volta a semear tudo no arranque seguinte.
+
 ---
 
 ## Demonstração disponível na Fase 1 — Identidade, acesso e isolamento (≈4 minutos)
