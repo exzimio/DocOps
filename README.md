@@ -934,3 +934,9 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
   nome, estado e duração, e nunca uma mensagem de exceção, uma cadeia de ligação ou um nome de
   máquina, que é o que transforma uma sonda de vida em reconhecimento. O detalhe fica atrás de
   `admin.settings`.
+
+If you'd like to know more about this project, reach out on [LinkedIn](https://www.linkedin.com/in/alexandre-magno-382a813b2/).
+
+---
+
+© 2026 Alexandre Magno. All rights reserved.
