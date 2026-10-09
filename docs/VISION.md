@@ -121,41 +121,39 @@ uma auditoria automática passou a correr sobre dez ecrãs.
 
 ## 6. Disciplina de engenharia
 
-Cada fase segue a mesma ordem, sem exceções: backend primeiro, validação com chamadas reais à
-API, depois interface, verificação no browser com leitura das capturas de ecrã, testes,
-documentação, e só então o commit.
+Cada funcionalidade segue a mesma ordem: backend primeiro, validação com chamadas reais à API,
+depois interface, verificação no browser com leitura das capturas de ecrã, testes, documentação, e
+só então o commit.
 
-Antes de cada commit correm nove portões — compilação sem qualquer aviso, testes unitários,
-testes de integração contra SQL real, verificação de tipos, análise estática, formatação nos
-dois pacotes, testes de componentes e testes end-to-end em desktop e telemóvel, a partir de uma
-base de dados reposta.
+Antes de cada commit correm os mesmos portões: compilação sem qualquer aviso, testes unitários,
+testes de integração contra SQL real, verificação de tipos, análise estática, formatação nos dois
+pacotes, testes de componentes e testes end-to-end em desktop e telemóvel, a partir de uma base de
+dados reposta.
 
-Dez decisões de arquitetura estão registadas por escrito (ADR), incluindo as que explicam
-porque algo **não** foi feito — por exemplo, porque a assinatura eletrónica não gerou um par
-de chaves criptográficas: seria mais convincente e continuaria sem valor legal, a pior
-combinação possível.
-
-A maior parte dos defeitos corrigidos durante a construção foi encontrada a sondar a API real e a
-ler capturas de ecrã, e não a ler código.
+As decisões de arquitetura estão registadas por escrito em ADR, incluindo as que explicam porque
+algo **não** foi feito. A assinatura eletrónica, por exemplo, não gera um par de chaves
+criptográficas: seria mais convincente e continuaria sem valor legal, a pior combinação possível.
 
 ## 7. Números
 
-- ~28 000 linhas de C# e ~17 700 de TypeScript/React, mais ~11 200 de testes
-- 123 endpoints REST em 17 controladores
-- 45 ficheiros de domínio, 29 tabelas, 12 migrações
-- **748 testes**: 330 unitários, 181 de integração contra SQL Server real, 59 de componentes e
-  178 end-to-end em desktop e telemóvel
-- 1 analisador de Roslyn que falha a compilação, e 2 guardas que leem o código-fonte e falham a suite de testes
-- 10 decisões de arquitetura registadas
-- 44 permissões distribuídas por 6 perfis
+- Cerca de 29 000 linhas de C#, 18 000 de TypeScript e React, e 12 500 de testes
+- Mais de 120 endpoints REST, em 17 controladores
+- Cerca de 30 tabelas
+- **Mais de 800 testes automatizados**: unitários, de integração contra SQL Server real, de
+  componentes e end-to-end em desktop e telemóvel
+- Um analisador de Roslyn que falha a compilação, e dois guardas que leem o código-fonte e falham a
+  suite de testes
+- Mais de 40 permissões, distribuídas por seis perfis
 
 ## 8. Estado
 
-Construído em dez fases, cada uma entregue a funcionar de ponta a ponta. **Nove concluídas**; a
-décima — refinamento de UX, acessibilidade, desempenho e documentação — está em curso, com a
-auditoria de acessibilidade e a divisão de pacotes já feitas.
+O âmbito planeado está concluído: gestão documental, motor de workflow com desenhador visual,
+inteligência documental, pesquisa, caixa de entrada e integrações, portal externo, assinatura
+eletrónica, relatórios e administração, mais o trabalho de acessibilidade, desempenho e
+documentação.
 
-Nenhuma fase foi dada por fechada sem estar a funcionar, testada e documentada.
+Nada foi dado por terminado sem estar a funcionar, testado e documentado. O que o projeto não faz,
+e porquê, está na secção de limitações conhecidas do README.
 
 ## 9. O que este projeto demonstra
 
