@@ -29,7 +29,8 @@ appsettings.Local.json
 secrets.json
 
 ## Local file storage (documents uploaded in dev)
-storage/
+/src/Api/storage/
+/src/Worker/storage/
 src/Api/App_Data/
 
 ## SQL Server container volume
