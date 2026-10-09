@@ -586,7 +586,7 @@ public sealed class AiProcessingService(
 
         Dictionary<Guid, string> names = await UserNamesAsync(approvals.Select(a => a.CompletedByUserId), cancellationToken);
 
-        string Who(Guid? id) => id is { } u ? names.GetValueOrDefault(u, "—") : "—";
+        string Who(Guid? id) => id is { } u ? names.GetValueOrDefault(u, "-") : "-";
 
         string text = approvals.Count == 1
             ? $"Aprovado por {Who(approvals[0].CompletedByUserId)} ({approvals[0].Title})."
@@ -607,8 +607,8 @@ public sealed class AiProcessingService(
                     Kind = "audit",
                     DocumentTitle = document.Title,
                     Excerpt = a.DecisionComment is { Length: > 0 } comment
-                        ? $"{a.Title} — {Who(a.CompletedByUserId)}: «{comment}»"
-                        : $"{a.Title} — {Who(a.CompletedByUserId)}",
+                        ? $"{a.Title}, por {Who(a.CompletedByUserId)}: «{comment}»"
+                        : $"{a.Title}, por {Who(a.CompletedByUserId)}",
                     OccurredAtUtc = a.CompletedAtUtc
                 })
             ]
@@ -847,7 +847,7 @@ public sealed class AiProcessingService(
             Action = action,
             EntityType = AuditEntityTypes.Document,
             EntityId = document.Id,
-            EntityDisplayName = $"{document.Reference} — {document.Title}",
+            EntityDisplayName = $"{document.Reference} · {document.Title}",
             Summary = summary,
             Before = before,
             After = after,

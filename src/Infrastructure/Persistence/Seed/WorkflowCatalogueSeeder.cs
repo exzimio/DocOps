@@ -39,7 +39,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
         new(
             InvoiceApprovalCode,
             "Aprovação de fatura de fornecedor",
-            "Validação de dados, aprovação financeira e — acima de 10 000 € — aprovação de direção.",
+            "Validação de dados, aprovação financeira e, acima de 10 000 €, aprovação de direção.",
             "SupplierInvoice",
             [
                 new("start", "Início", WorkflowNodeType.Start, 0, 190),
@@ -238,7 +238,7 @@ public sealed class WorkflowCatalogueSeeder(DocOpsDbContext dbContext)
         new(
             OnboardingCode,
             "Integração de novo colaborador",
-            "Duas frentes em paralelo — recursos humanos e operações — que convergem antes da comunicação de boas-vindas.",
+            "Duas frentes em paralelo, recursos humanos e operações, que convergem antes da comunicação de boas-vindas.",
             "EmployeeDocument",
             [
                 new("start", "Início", WorkflowNodeType.Start, 0, 190),

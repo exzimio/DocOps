@@ -67,8 +67,8 @@ public sealed class RetentionChecker(
                     RecipientUserId = recipient,
                     Kind = NotificationKind.RetentionDue,
                     Title = $"Retenção terminada: {document.Reference}",
-                    Body = "O prazo de conservação chegou ao fim. O documento pode ser eliminado — "
-                        + "a decisão é de quem o guarda, não deste aviso.",
+                    Body = "O prazo de conservação chegou ao fim. O documento pode ser eliminado, mas a decisão é "
+                        + "de quem o guarda, e não deste aviso.",
                     Link = $"/app/documents/{document.Id}",
                     DocumentId = document.Id,
                     CreatedAtUtc = now

@@ -35,16 +35,16 @@ public sealed class DocumentCatalogueSeeder(DocOpsDbContext dbContext)
 
     private static readonly PolicySeed[] Policies =
     [
-        new("FIN-10A", "Documentos fiscais — 10 anos", 120, RetentionTrigger.OnArchive,
+        new("FIN-10A", "Documentos fiscais (10 anos)", 120, RetentionTrigger.OnArchive,
             "Obrigação de conservação de documentos fiscais",
             "Faturas, notas de crédito e documentos de suporte contabilístico"),
-        new("CTR-10A", "Contratos — 10 anos após término", 120, RetentionTrigger.OnArchive,
+        new("CTR-10A", "Contratos (10 anos após término)", 120, RetentionTrigger.OnArchive,
             "Prazo geral de prescrição contratual",
             "Contratos e adendas, contados a partir do termo da vigência"),
-        new("RH-5A", "Recursos humanos — 5 anos", 60, RetentionTrigger.OnArchive,
+        new("RH-5A", "Recursos humanos (5 anos)", 60, RetentionTrigger.OnArchive,
             "Conservação de registos de pessoal",
             "Documentos de colaboradores após cessação do vínculo"),
-        new("GER-3A", "Documentação corrente — 3 anos", 36, RetentionTrigger.OnArchive,
+        new("GER-3A", "Documentação corrente (3 anos)", 36, RetentionTrigger.OnArchive,
             "Política interna de arquivo",
             "Comunicações internas, pedidos e relatórios operacionais")
     ];

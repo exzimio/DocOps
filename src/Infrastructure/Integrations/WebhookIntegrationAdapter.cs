@@ -123,8 +123,8 @@ public sealed class WebhookIntegrationAdapter(
     public IntegrationAdapterInfo Info { get; } = new(
         IntegrationKind.Webhooks,
         "Webhooks",
-        "Entrega os acontecimentos relevantes — documentos criados, estados alterados, processos "
-        + "concluídos — a um endereço HTTPS configurado pela organização.",
+        "Entrega os acontecimentos relevantes, como documentos criados, estados alterados e processos "
+        + "concluídos, a um endereço HTTPS configurado pela organização.",
         RequiresCredentials: false,
         IsSimulated: false);
 

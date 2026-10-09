@@ -25,7 +25,7 @@ internal static class DocumentProjections
             OwnerName = db.Users
                 .Where(u => u.Id == document.OwnerUserId)
                 .Select(u => u.FirstName + " " + u.LastName)
-                .FirstOrDefault() ?? "—",
+                .FirstOrDefault() ?? "-",
             DepartmentName = document.Department != null ? document.Department.Name : null,
             DepartmentCode = document.Department != null ? document.Department.Code : null,
             CurrentVersionNumber = document.CurrentVersionNumber,
@@ -54,7 +54,7 @@ internal static class DocumentProjections
             db.Users
                 .Where(u => u.Id == version.CreatedByUserId)
                 .Select(u => u.FirstName + " " + u.LastName)
-                .FirstOrDefault() ?? "—",
+                .FirstOrDefault() ?? "-",
             version.IsCurrent);
 
     /// <summary>

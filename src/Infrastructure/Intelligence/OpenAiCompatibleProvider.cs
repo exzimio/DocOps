@@ -126,7 +126,7 @@ public sealed class OpenAiCompatibleProvider(
             "{\"fields\":[{\"code\":string,\"value\":string or null,\"confidence\":number between 0 and 1,\"quote\":string or null}]}. " +
             "Dates as yyyy-MM-dd, amounts as plain numbers with a dot for decimals. " +
             "\"quote\" must be the words copied exactly from the document the value was read from. " +
-            "If a field is not in the document, return null for it — never guess.",
+            "If a field is not in the document, return null for it. Never guess.",
             $"Document type: {schema.Name}\nFields:\n{fields}\n\nDocument:\n{Excerpt(content)}",
             cancellationToken);
 

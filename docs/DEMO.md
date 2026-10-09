@@ -865,7 +865,7 @@ falsificação. Muda a lei, muda o contrato; um catálogo incapaz de a acompanha
 mentir. O que a mudança faz é mexer na data de eliminação de todos os documentos que a política
 governa, e por isso fica na auditoria com o valor antigo e o novo.
 
-Agora tente **retirar** a política *Contratos — 10 anos após término*. É recusado, e a mensagem
+Agora tente **retirar** a política *Contratos (10 anos após término)*. É recusado, e a mensagem
 nomeia o tipo que a adota. Retirá-la deixaria esse tipo a aplicar uma regra que a organização
 decidiu abandonar, sem nada no ecrã a dizê-lo.
 

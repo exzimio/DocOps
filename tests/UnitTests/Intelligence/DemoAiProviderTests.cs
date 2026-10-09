@@ -194,7 +194,7 @@ public class DemoAiProviderTests
 
         Assert.True(answer.Answered);
         Assert.Contains("30 September 2028", answer.Text);
-        Assert.Equal("Cláusula 2.ª — vigência", answer.Citations[0].Section);
+        Assert.Equal("Cláusula 2.ª - vigência", answer.Citations[0].Section);
     }
 
     [Fact]

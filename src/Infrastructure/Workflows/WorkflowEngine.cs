@@ -84,7 +84,7 @@ public sealed class WorkflowEngine(
                 Action = AuditActions.WorkflowInstanceStarted,
                 EntityType = AuditEntityTypes.WorkflowInstance,
                 EntityId = instance.Id,
-                EntityDisplayName = $"{instance.Reference} — {definition.Name}",
+                EntityDisplayName = $"{instance.Reference} · {definition.Name}",
                 Summary = $"Processo iniciado sobre {instanceVariables.GetValueOrDefault(WorkflowVariables.DocumentReference) ?? "nenhum documento"}",
                 After = new { instance.Reference, Definition = definition.Code, DocumentId = documentId }
             },
@@ -630,7 +630,7 @@ public sealed class WorkflowEngine(
                 Action = AuditActions.WorkflowTaskCompleted,
                 EntityType = AuditEntityTypes.WorkflowTask,
                 EntityId = task.Id,
-                EntityDisplayName = $"{instance.Reference} — {task.Title}",
+                EntityDisplayName = $"{instance.Reference} · {task.Title}",
                 Summary = $"{DecisionLabel(decision)}: {task.Title}",
                 After = new
                 {

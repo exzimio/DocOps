@@ -46,22 +46,22 @@ public sealed class DocumentDemoSeeder(
         // --------------------------------------------------------------------- Por classificar
         // Files that arrived but that nobody has read yet. Their text is realistic — laid out like
         // real invoices and contracts — which is what the AI processing screen works from.
-        new(DocumentTypeCodes.Unclassified, "Documento recebido — fatura-atlas-tecnologia", "ana.ferreira@asteria.example", "PRC",
+        new(DocumentTypeCodes.Unclassified, "Documento recebido - fatura-atlas-tecnologia", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Draft, 0, [], ["recebido"],
             Description: "Recebido por correio eletrónico da Atlas Tecnologia; tipo por identificar.",
             ContentFile: "fatura-atlas-tecnologia.txt"),
 
-        new(DocumentTypeCodes.Unclassified, "Documento recebido — contrato-nordhavn-logistica", "carla.nunes@asteria.example", "LEG",
+        new(DocumentTypeCodes.Unclassified, "Documento recebido - contrato-nordhavn-logistica", "carla.nunes@asteria.example", "LEG",
             DocumentStatus.Draft, 1, [], ["recebido"],
             Description: "Minuta assinada enviada pela Nordhavn Logística.",
             ContentFile: "contrato-nordhavn-logistica.txt"),
 
-        new(DocumentTypeCodes.Unclassified, "Documento recebido — invoice-brightline-uk", "ricardo.lopes@asteria.example", "FIN",
+        new(DocumentTypeCodes.Unclassified, "Documento recebido - invoice-brightline-uk", "ricardo.lopes@asteria.example", "FIN",
             DocumentStatus.Draft, 0, [], ["recebido"],
             Description: "Fatura em inglês de um fornecedor do Reino Unido.",
             ContentFile: "invoice-brightline-uk.txt"),
 
-        new(DocumentTypeCodes.Unclassified, "Documento recebido — encomenda-verdemar", "ana.ferreira@asteria.example", "PRC",
+        new(DocumentTypeCodes.Unclassified, "Documento recebido - encomenda-verdemar", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Draft, 1, [], ["recebido"],
             ContentFile: "encomenda-verdemar.txt"),
 
@@ -126,7 +126,7 @@ public sealed class DocumentDemoSeeder(
             ["fatura", "arquivado", "pago"]),
 
         // -------------------------------------------------------------------------------- Contratos
-        new("Contract", "Contrato de fornecimento — Northstar Supplies", "carla.nunes@asteria.example", "LEG",
+        new("Contract", "Contrato de fornecimento - Northstar Supplies", "carla.nunes@asteria.example", "LEG",
             DocumentStatus.Approved, 210,
             [("counterparty", "Northstar Supplies"), ("contractType", "Fornecimento"),
              ("startDate", "2026-01-01"), ("endDate", "2026-12-31"), ("contractValue", "180000.00"),
@@ -140,7 +140,7 @@ public sealed class DocumentDemoSeeder(
                 new GrantSeed(PermissionSubjectType.User, "sofia.martins@asteria.example", ["view", "download", "edit"])
             ]),
 
-        new("Contract", "Contrato de prestação de serviços — Atlas Tecnologia", "carla.nunes@asteria.example", "LEG",
+        new("Contract", "Contrato de prestação de serviços - Atlas Tecnologia", "carla.nunes@asteria.example", "LEG",
             DocumentStatus.SignatureRequired, 12,
             [("counterparty", "Atlas Tecnologia"), ("contractType", "Prestação de serviços"),
              ("startDate", "2026-10-01"), ("endDate", "2027-09-30"), ("contractValue", "96000.00"),
@@ -148,14 +148,14 @@ public sealed class DocumentDemoSeeder(
             ["contrato", "assinatura", "tecnologia"],
             Description: "Suporte e manutenção da plataforma de gestão documental.", Versions: 2),
 
-        new("Contract", "Acordo de confidencialidade — Verdemar Serviços", "carla.nunes@asteria.example", "LEG",
+        new("Contract", "Acordo de confidencialidade - Verdemar Serviços", "carla.nunes@asteria.example", "LEG",
             DocumentStatus.Signed, 64,
             [("counterparty", "Verdemar Serviços"), ("contractType", "Confidencialidade"),
              ("startDate", "2026-07-15"), ("endDate", "2029-07-14"), ("noticeDays", "30"),
              ("governingLaw", "Lei portuguesa")],
             ["contrato", "confidencialidade", "assinado"]),
 
-        new("Contract", "Contrato de arrendamento — Armazém de Alverca", "admin@asteria.example", "MGT",
+        new("Contract", "Contrato de arrendamento - Armazém de Alverca", "admin@asteria.example", "MGT",
             DocumentStatus.Approved, 300,
             [("counterparty", "Predial Tejo, Lda."), ("contractType", "Arrendamento"),
              ("startDate", "2025-12-01"), ("endDate", "2030-11-30"), ("contractValue", "420000.00"),
@@ -163,7 +163,7 @@ public sealed class DocumentDemoSeeder(
             ["contrato", "imóvel"],
             Classification: SecurityClassification.Restricted),
 
-        new("Contract", "Contrato de parceria — Nordvik Systems", "carla.nunes@asteria.example", "LEG",
+        new("Contract", "Contrato de parceria - Nordvik Systems", "carla.nunes@asteria.example", "LEG",
             DocumentStatus.InReview, 8,
             [("counterparty", "Nordvik Systems"), ("contractType", "Parceria"),
              ("startDate", "2026-11-01"), ("endDate", "2027-10-31"), ("contractValue", "0.00"),
@@ -171,7 +171,7 @@ public sealed class DocumentDemoSeeder(
             ["contrato", "revisão-jurídica", "internacional"],
             Description: "Parceria tecnológica para integração de sistemas. Em revisão jurídica."),
 
-        new("Contract", "Contrato de fornecimento — Lusitânia Papelaria (expirado)", "carla.nunes@asteria.example", "LEG",
+        new("Contract", "Contrato de fornecimento - Lusitânia Papelaria (expirado)", "carla.nunes@asteria.example", "LEG",
             DocumentStatus.Archived, 400,
             [("counterparty", "Lusitânia Papelaria"), ("contractType", "Fornecimento"),
              ("startDate", "2024-09-01"), ("endDate", "2025-08-31"), ("contractValue", "45000.00"),
@@ -179,58 +179,58 @@ public sealed class DocumentDemoSeeder(
             ["contrato", "arquivado", "expirado"]),
 
         // ------------------------------------------------------------------------------- Encomendas
-        new("PurchaseOrder", "Encomenda ENC-2026-00031 — Northstar Supplies", "ana.ferreira@asteria.example", "PRC",
+        new("PurchaseOrder", "Encomenda ENC-2026-00031 - Northstar Supplies", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Approved, 40,
             [("supplier", "Northstar Supplies"), ("orderNumber", "ENC-2026-00031"), ("orderDate", "2026-08-08"),
              ("totalAmount", "15313.50"), ("deliveryDate", "2026-09-01")],
             ["encomenda", "aprovado"]),
 
-        new("PurchaseOrder", "Encomenda ENC-2026-00028 — Ibérica Logística", "ana.ferreira@asteria.example", "PRC",
+        new("PurchaseOrder", "Encomenda ENC-2026-00028 - Ibérica Logística", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Approved, 48,
             [("supplier", "Ibérica Logística"), ("orderNumber", "ENC-2026-00028"), ("orderDate", "2026-08-01"),
              ("totalAmount", "10086.00"), ("deliveryDate", "2026-08-28")],
             ["encomenda", "aprovado", "logística"]),
 
-        new("PurchaseOrder", "Encomenda ENC-2026-00045 — Atlas Tecnologia", "ana.ferreira@asteria.example", "PRC",
+        new("PurchaseOrder", "Encomenda ENC-2026-00045 - Atlas Tecnologia", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.PendingApproval, 4,
             [("supplier", "Atlas Tecnologia"), ("orderNumber", "ENC-2026-00045"), ("orderDate", "2026-09-11"),
              ("totalAmount", "30504.00"), ("deliveryDate", "2026-10-15")],
             ["encomenda", "aguarda-aprovação", "equipamento"]),
 
-        new("PurchaseOrder", "Encomenda ENC-2026-00046 — Verdemar Serviços", "ana.ferreira@asteria.example", "PRC",
+        new("PurchaseOrder", "Encomenda ENC-2026-00046 - Verdemar Serviços", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Draft, 1,
             [("supplier", "Verdemar Serviços"), ("orderNumber", "ENC-2026-00046"), ("orderDate", "2026-09-17"),
              ("totalAmount", "2480.00"), ("deliveryDate", "2026-10-02")],
             ["encomenda", "rascunho"]),
 
-        new("PurchaseOrder", "Encomenda ENC-2026-00012 — Nordvik Systems", "ana.ferreira@asteria.example", "PRC",
+        new("PurchaseOrder", "Encomenda ENC-2026-00012 - Nordvik Systems", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Archived, 130,
             [("supplier", "Nordvik Systems"), ("orderNumber", "ENC-2026-00012"), ("orderDate", "2026-05-10"),
              ("totalAmount", "23247.00"), ("deliveryDate", "2026-06-01")],
             ["encomenda", "arquivado"]),
 
         // ----------------------------------------------------------------------- Documentos de RH
-        new("EmployeeDocument", "Contrato de trabalho — Marta Oliveira", "joao.pereira@asteria.example", "HR",
+        new("EmployeeDocument", "Contrato de trabalho - Marta Oliveira", "joao.pereira@asteria.example", "HR",
             DocumentStatus.Signed, 75,
             [("employeeName", "Marta Oliveira"), ("documentKind", "Contrato de trabalho"), ("effectiveDate", "2026-07-01")],
             ["rh", "contratação", "assinado"]),
 
-        new("EmployeeDocument", "Plano de integração — Marta Oliveira", "joao.pereira@asteria.example", "HR",
+        new("EmployeeDocument", "Plano de integração - Marta Oliveira", "joao.pereira@asteria.example", "HR",
             DocumentStatus.Approved, 74,
             [("employeeName", "Marta Oliveira"), ("documentKind", "Onboarding"), ("effectiveDate", "2026-07-01")],
             ["rh", "onboarding"]),
 
-        new("EmployeeDocument", "Avaliação de desempenho 2026 — Ana Ferreira", "joao.pereira@asteria.example", "HR",
+        new("EmployeeDocument", "Avaliação de desempenho 2026 - Ana Ferreira", "joao.pereira@asteria.example", "HR",
             DocumentStatus.InReview, 20,
             [("employeeName", "Ana Ferreira"), ("documentKind", "Avaliação de desempenho"), ("effectiveDate", "2026-08-31")],
             ["rh", "desempenho"], Versions: 2),
 
-        new("EmployeeDocument", "Registo de formação — Segurança da informação", "joao.pereira@asteria.example", "HR",
+        new("EmployeeDocument", "Registo de formação - Segurança da informação", "joao.pereira@asteria.example", "HR",
             DocumentStatus.Approved, 55,
             [("employeeName", "Equipa de Operações"), ("documentKind", "Formação"), ("effectiveDate", "2026-07-22")],
             ["rh", "formação", "segurança"]),
 
-        new("EmployeeDocument", "Processo de cessação — Bruno Carvalho", "joao.pereira@asteria.example", "HR",
+        new("EmployeeDocument", "Processo de cessação - Bruno Carvalho", "joao.pereira@asteria.example", "HR",
             DocumentStatus.Archived, 160,
             [("employeeName", "Bruno Carvalho"), ("documentKind", "Cessação"), ("effectiveDate", "2026-04-30")],
             ["rh", "arquivado"]),
@@ -260,19 +260,19 @@ public sealed class DocumentDemoSeeder(
             Classification: SecurityClassification.Restricted),
 
         // --------------------------------------------------------------------------------- E-mails
-        new("Email", "Reclamação de entrega — Ibérica Logística", "sofia.martins@asteria.example", "OPS",
+        new("Email", "Reclamação de entrega - Ibérica Logística", "sofia.martins@asteria.example", "OPS",
             DocumentStatus.Approved, 22,
             [("fromAddress", "operacoes@iberica-logistica.example"), ("subject", "Atraso na entrega da encomenda ENC-2026-00028"),
              ("receivedAt", "2026-08-27")],
             ["email", "incidente", "logística"]),
 
-        new("Email", "Proposta comercial — Nordvik Systems", "sofia.martins@asteria.example", "OPS",
+        new("Email", "Proposta comercial - Nordvik Systems", "sofia.martins@asteria.example", "OPS",
             DocumentStatus.InReview, 9,
             [("fromAddress", "sales@nordvik.example"), ("subject", "Proposta de integração de sistemas"),
              ("receivedAt", "2026-09-09")],
             ["email", "proposta"]),
 
-        new("Email", "Confirmação de pagamento — Verdemar Serviços", "ricardo.lopes@asteria.example", "FIN",
+        new("Email", "Confirmação de pagamento - Verdemar Serviços", "ricardo.lopes@asteria.example", "FIN",
             DocumentStatus.Archived, 30,
             [("fromAddress", "financeiro@verdemar.example"), ("subject", "Confirmação de pagamento da fatura 2026/0219"),
              ("receivedAt", "2026-08-19")],
@@ -284,28 +284,28 @@ public sealed class DocumentDemoSeeder(
             [("requester", "Ana Ferreira"), ("requestType", "Acesso"), ("neededBy", "2026-09-25")],
             ["pedido", "aguarda-aprovação", "acesso"]),
 
-        new("RequestForm", "Pedido de equipamento — portátil de substituição", "joao.pereira@asteria.example", "HR",
+        new("RequestForm", "Pedido de equipamento - portátil de substituição", "joao.pereira@asteria.example", "HR",
             DocumentStatus.Approved, 28,
             [("requester", "João Pereira"), ("requestType", "Equipamento"), ("neededBy", "2026-09-05")],
             ["pedido", "equipamento"]),
 
-        new("RequestForm", "Pedido de formação — Gestão documental avançada", "ana.ferreira@asteria.example", "PRC",
+        new("RequestForm", "Pedido de formação - Gestão documental avançada", "ana.ferreira@asteria.example", "PRC",
             DocumentStatus.Draft, 1,
             [("requester", "Ana Ferreira"), ("requestType", "Formação"), ("neededBy", "2026-11-01")],
             ["pedido", "formação", "rascunho"]),
 
         // ------------------------------------------------------------------------------ Relatórios
-        new("Report", "Relatório de tesouraria — agosto de 2026", "ricardo.lopes@asteria.example", "FIN",
+        new("Report", "Relatório de tesouraria - agosto de 2026", "ricardo.lopes@asteria.example", "FIN",
             DocumentStatus.Approved, 16,
             [("period", "Agosto de 2026"), ("author", "Ricardo Lopes")],
             ["relatório", "financeiro"], Versions: 2),
 
-        new("Report", "Relatório de operações — 3.º trimestre de 2026", "sofia.martins@asteria.example", "OPS",
+        new("Report", "Relatório de operações - 3.º trimestre de 2026", "sofia.martins@asteria.example", "OPS",
             DocumentStatus.InReview, 7,
             [("period", "3.º trimestre de 2026"), ("author", "Sofia Martins")],
             ["relatório", "operações"]),
 
-        new("Report", "Relatório de conformidade documental — 1.º semestre", "admin@asteria.example", "MGT",
+        new("Report", "Relatório de conformidade documental - 1.º semestre", "admin@asteria.example", "MGT",
             DocumentStatus.Approved, 80,
             [("period", "1.º semestre de 2026"), ("author", "Helena Vasconcelos")],
             ["relatório", "conformidade"],
@@ -647,7 +647,7 @@ public sealed class DocumentDemoSeeder(
             Action = action,
             EntityType = AuditEntityTypes.Document,
             EntityId = document.Id,
-            EntityDisplayName = $"{document.Reference} — {document.Title}",
+            EntityDisplayName = $"{document.Reference} · {document.Title}",
             Severity = AuditSeverity.Information,
             CorrelationId = "seed-" + document.Id.ToString("N")[..12],
             Summary = summary

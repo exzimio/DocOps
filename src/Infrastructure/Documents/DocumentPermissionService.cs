@@ -80,7 +80,7 @@ public sealed class DocumentPermissionService(
                 Action = AuditActions.DocumentPermissionGranted,
                 EntityType = AuditEntityTypes.Document,
                 EntityId = document.Id,
-                EntityDisplayName = $"{document.Reference} — {document.Title}",
+                EntityDisplayName = $"{document.Reference} · {document.Title}",
                 Severity = AuditSeverity.Security,
                 Summary = $"Acesso concedido a {displayName}",
                 Before = previousLevel is { } previous
@@ -117,7 +117,7 @@ public sealed class DocumentPermissionService(
                 Action = AuditActions.DocumentPermissionRevoked,
                 EntityType = AuditEntityTypes.Document,
                 EntityId = document.Id,
-                EntityDisplayName = $"{document.Reference} — {document.Title}",
+                EntityDisplayName = $"{document.Reference} · {document.Title}",
                 Severity = AuditSeverity.Security,
                 Summary = $"Acesso revogado a {permission.SubjectDisplayName}",
                 Before = new

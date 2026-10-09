@@ -523,7 +523,7 @@ public sealed class DocumentService(
             TypeIcon = type.Icon,
             Status = document.Status,
             Classification = document.Classification,
-            OwnerName = userNames.GetValueOrDefault(document.OwnerUserId, "—"),
+            OwnerName = userNames.GetValueOrDefault(document.OwnerUserId, "-"),
             DepartmentName = document.Department?.Name,
             DepartmentCode = document.Department?.Code,
             CurrentVersionNumber = document.CurrentVersionNumber,
@@ -561,7 +561,7 @@ public sealed class DocumentService(
                         v.ContentHash,
                         v.Comment,
                         v.CreatedAtUtc,
-                        v.CreatedByUserId is { } creator ? userNames.GetValueOrDefault(creator, "—") : "—",
+                        v.CreatedByUserId is { } creator ? userNames.GetValueOrDefault(creator, "-") : "-",
                         v.IsCurrent))
             ],
             Metadata =
@@ -803,7 +803,7 @@ public sealed class DocumentService(
             Action = action,
             EntityType = AuditEntityTypes.Document,
             EntityId = document.Id,
-            EntityDisplayName = $"{document.Reference} — {document.Title}",
+            EntityDisplayName = $"{document.Reference} · {document.Title}",
             Summary = summary,
             Before = before,
             After = after,

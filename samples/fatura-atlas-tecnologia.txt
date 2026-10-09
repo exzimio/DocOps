@@ -1,5 +1,5 @@
 Atlas Tecnologia, Lda.
-Rua das Flores, 120 — 4050-262 Porto
+Rua das Flores, 120, 4050-262 Porto
 NIF 509 123 456 · faturacao@atlas-tecnologia.example
 
 FATURA
@@ -9,8 +9,8 @@ Fatura n.º: FT 2026/0815
 Data de emissão: 03/09/2026
 Data de vencimento: 03/10/2026
 
-Cliente: Asteria Group, S.A. — NIF 501 234 567
-Avenida da Liberdade, 200 — 1250-147 Lisboa
+Cliente: Asteria Group, S.A., NIF 501 234 567
+Avenida da Liberdade, 200, 1250-147 Lisboa
 Requisição / Encomenda: ENC-2026-00045
 
 DESCRIÇÃO                                   QTD     PREÇO UN.      TOTAL

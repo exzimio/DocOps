@@ -156,14 +156,14 @@ public sealed class WorkflowInstanceSeeder(
             Outcome: "Rejeitada"),
 
         // ------------------------------------------------------------------------- Contratos
-        new(Contract, "Contrato de parceria — Nordvik Systems", 8, WorkflowInstanceStatus.Waiting,
+        new(Contract, "Contrato de parceria - Nordvik Systems", 8, WorkflowInstanceStatus.Waiting,
             ["legal-review"],
             [
                 new("legal-review", "Rever cláusulas contratuais", WorkflowTaskStatus.InProgress, 0,
                     AssigneeEmail: "carla.nunes@asteria.example", DueInHours: 216)
             ]),
 
-        new(Contract, "Contrato de prestação de serviços — Atlas Tecnologia", 12, WorkflowInstanceStatus.Waiting,
+        new(Contract, "Contrato de prestação de serviços - Atlas Tecnologia", 12, WorkflowInstanceStatus.Waiting,
             ["signature-preparation"],
             [
                 new("legal-review", "Rever cláusulas contratuais", WorkflowTaskStatus.Completed, 0,
@@ -177,7 +177,7 @@ public sealed class WorkflowInstanceSeeder(
                     AssigneeEmail: "carla.nunes@asteria.example", DueInHours: 120)
             ]),
 
-        new(Contract, "Contrato de arrendamento — Armazém de Alverca", 9, WorkflowInstanceStatus.Waiting,
+        new(Contract, "Contrato de arrendamento - Armazém de Alverca", 9, WorkflowInstanceStatus.Waiting,
             ["management-approval"],
             [
                 new("legal-review", "Rever cláusulas contratuais", WorkflowTaskStatus.Completed, 0,
@@ -188,7 +188,7 @@ public sealed class WorkflowInstanceSeeder(
                     Priority: WorkflowTaskPriority.Critical, Escalated: true)
             ]),
 
-        new(Contract, "Contrato de fornecimento — Northstar Supplies", 210, WorkflowInstanceStatus.Completed,
+        new(Contract, "Contrato de fornecimento - Northstar Supplies", 210, WorkflowInstanceStatus.Completed,
             [],
             [
                 new("legal-review", "Rever cláusulas contratuais", WorkflowTaskStatus.Completed, 0,
@@ -203,7 +203,7 @@ public sealed class WorkflowInstanceSeeder(
             ],
             Outcome: "Contrato aprovado"),
 
-        new(Contract, "Acordo de confidencialidade — Verdemar Serviços", 64, WorkflowInstanceStatus.Completed,
+        new(Contract, "Acordo de confidencialidade - Verdemar Serviços", 64, WorkflowInstanceStatus.Completed,
             [],
             [
                 new("legal-review", "Rever cláusulas contratuais", WorkflowTaskStatus.Completed, 0,
@@ -219,7 +219,7 @@ public sealed class WorkflowInstanceSeeder(
             Outcome: "Contrato aprovado"),
 
         // ------------------------------------------------------------------------- Integração
-        new(Onboarding, "Plano de integração — Marta Oliveira", 4, WorkflowInstanceStatus.Waiting,
+        new(Onboarding, "Plano de integração - Marta Oliveira", 4, WorkflowInstanceStatus.Waiting,
             ["hr-file", "it-setup"],
             [
                 new("hr-file", "Instruir processo individual", WorkflowTaskStatus.Pending, 0,
@@ -232,7 +232,7 @@ public sealed class WorkflowInstanceSeeder(
                 ("split", WorkflowEventTypes.NodeEntered, "Ramificação paralela 'Preparar integração'", 0)
             ]),
 
-        new(Onboarding, "Contrato de trabalho — Marta Oliveira", 75, WorkflowInstanceStatus.Completed,
+        new(Onboarding, "Contrato de trabalho - Marta Oliveira", 75, WorkflowInstanceStatus.Completed,
             [],
             [
                 new("hr-file", "Instruir processo individual", WorkflowTaskStatus.Completed, 0,
@@ -249,7 +249,7 @@ public sealed class WorkflowInstanceSeeder(
                 ("welcome", WorkflowEventTypes.NotificationSent, "Notificação enviada a Human Resources", 20)
             ]),
 
-        new(Onboarding, "Registo de formação — Segurança da informação", 55, WorkflowInstanceStatus.Completed,
+        new(Onboarding, "Registo de formação - Segurança da informação", 55, WorkflowInstanceStatus.Completed,
             [],
             [
                 new("hr-file", "Instruir processo individual", WorkflowTaskStatus.Completed, 0,

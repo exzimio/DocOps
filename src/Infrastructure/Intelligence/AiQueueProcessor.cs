@@ -69,7 +69,7 @@ public sealed class AiQueueProcessor(
                 Action = run.Status == AiRunStatus.Failed ? AuditActions.AiRunFailed : AuditActions.AiRunCreated,
                 EntityType = AuditEntityTypes.Document,
                 EntityId = document.Id,
-                EntityDisplayName = $"{document.Reference} — {document.Title}",
+                EntityDisplayName = $"{document.Reference} · {document.Title}",
                 Summary = run.Status == AiRunStatus.Failed
                     ? "Análise de IA pedida por um processo, sem resultado"
                     : $"Documento analisado por '{run.ProviderName}' a pedido de um processo",

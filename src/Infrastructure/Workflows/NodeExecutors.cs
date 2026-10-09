@@ -351,7 +351,7 @@ public sealed class DocumentStatusEffect(DocOpsDbContext dbContext, IAuditServic
                 Action = Domain.Auditing.AuditActions.DocumentStatusChanged,
                 EntityType = Domain.Auditing.AuditEntityTypes.Document,
                 EntityId = document.Id,
-                EntityDisplayName = $"{document.Reference} — {document.Title}",
+                EntityDisplayName = $"{document.Reference} · {document.Title}",
                 Summary = $"Estado alterado pelo workflow {context.Instance.Reference}",
                 Before = new { Status = previous.ToString() },
                 After = new { Status = targetStatus.ToString(), Workflow = context.Instance.Reference }

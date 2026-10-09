@@ -126,7 +126,7 @@ public sealed class SignatureService(
             SignerDisplayName = signer.Name,
             SignerEmail = signer.Email ?? string.Empty,
             RequestedByUserId = CurrentUserId(),
-            RequestedByDisplayName = currentUser.DisplayName ?? "—",
+            RequestedByDisplayName = currentUser.DisplayName ?? "-",
             RequestedAtUtc = clock.UtcNow,
             Reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim(),
             Status = SignatureRequestStatus.Pending
@@ -366,8 +366,8 @@ public sealed class SignatureService(
             {
                 Id = row.Request.Id,
                 DocumentId = row.Request.DocumentId,
-                DocumentReference = row.Reference ?? "—",
-                DocumentTitle = row.Title ?? "—",
+                DocumentReference = row.Reference ?? "-",
+                DocumentTitle = row.Title ?? "-",
                 VersionNumber = row.Request.VersionNumber,
                 RequestedContentHash = row.Request.RequestedContentHash,
                 SignedContentHash = row.Request.SignedContentHash,
