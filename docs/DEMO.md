@@ -33,12 +33,12 @@ ficheiros carregados em `src/Api/storage`. A API volta a semear tudo no arranque
 
 ---
 
-## Demonstração disponível na Fase 1 — Identidade, acesso e isolamento (≈4 minutos)
+## Identidade, acesso e isolamento (≈4 minutos)
 
 ### 1. Página pública (20 s)
 
 Abrir <http://localhost:5173>. Referir a proposta de valor, as seis capacidades e a nota de projeto
-independente. Alternar o idioma para inglês e o tema para escuro — a preferência persiste.
+independente. Alternar o idioma para inglês e o tema para escuro: a preferência persiste.
 
 ### 2. Autenticação real (40 s)
 
@@ -50,7 +50,7 @@ Em **Abrir demonstração interativa**:
 - Entrar com a palavra-passe correta.
 
 Nas ferramentas de programador, mostrar o cookie `docops.session`: `HttpOnly`, `SameSite=Lax`.
-Em `document.cookie` na consola, o cookie **não** aparece — nenhum *token* está acessível a
+Em `document.cookie` na consola, o cookie **não** aparece: nenhum *token* está acessível a
 JavaScript.
 
 ### 3. Painel com dados reais (60 s)
@@ -67,7 +67,7 @@ Reparar que Ricardo Lopes tem `documents.approve` (é aprovador financeiro) mas 
 Terminar sessão e entrar com `admin@vertice.example`.
 
 A mesma aplicação, o mesmo *endpoint* `/api/tenants/current`, resultado completamente diferente:
-Vértice Industrial com dois departamentos. Não existe forma de pedir os dados da Asteria Group — a
+Vértice Industrial com dois departamentos. Não existe forma de pedir os dados da Asteria Group: a
 organização vem da sessão e não há rota que a aceite como parâmetro.
 
 ### 5. Trilho de auditoria (40 s)
@@ -105,15 +105,15 @@ imutável nas duas camadas.
 
 ### 6. Superfície da API e saúde do sistema (40 s)
 
-- <http://localhost:5180/scalar/v1> — documentação OpenAPI gerada.
-- <http://localhost:5180/health> — estado das dependências, sem revelar infraestrutura.
+- <http://localhost:5180/scalar/v1>: documentação OpenAPI gerada.
+- <http://localhost:5180/health>: estado das dependências, sem revelar infraestrutura.
 - `curl -X POST http://localhost:5180/api/auth/login -H "Content-Type: application/json" -d '{"email":"a@b.com","password":"x"}'`
   devolve `403 origin_not_allowed`: um pedido sem origem autorizada é recusado, mesmo antes de
   qualquer verificação de credenciais.
 
 ---
 
-## Demonstração disponível na Fase 2 — Repositório documental (≈5 minutos)
+## Repositório documental (≈5 minutos)
 
 ### 1. Lista de documentos (60 s)
 
@@ -123,7 +123,7 @@ em 8 tipos, com estados, classificações, versões e etiquetas coerentes.
 - Escreva `Northstar` na pesquisa: a lista reduz-se aos documentos desse fornecedor. A pesquisa corre
   no servidor, sobre título, referência, descrição e metadados.
 - Clique no estado **Aguarda aprovação**: ficam as faturas e pedidos por decidir.
-- Repare no rodapé: a contagem e a paginação vêm do servidor — o browser nunca recebe a lista toda.
+- Repare no rodapé: a contagem e a paginação vêm do servidor: o browser nunca recebe a lista toda.
 
 ### 2. Detalhe, metadados e versões (90 s)
 
@@ -136,13 +136,13 @@ Abra a fatura **Atlas Tecnologia**.
   versão. Descarregue a versão 1 e a versão atual: são ficheiros diferentes, ambos preservados.
 - Carregue uma nova versão no painel lateral e veja o número de versão e a impressão digital mudarem.
 
-### 3. Acesso efetivo — a razão por trás da permissão (90 s)
+### 3. Acesso efetivo: a razão por trás da permissão (90 s)
 
 O painel **Acesso efetivo** explica a decisão de autorização, regra a regra:
 
-- "É o proprietário do documento" — concede ver, descarregar, editar, eliminar, partilhar, aprovar.
+- "É o proprietário do documento": concede ver, descarregar, editar, eliminar, partilhar, aprovar.
 - "Classificação confidencial: leitura para o departamento responsável".
-- "O perfil do utilizador não inclui estas permissões na organização" — remove `eliminar`, porque o
+- "O perfil do utilizador não inclui estas permissões na organização": remove `eliminar`, porque o
   perfil *Finance Approver* não tem `documents.delete`.
 
 Isto demonstra o princípio: uma partilha de documento nunca concede mais do que o perfil permite.
@@ -151,7 +151,7 @@ Isto demonstra o princípio: uma partilha de documento nunca concede mais do que
 
 Termine a sessão e entre como `contacto@northstar.example` (parceiro externo, Northstar Supplies).
 
-Abra **Documentos**: vê exatamente **um** documento — a fatura que lhe foi partilhada explicitamente.
+Abra **Documentos**: vê exatamente **um** documento, a fatura que lhe foi partilhada explicitamente.
 Nenhuma classificação abre documentos a um utilizador externo; só uma permissão explícita o faz.
 
 ### 5. Trilho de auditoria do documento (60 s)
@@ -163,13 +163,13 @@ alteração mostram o antes e o depois.
 
 ---
 
-## Demonstração disponível na Fase 3 — Tarefas e processos (≈5 minutos)
+## Tarefas e processos (≈5 minutos)
 
 ### 1. Centro de tarefas (60 s)
 
 Entre como `ricardo.lopes@asteria.example` e abra **Tarefas**.
 
-- Os indicadores no topo — pendentes, em curso, em atraso, concluídas, por atribuir — são calculados
+- Os indicadores no topo (pendentes, em curso, em atraso, concluídas, por atribuir) são calculados
   pelo servidor a partir das tarefas reais.
 - Cada linha mostra o prazo com um ponto de SLA que passa de verde a âmbar e a vermelho à medida que
   a data se aproxima, e uma marca de *escalada* quando o prazo foi ultrapassado.
@@ -194,21 +194,21 @@ Documento passou de 'Approved' para 'Archived'
 Processo concluído
 ```
 
-O documento ligado está agora **arquivado** — não porque a interface o disse, mas porque o nó final
+O documento ligado está agora **arquivado**, não porque a interface o disse, mas porque o nó final
 do processo pediu essa transição e a máquina de estados do documento a aceitou.
 
 ### 3. Encaminhamento por condição (60 s)
 
 Abra a definição **Aprovação de fatura de fornecedor** (botão *Passos do processo*). Repare no nó de
 condição: faturas acima de 10 000 € seguem para aprovação de direção; abaixo, para aprovação
-financeira. As instâncias em curso mostram-no na prática — a fatura da Atlas Tecnologia (30 504 €)
+financeira. As instâncias em curso mostram-no na prática: a fatura da Atlas Tecnologia (30 504 €)
 está parada em *Aprovação de direção*, as restantes em *Aprovação financeira*.
 
 ### 4. Validação de definições (45 s)
 
 Na mesma página, o painel **Problemas de validação** mostra que o processo é executável. A validação
-recusa ativar uma definição com nós sem saída, ramos em falta ou tipos de nó que o motor ainda não
-executa — um processo desenhado com nós de IA não pode ser ativado antes de essa fase existir.
+recusa ativar uma definição com nós sem saída, ramos em falta ou tipos de nó que o motor não
+executa.
 
 ### 5. Iniciar um processo a partir de um documento (45 s)
 
@@ -225,7 +225,7 @@ cronologia da instância e registo de auditoria. Nada disto acontece no pedido d
 
 ---
 
-## Demonstração disponível na Fase 4 — Desenhar um processo (≈5 minutos)
+## Desenhar um processo (≈5 minutos)
 
 Entre como `admin@asteria.example`, que é quem tem a permissão `workflows.design`.
 
@@ -241,7 +241,7 @@ Um aviso no topo diz o que este processo já tem: *«já tem execuções; guarda
 que o motor não saiba executar.
 
 Na paleta, adicione uma **Aprovação**. O painel da direita muda para os campos que um passo de
-aprovação realmente usa — título da tarefa, a quem é atribuída, prazo, escalonamento, prioridade e o
+aprovação realmente usa: título da tarefa, a quem é atribuída, prazo, escalonamento, prioridade e o
 estado que o documento passa a ter ao entrar no passo. Arraste das pegas dos nós para desenhar as
 ligações.
 
@@ -251,7 +251,7 @@ use.
 
 ### 3. Ramos que o motor sabe seguir (45 s)
 
-Selecione a ligação que sai da aprovação. O campo **Ramo** oferece apenas `Aprovado` e `Rejeitado` —
+Selecione a ligação que sai da aprovação. O campo **Ramo** oferece apenas `Aprovado` e `Rejeitado`,
 os dois valores que o motor compara quando resolve a saída de um passo com decisão. Numa condição
 oferece `Verdadeiro` e `Falso`. Não há ramos livres: um desenho que a interface permite é um desenho
 que o motor executa.
@@ -260,13 +260,13 @@ que o motor executa.
 
 **Guardar** grava o grafo; o indicador *Alterações por guardar* desaparece. **Validar** corre a
 validação no servidor e lista o que impede a execução. Tente **Ativar** com um passo por configurar:
-a resposta é `409` e o processo continua inativo — a decisão é do servidor, não do botão.
+a resposta é `409` e o processo continua inativo: a decisão é do servidor, não do botão.
 
 ### 5. Versionamento com processos a correr (60 s)
 
 Abra um processo que já tenha execuções e altere um passo. O botão diz **Guardar nova versão**. Ao
 guardar, o URL muda para o registo da versão 2, o crachá passa a `v2` e a versão anterior fica
-marcada como não editável — continua na base de dados porque as instâncias em curso resolvem os nós
+marcada como não editável, e continua na base de dados porque as instâncias em curso resolvem os nós
 nela. Abra uma dessas instâncias em **Workflows → Execuções**: os passos que mostra são os da versão
 com que arrancou.
 
@@ -279,9 +279,9 @@ com que arrancou.
 
 ---
 
-## Demonstração disponível na Fase 5 — Inteligência documental (≈6 minutos)
+## Inteligência documental (≈6 minutos)
 
-O ponto desta fase não é que a IA acerte. É que **se possa verificar se acertou**, e que nada chegue
+O ponto desta demonstração não é que a IA acerte. É que **se possa verificar se acertou**, e que nada chegue
 ao documento sem alguém decidir.
 
 ### 1. O que chegou e ninguém leu (40 s)
@@ -289,7 +289,7 @@ ao documento sem alguém decidir.
 Entre como `ana.ferreira@asteria.example` e abra **Centro de IA**. A primeira coisa visível é o aviso
 de que o fornecedor ativo é o **de demonstração**: regras determinísticas sobre o texto, não um
 modelo de linguagem. Em **Por classificar** estão os ficheiros recebidos cujo tipo ninguém
-identificou ainda — repare que a Ana só vê os dela: o contrato do Jurídico e a fatura britânica das
+identificou ainda. Repare que a Ana só vê os dela: o contrato do Jurídico e a fatura britânica das
 Finanças são confidenciais e não aparecem aqui.
 
 ### 2. Ler o documento (90 s)
@@ -300,7 +300,7 @@ documento, numerado**; do lado direito, o que a análise propõe.
 A classificação sugere *Fatura de fornecedor* com a confiança e a linha que a suporta. Cada campo
 mostra o valor, o grau de confiança e a linha de onde foi lido. **Clique na linha 21** («Total a
 pagar: 1 906,50 €»): o texto à esquerda salta para essa linha e realça-a. É isto que distingue uma
-citação de uma afirmação — é um sítio onde ir ver.
+citação de uma afirmação: é um sítio onde ir ver.
 
 Repare no que **não** foi encontrado: campos sem valor dizem-no, em vez de adivinhar.
 
@@ -317,7 +317,7 @@ outro. Só então **Aplicar ao documento**.
 
 Em **Visão geral**, o documento passou a *Fatura de fornecedor*, a política de retenção acompanhou o
 tipo, e cada valor escrito a partir de uma sugestão aceite tem o selo **IA** com a confiança. O valor
-que corrigiu não tem selo — foi escrito por si.
+que corrigiu não tem selo: foi escrito por si.
 
 Em **Auditoria** está tudo, decisão a decisão: `ai.run.created`, `ai.classification.accepted`, um
 `ai.suggestion.accepted` por campo, `ai.suggestion.edited`, `ai.suggestion.rejected`,
@@ -326,11 +326,11 @@ Em **Auditoria** está tudo, decisão a decisão: `ai.run.created`, `ai.classifi
 ### 5. Perguntar ao documento (60 s)
 
 No separador **Inteligência**, use **Qual é o total?**. A resposta vem com a linha que a sustenta, e
-clicar nela leva-o lá. Pergunte agora algo que o documento não diz — «Qual é a cor do logótipo?» — e
+clicar nela leva-o lá. Pergunte agora algo que o documento não diz, como «Qual é a cor do logótipo?», e
 a resposta é que não foi encontrado, sem citações inventadas.
 
 Entre como `ricardo.lopes@asteria.example`, abra uma fatura já aprovada e pergunte **«Quem aprovou
-este documento?»**. A resposta vem dos registos de aprovação do sistema, citando-os — não do texto
+este documento?»**. A resposta vem dos registos de aprovação do sistema, citando-os, e não do texto
 do documento, onde essa informação não existe.
 
 ### 6. IA dentro de um processo (45 s)
@@ -338,7 +338,7 @@ do documento, onde essa informação não existe.
 No desenhador de workflows, os nós **Classificação por IA** e **Extração por IA** já são executáveis.
 Um passo de IA não chama o fornecedor dentro da travessia: põe a análise em fila, e o worker
 (`dotnet run --project src/Worker/DocOps.Worker.csproj`) processa-a e retoma o processo, que escreve
-o resultado em variáveis `ai.*` — uma condição a seguir pode encaminhar por elas. O passo **nunca**
+o resultado em variáveis `ai.*`, e uma condição a seguir pode encaminhar por elas. O passo **nunca**
 aplica nada: as sugestões continuam à espera de uma pessoa.
 
 Um documento sem texto (uma digitalização, por exemplo) faz o processo seguir pelo ramo **Sem
@@ -354,9 +354,9 @@ valor se puder reler a partir delas.
 
 ---
 
-## Demonstração disponível na Fase 6 — Pesquisa (≈4 minutos)
+## Pesquisa (≈4 minutos)
 
-Entre como `ana.ferreira@asteria.example` — uma colaboradora sem privilégios especiais, para que se
+Entre como `ana.ferreira@asteria.example`, uma colaboradora sem privilégios especiais, para que se
 veja que a pesquisa devolve o que *ela* pode ver.
 
 ### 1. Texto livre, com prova de onde veio (1 min)
@@ -371,8 +371,8 @@ Repare, por esta ordem:
 - Por baixo de cada resultado está um **excerto do próprio documento**, com a palavra encontrada
   realçada. A posição do realce vem do servidor; o ecrã não volta a procurar.
 - As etiquetas **Encontrado em** dizem em que partes do documento os termos estavam.
-- Ao fundo da página, uma linha diz que motor respondeu — «Respondido pelo índice de texto integral
-  do SQL Server» — e quais os termos em que a frase foi separada.
+- Ao fundo da página, uma linha diz que motor respondeu («Respondido pelo índice de texto integral
+  do SQL Server») e quais os termos em que a frase foi separada.
 
 Experimente `"prestação de serviços"` entre aspas: a frase é procurada inteira, e a linha de
 diagnóstico mostra-a como um único termo.
@@ -381,10 +381,10 @@ diagnóstico mostra-a como um único termo.
 
 Carregue em **Mostrar filtros**. Além dos habituais, repare em dois:
 
-- **Processo** — de onde está o documento no circuito: sem processo, em curso, concluído, rejeitado.
-- **Aprovação** — se aguarda decisão, se já foi aprovado, se foi rejeitado.
+- **Processo**: em que ponto do circuito está o documento (sem processo, em curso, concluído, rejeitado).
+- **Aprovação**: se aguarda decisão, se já foi aprovado, se foi rejeitado.
 
-Escolha **A aguardar**. Todos os documentos que restam mostram o estado «Aguarda aprovação» — os
+Escolha **A aguardar**. Todos os documentos que restam mostram o estado «Aguarda aprovação», e os
 dois estados são lidos dos workflows e das tarefas, não de uma cópia guardada no documento.
 
 ### 3. Perguntar por palavras (1 min)
@@ -394,7 +394,7 @@ Limpe a caixa de pesquisa e escreva na **pergunta em linguagem natural**:
 > faturas que aguardam aprovação
 
 Antes dos resultados, a aplicação mostra **como leu a pergunta**: `Aprovação: A aguardar` e
-`Tipo: Fatura de fornecedor`. São esses filtros que correram — os mesmos que o formulário produz,
+`Tipo: Fatura de fornecedor`. Foram esses filtros que correram, os mesmos que o formulário produz e
 com a mesma autorização. A etiqueta **Demonstração** ao lado diz que quem leu a pergunta foi a
 tabela de regras e não um modelo de linguagem.
 
@@ -413,7 +413,7 @@ Sem sair, abra uma janela anónima e entre como `admin@asteria.example`. Faça a
 O administrador vê mais. Não é a interface a esconder linhas: o predicado de permissões faz parte da
 consulta, pelo que os documentos que a Ana não pode ver nunca chegam a ser contados.
 
-## Demonstração disponível na Fase 6 — Caixa de entrada (≈4 minutos)
+## Caixa de entrada (≈4 minutos)
 
 Entre como `sofia.martins@asteria.example`, que tem `inbox.process` e pode agir sobre as mensagens.
 
@@ -421,7 +421,7 @@ Entre como `sofia.martins@asteria.example`, que tem `inbox.process` e pode agir 
 
 Abra **Caixa de entrada**. Repare, antes de tudo, na faixa âmbar no topo: diz que esta é uma **caixa
 de correio de demonstração**, gerada localmente, sem ligação a servidor nenhum e sem credenciais.
-Não é letra pequena — é a mesma regra da IA na Fase 5, aplicada ao correio: uma simulação diz que é
+Não é letra pequena: é a mesma regra da IA, aplicada ao correio. Uma simulação diz que é
 uma simulação, onde quer que apareça.
 
 A lista tem correspondência realista: uma fatura da Atlas Tecnologia com anexo, uma minuta de
@@ -431,11 +431,11 @@ papelaria já arquivado. À direita, a mensagem selecionada abre-se para leitura
 Carregue em **Sincronizar**. A linha por baixo diz quantas mensagens foram obtidas e quantas eram
 novas: **zero**. Sincronizar de novo não acrescenta nada, porque o identificador que o sistema de
 correio dá a cada mensagem tem índice único por organização e caixa. O botão vai ser carregado duas
-vezes por alguém — e a segunda vez não pode duplicar a caixa de entrada.
+vezes por alguém, e a segunda vez não pode duplicar a caixa de entrada.
 
 ### 2. Uma fatura que chega por correio torna-se um documento (1,5 min)
 
-Escolha a mensagem de **Mariana Quadros** — a fatura FT 2026/0815, com o anexo `FT-2026-0815.txt`.
+Escolha a mensagem de **Mariana Quadros**, a fatura FT 2026/0815, com o anexo `FT-2026-0815.txt`.
 
 Carregue em **Guardar como documento**, ao lado do anexo. No diálogo, escolha o tipo
 **«Por classificar»** e guarde.
@@ -443,62 +443,61 @@ Carregue em **Guardar como documento**, ao lado do anexo. No diálogo, escolha o
 Três coisas acontecem de uma vez:
 
 - O anexo passa a ser um **documento a sério**, com referência própria, permissões e entrada de
-  auditoria — criado pelo mesmo serviço que um carregamento manual usa. Não há porta lateral para o
+  auditoria, criado pelo mesmo serviço que um carregamento manual usa. Não há porta lateral para o
   repositório.
 - A mensagem passa a **Processada** e mostra a ligação ao documento que produziu. A ligação fica
   registada dos dois lados: meses depois ainda se responde a «de onde veio esta fatura».
 - O painel **não salta** para outra mensagem, mesmo que ela tenha deixado de corresponder ao filtro
   «Não lida»/«Lida» que está ativo. O que se estava a ler continua no ecrã.
 
-Siga a ligação para o documento. Repare que ele entrou **por classificar** — que é o estado correto,
-porque ninguém o leu ainda. É exatamente onde a inteligência documental da Fase 5 pega: abra o
+Siga a ligação para o documento. Repare que ele entrou **por classificar**, que é o estado correto,
+porque ninguém o leu ainda. É exatamente onde a inteligência documental pega: abra o
 separador de IA e o percurso continua, agora com um documento que chegou por correio em vez de ter
 sido carregado à mão.
 
 ### 3. As ações que uma caixa de entrada precisa de ter (1 min)
 
-Volte à caixa de entrada e escolha uma mensagem **sem anexo** — a renovação da parceria Nordvik, por
+Volte à caixa de entrada e escolha uma mensagem **sem anexo**, a renovação da parceria Nordvik, por
 exemplo. As ações disponíveis mudam com o que a mensagem é:
 
-- **Criar documento a partir da mensagem** — para as mensagens em que o corpo *é* o conteúdo. O
+- **Criar documento a partir da mensagem**: para as mensagens em que o corpo *é* o conteúdo. O
   documento guarda a mensagem com os seus cabeçalhos: quem enviou, quando, para que caixa. Um corpo
   sem isso não é prova de nada.
-- **Associar a documento existente** — quando o assunto já tem documento e a mensagem é mais um
+- **Associar a documento existente**: quando o assunto já tem documento e a mensagem é mais um
   episódio dele. A lista de documentos é a mesma, com as mesmas permissões: não se pode associar uma
   mensagem a um documento que não se pode abrir.
-- **Iniciar processo** — só aparece depois de a mensagem ter documento, porque um processo corre
+- **Iniciar processo**: só aparece depois de a mensagem ter documento, porque um processo corre
   sobre um documento. O servidor recusa na mesma se for pedido sem ele.
 
 Experimente **Arquivar** e depois **Reabrir**: uma mensagem arquivada sai da lista de trabalho mas
-fica no registo, e reabri-la devolve-a ao ponto onde estava — se já tinha produzido um documento,
+fica no registo, e reabri-la devolve-a ao ponto onde estava: se já tinha produzido um documento,
 volta a **Processada**, não a **Por ler**. O trabalho feito não se desfaz por se ter arquivado.
 
 ### 4. A caixa de uma organização é só dela (30 s)
 
 Entre numa janela anónima como `admin@vertice.example`, o administrador da segunda organização.
 
-A caixa de entrada está **vazia** — ou, se alguém já executou a integração de correio desta segunda
+A caixa de entrada está **vazia**, ou, se alguém já executou a integração de correio desta segunda
 organização, tem as mensagens **dela**, nunca as da Asteria. Não é a interface a esconder: o filtro
-de organização faz parte da consulta. Vale a pena dizer em voz alta numa entrevista que **esta
-funcionalidade falhou exatamente aqui na primeira versão** — os filtros são declarados entidade a entidade e faltou declarar os da
-caixa de entrada. Foi apanhado antes do *commit* por um teste que enumera todas as entidades com
-organização e falha se alguma ficar sem filtro. É o tipo de erro que só se evita com uma rede.
+de organização faz parte da consulta. Os filtros são declarados entidade a entidade, e por isso há um teste que enumera todas as
+entidades com organização e falha se alguma ficar sem filtro: é o tipo de erro que só se evita com
+uma rede.
 
-## Demonstração disponível na Fase 6 — Centro de integrações (≈5 minutos)
+## Centro de integrações (≈5 minutos)
 
 Entre como `admin@asteria.example`, que tem `integrations.manage`. Abra **Integrações**.
 
 ### 1. Seis cartões, e o que cada um admite sobre si (1 min)
 
 Seis sistemas: Microsoft Outlook, ERP, CRM, assinatura eletrónica, webhooks e importação de
-ficheiros. Todos começam **«Por configurar»**, com tudo a zero — porque nenhum correu ainda, e um
+ficheiros. Todos começam **«Por configurar»**, com tudo a zero, porque nenhum correu ainda, e um
 ecrã que abrisse com números já lá postos estaria a inventá-los.
 
 Repare em **quais** têm a faixa âmbar de simulação: o Outlook, o ERP e o CRM. Os outros três não.
 
 Vale a pena parar aqui, porque é o ponto que distingue este ecrã de um mural de logótipos: **só é
 dito simulado o que é simulado**. O lado de lá do ERP e do CRM é uma lista local fixa, e o correio
-corre no conetor de demonstração — esses dizem-no, e dizem exatamente *o quê*. Os outros três fazem
+corre no conetor de demonstração, e esses dizem-no, e dizem exatamente *o quê*. Os outros três fazem
 trabalho verdadeiro de ponta a ponta: a importação lê e move ficheiros reais do disco, os webhooks
 entregam HTTP a um destino externo, a assinatura conta os documentos que estão mesmo à espera de
 assinatura. Rotulá-los de demonstração faria parecer teatro o que é código a funcionar.
@@ -508,7 +507,7 @@ assinatura. Rotulá-los de demonstração faria parecer teatro o que é código 
 No cartão do **ERP**, carregue em **Executar agora**.
 
 O cartão passa a **Ligada** e diz quantos registos reconciliou e quantos fornecedores estão por
-registar. Abra **Ver registo**. A primeira linha é informativa — quantos valores foram conferidos,
+registar. Abra **Ver registo**. A primeira linha é informativa: quantos valores foram conferidos,
 em quantos documentos. As seguintes são **avisos**, uma por fornecedor que o ERP não conhece, com os
 documentos afetados nomeados.
 
@@ -525,7 +524,7 @@ O mesmo vale para o **CRM**, sobre as contrapartes dos contratos em vez dos forn
 ### 3. A importação recusa-se a correr sem dono (45 s)
 
 Execute o cartão da **Importação de ficheiros**. Sem nada na pasta vigiada, ele diz «nada por
-importar» e qual é a pasta — informação, não erro.
+importar» e qual é a pasta, como informação e não como erro.
 
 O pormenor que vale a pena contar: o varrimento agendado do worker **salta** este cartão de
 propósito, e diz porquê no registo. Um documento tem dono, e o trabalho agendado não tem sessão. As
@@ -541,16 +540,16 @@ e o original é movido para `importados/`, para que uma segunda execução não 
 
 No cartão dos **Webhooks**, carregue em **Configurar** e escreva `http://exemplo.com/hook`. Guarde.
 
-É recusado. Experimente agora `https://127.0.0.1/hook` — também é recusado, e por outra razão.
+É recusado. Experimente agora `https://127.0.0.1/hook`: também é recusado, e por outra razão.
 
 Aqui está a parte que interessa numa entrevista: um administrador a escrever um endereço que **este
 servidor** vai depois chamar é a definição de um pedido forjado do lado do servidor (SSRF). Por isso
-a verificação — HTTPS obrigatório, *loopback* e gamas privadas recusados — corre **no servidor e
+a verificação (HTTPS obrigatório, *loopback* e gamas privadas recusados) corre **no servidor e
 antes de o endereço ser guardado**, não só no momento da entrega. O formulário valida também, mas só
 para a mensagem chegar depressa; a verificação que conta é a que o cliente não pode contornar.
 
 Guarde um endereço HTTPS externo e reabra o diálogo: o endereço está lá, lido da base de dados. Pode
-mostrá-lo porque as definições de uma integração são **explicitamente não secretas** — nenhuma
+mostrá-lo porque as definições de uma integração são **explicitamente não secretas**: nenhuma
 credencial é guardada aqui, e é essa decisão que torna seguro mostrar o que lá está.
 
 ### 5. Ver e mudar são permissões diferentes (30 s)
@@ -558,25 +557,24 @@ credencial é guardada aqui, e é essa decisão que torna seguro mostrar o que l
 Numa janela anónima, entre como `sofia.martins@asteria.example`, que tem `integrations.view` mas não
 `integrations.manage`.
 
-Os cartões estão todos lá, com os números e o registo — mas sem **Executar agora**, sem
+Os cartões estão todos lá, com os números e o registo, mas sem **Executar agora**, sem
 **Configurar** e sem o interruptor de **Ativa**. Um gestor pode querer saber se o correio está a
 chegar sem poder desligar nada. E não é a interface a decidir: as ações que ela esconde são recusadas
 pelo servidor na mesma, com `403`.
 
 ### 6. Um processo que espera por um sistema externo (45 s)
 
-Abra o **desenhador de workflows** e a paleta de nós. O nó **Integração** já não está marcado como
-não executável — com ele, **nenhum tipo de nó do desenhador falha por não estar implementado**, que
-era o último sítio do produto onde isso ainda acontecia.
+Abra o **desenhador de workflows** e a paleta de nós. O nó **Integração** está lá,
+executável como **todos os tipos de nó que o desenhador oferece**.
 
 Ponha um nó de integração num processo e escolha qual integração ele corre. O que acontece quando o
 processo lá chega vale a pena explicar: o nó **não** chama o sistema externo ali. Enfileira o pedido,
 larga a transação do motor e a instância fica à espera; o worker corre a integração e retoma o
 processo quando ela termina. Uma chamada de rede dentro da travessia do grafo manteria uma transação
-de base de dados aberta à espera da Internet — e uma integração lenta passaria a ser um problema de
+de base de dados aberta à espera da Internet, e uma integração lenta passaria a ser um problema de
 base de dados.
 
-## Demonstração disponível na Fase 7 — Portal externo (≈4 minutos)
+## Portal externo (≈4 minutos)
 
 Entre como `contacto@northstar.example`. É a única conta de demonstração que não é de um colaborador
 da organização: representa a **Northstar Supplies**, um fornecedor.
@@ -584,7 +582,7 @@ da organização: representa a **Northstar Supplies**, um fornecedor.
 ### 1. Uma porta diferente para quem vem de fora (45 s)
 
 Repare para onde o início de sessão o leva: **`/portal`**, não `/app/dashboard`. E olhe para o que
-não está lá — sem Documentos, sem Tarefas, sem Workflows, sem Caixa de entrada, sem sino de
+não está lá: sem Documentos, sem Tarefas, sem Workflows, sem Caixa de entrada, sem sino de
 notificações. Um convidado não deve conseguir deduzir, só pela moldura, que ecrãs a organização tem
 por dentro.
 
@@ -593,7 +591,7 @@ clientes precisa de saber de que portal se trata.
 
 Experimente escrever `/app/documents` na barra de endereço. Volta ao portal. Vale a pena dizer numa
 entrevista que isto é **conveniência, não segurança**: o servidor recusa de qualquer forma, porque
-nenhum perfil externo tem as permissões da aplicação interna. E corre nos dois sentidos — entre numa
+nenhum perfil externo tem as permissões da aplicação interna. E corre nos dois sentidos: entre numa
 janela anónima como `admin@asteria.example`, escreva `/portal`, e é devolvido ao painel. Nem o
 administrador da organização entra no portal do fornecedor.
 
@@ -605,11 +603,11 @@ Preencha o assunto, uma nota, escolha um ficheiro e submeta. A submissão aparec
 O que acabou de acontecer do lado de dentro vale a pena contar:
 
 - O ficheiro tornou-se um **documento a sério**, criado pelo mesmo `IDocumentService` que um
-  carregamento manual usa — com referência própria, permissões e entrada de auditoria. Não há porta
+  carregamento manual usa, com referência própria, permissões e entrada de auditoria. Não há porta
   lateral para o repositório.
 - Entrou como **«por classificar»**, e não como fatura. O tipo fatura exige fornecedor, número, data
   e total; um portal que os exigisse antes de aceitar o ficheiro seria uma porta de entrada pior do
-  que o e-mail que veio substituir. É também exatamente onde a inteligência documental da Fase 5 o
+  que o e-mail que veio substituir. É também exatamente onde a inteligência documental o
   apanha.
 - Entrou no **departamento financeiro, com acesso de contribuidor**. Sem isso a submissão chegava e
   ficava intocável: o tipo de receção é confidencial, e um documento confidencial sem departamento
@@ -617,7 +615,7 @@ O que acabou de acontecer do lado de dentro vale a pena contar:
 
 ### 3. O que o fornecedor vê, e o que não vê (1 min)
 
-Abra a submissão. Tem o que enviou, quando, o ficheiro, o estado — e uma secção de **perguntas e
+Abra a submissão. Tem o que enviou, quando, o ficheiro, o estado, e uma secção de **perguntas e
 respostas** que diz, por extenso, que as notas internas ficam do lado de dentro.
 
 Agora o contraste. Noutra janela, entre como `ricardo.lopes@asteria.example` e inicie um processo
@@ -625,13 +623,13 @@ sobre esse documento. O processo tem cronologia, tarefas, prazos, responsáveis.
 fornecedor continua a ver **nada disso**.
 
 Não é a interface a esconder. A lista que o portal constrói **seleciona dois tipos de evento pelo
-nome** — a pergunta e a resposta — em vez de mostrar tudo menos o que é interno. A diferença importa:
-uma lista construída por exclusão deixaria entrar, por omissão, o tipo de evento que a próxima fase
-acrescentar. Selecionar falha fechado; excluir falha aberto.
+nome** (a pergunta e a resposta) em vez de mostrar tudo menos o que é interno. A diferença importa:
+uma lista construída por exclusão deixaria entrar, por omissão, o tipo de evento que alguém
+acrescentar a seguir. Selecionar falha fechado; excluir falha aberto.
 
 ### 4. A conversa que o portal existe para ter (1 min)
 
-Como `ana.ferreira@asteria.example` — a tarefa de validação da fatura é de Compras — abra a tarefa e
+Como `ana.ferreira@asteria.example` (a tarefa de validação da fatura é de Compras), abra a tarefa e
 carregue em **Pedir informação**, escrevendo uma pergunta ao fornecedor.
 
 De volta ao portal, a submissão mostra **«Aguarda a sua resposta»** e o detalhe traz a pergunta, com
@@ -639,7 +637,7 @@ uma caixa para responder. Responda.
 
 Três coisas a apontar:
 
-- A resposta entra na **cronologia interna do processo** e **notifica quem perguntou** — quem pediu
+- A resposta entra na **cronologia interna do processo** e **notifica quem perguntou**: quem pediu
   a informação não tem de ir verificar se ela chegou.
 - A resposta **não faz o processo avançar**. Acrescenta informação; a decisão continua de quem
   perguntou. Um fornecedor não aprova a sua própria fatura respondendo a uma questão sobre ela.
@@ -649,18 +647,18 @@ Três coisas a apontar:
 
 ### 5. E só o que é seu (15 s)
 
-Volte à lista. Estão lá a fatura que a organização lhe partilhou e o que ele próprio submeteu — e
+Volte à lista. Estão lá a fatura que a organização lhe partilhou e o que ele próprio submeteu, e
 mais nada do repositório, que tem dezenas de documentos.
 
 O portal **não tem regras de autorização próprias**: usa o mesmo avaliador de acesso da aplicação
 interna, que já dizia que um utilizador externo alcança um documento apenas por propriedade ou por
-concessão explícita. Dois conjuntos de regras sobre os mesmos documentos acabariam por divergir — e
+concessão explícita. Dois conjuntos de regras sobre os mesmos documentos acabariam por divergir, e
 quando divergem, é sempre o mais permissivo que ganha.
 
-## Demonstração disponível na Fase 7 — Assinatura eletrónica (≈3 minutos)
+## Assinatura eletrónica (≈3 minutos)
 
 > **Diga isto em voz alta antes de mostrar o ecrã:** esta funcionalidade **não tem validade legal**.
-> Não é uma assinatura qualificada nem avançada — não há chave privada sob controlo do signatário,
+> Não é uma assinatura qualificada nem avançada: não há chave privada sob controlo do signatário,
 > nem certificado, nem carimbo temporal independente. É um registo de que alguém concordou com um
 > conteúdo identificado. O ecrã diz o mesmo, no topo, antes de tudo o resto.
 
@@ -675,12 +673,12 @@ Escolha quem assina e peça. Repare no que acontece ao documento: passa a **«Ag
 o pedido mostra a **versão** e o **resumo SHA-256 completo** do conteúdo.
 
 Experimente escolher alguém que não tenha acesso ao documento. É recusado, com a indicação de que é
-preciso conceder-lhe acesso primeiro — um pedido que a pessoa nunca poderia cumprir ficaria na lista
+preciso conceder-lhe acesso primeiro: um pedido que a pessoa nunca poderia cumprir ficaria na lista
 dela a devolver recusas para sempre.
 
 ### 2. Só quem foi nomeado assina (45 s)
 
-Ainda como administrador — que detém **todas** as permissões da organização — tente assinar. É
+Ainda como administrador, que detém **todas** as permissões da organização, tente assinar. É
 recusado.
 
 Vale a pena parar aqui numa entrevista. Não é uma falha de permissões: é a afirmação de que uma
@@ -697,7 +695,7 @@ Este é o ponto técnico da funcionalidade.
 O pedido **fixou a versão** e copiou o resumo do conteúdo. Se alguém carregar uma versão nova, o
 registo **não é apagado nem re-apontado**: passa a mostrar que já não corresponde ao conteúdo atual.
 
-São três leituras possíveis e só uma é verdadeira — apagar seria perder prova, re-apontar em silêncio
+São três leituras possíveis e só uma é verdadeira: apagar seria perder prova, re-apontar em silêncio
 seria falsificá-la, e dizer «já não corresponde» é o que de facto aconteceu.
 
 E a verificação não depende de confiar na aplicação: descarregue o ficheiro, calcule-lhe o SHA-256 e
@@ -706,29 +704,29 @@ compare com o que está no ecrã.
 ### 4. O histórico (15 s)
 
 Abra o separador **Auditoria** do mesmo documento. Lá estão `signature.requested` e
-`signature.signed`, com quem, quando e sobre que versão — no sítio onde as pessoas procuram a
+`signature.signed`, com quem, quando e sobre que versão, no sítio onde as pessoas procuram a
 história de um documento, e não escondidas num registo separado de assinaturas.
 
-## Demonstração disponível na Fase 8 — Análises (≈4 minutos)
+## Análises (≈4 minutos)
 
 Entre como `admin@asteria.example` e abra **Análises**.
 
 ### 1. Os números não estão escritos em lado nenhum (1 min)
 
 Repare primeiro no que o painel diz de si próprio: os números contam **apenas o que quem está a ver
-tem permissão para ver**. Não é uma limitação técnica — é a mesma regra da listagem e da pesquisa,
+tem permissão para ver**. Não é uma limitação técnica: é a mesma regra da listagem e da pesquisa,
 aplicada aqui. Uma contagem é informação: saber quantos documentos confidenciais existem no
 jurídico é saber alguma coisa sobre eles.
 
 Mude o período para **7 dias** e veja os números mudarem. Se não mudassem, o filtro não estaria a
-chegar ao servidor — e é exactamente esse o teste que corre nesta página.
+chegar ao servidor, e é exatamente esse o teste que corre nesta página.
 
 ### 2. O que o painel se recusa a dizer (1 min)
 
 Ainda com a janela de sete dias, procure uma medida que diga **«sem base de cálculo no período»**.
 
 Esta é a parte que vale a pena explicar em voz alta: quase todos os painéis mostrariam `0%` ali.
-Zero é uma afirmação — mediu-se e deu zero — e num período em que nada aconteceu lê-se como um mau
+Zero é uma afirmação (mediu-se e deu zero), e num período em que nada aconteceu lê-se como um mau
 resultado quando não houve resultado nenhum. É uma mentira com aspecto de facto. O contrato da API
 devolve `null`, e o ecrã escreve-o por extenso ([ADR-010](adr/ADR-010-analytics-from-queries.md)).
 
@@ -736,21 +734,21 @@ devolve `null`, e o ecrã escreve-o por extenso ([ADR-010](adr/ADR-010-analytics
 
 Documentos criados, processos iniciados e processos concluídos têm **três gráficos separados**, não
 um com dois eixos. Medidas de escalas diferentes num eixo duplo fazem parecer comparável o que não
-é — e o problema não é estético, é de leitura.
+é, e o problema não é estético, é de leitura.
 
 Desça até **«Onde os processos param»**: os passos com trabalho à espera, com nome real e há quanto
 tempo. É a pergunta que um gestor faz, respondida com uma consulta em vez de uma impressão.
 
 ### 4. Exportar (1 min)
 
-Exporte o CSV. Repare que os estados vão em nomes legíveis, não em números — um ficheiro não tem
+Exporte o CSV. Repare que os estados vão em nomes legíveis, e não em números: um ficheiro não tem
 quem o traduza do lado de lá.
 
 Depois saia e entre como `ana.ferreira@asteria.example`. O botão de exportar **desapareceu**: exige
-`reports.export`, que este perfil não tem. Se o forçasse pelo endereço, o servidor recusava na mesma
-— esconder é conveniência, a recusa é do servidor.
+`reports.export`, que este perfil não tem. Se o forçasse pelo endereço, o servidor recusava na mesma:
+esconder é conveniência, a recusa é do servidor.
 
-## Demonstração disponível na Fase 8 — Administração (≈4 minutos)
+## Administração (≈4 minutos)
 
 Como `admin@asteria.example`, abra **Administração**.
 
@@ -763,40 +761,40 @@ Não há botão para a ver outra vez, e isso é a funcionalidade: o servidor gua
 criptográfico. Um ecrã capaz de a mostrar de novo estaria a dizer que a guarda em claro.
 
 Saia, entre com essa conta. Funciona. Volte a entrar como administrador, **desative-a**, e tente
-entrar outra vez — já não entra. Ligue **«incluir desativadas»**: a conta continua lá. Não foi
+entrar outra vez: já não entra. Ligue **«incluir desativadas»**: a conta continua lá. Não foi
 eliminada, porque a auditoria e os documentos referem-se a ela.
 
 ### 2. A mudança que o ecrã recusa fazer (1 min)
 
-Procure a sua própria linha na lista. **Não tem botões** — diz «a sua conta».
+Procure a sua própria linha na lista. **Não tem botões**: diz «a sua conta».
 
 Explique porquê: um administrador que se retire o perfil de administração, ou se desative, cria a
 única avaria sem reparação possível de dentro do produto. O servidor recusa mesmo que o pedido
 chegue por outra via; o que a interface faz é não oferecer o que vai ser recusado.
 
 Procure agora `admin@docops.example`. Também não tem botões, mas a legenda é outra: **«conta de
-plataforma»**. As duas são inalteráveis daqui, por razões diferentes — e uma única legenda para as
-duas seria falsa numa delas. Este foi um defeito real, apanhado a ler uma captura de ecrã.
+plataforma»**. As duas são inalteráveis daqui, por razões diferentes, e uma única legenda para as
+duas seria falsa numa delas.
 
 ### 3. O perfil que não se distribui (1 min)
 
 Repare nos perfis oferecidos: `TenantAdmin`, `Manager`, `Employee`, `FinanceApprover`,
-`ExternalPartner` — e **não** `SystemAdmin`. Esse é concedido ao nível da plataforma; se uma
+`ExternalPartner`, e **não** `SystemAdmin`. Esse é concedido ao nível da plataforma; se uma
 organização o pudesse atribuir, promovia-se para fora da sua própria fronteira. Não está na lista
 **e** é recusado com `409` se for enviado à mão.
 
 ### 4. Departamentos (30 s)
 
 Crie um departamento e tente criar outro com o mesmo código. É recusado, com a mensagem a vir do
-servidor — é lá que a unicidade é decidida, não numa validação do browser.
+servidor: é lá que a unicidade é decidida, não numa validação do browser.
 
-## Demonstração disponível na Fase 8 — Catálogo de documentos (≈4 minutos)
+## Catálogo de documentos (≈4 minutos)
 
 Como `admin@asteria.example`, abra **Administração** e o separador **Catálogo**.
 
 > **A frase a dizer antes de mostrar:** este ecrã parece configuração, mas não é. Já existem
 > documentos classificados por estes tipos e descritos por estes campos. Cada alteração aqui muda o
-> significado do que já está escrito — e é por isso que o servidor recusa metade do que se lhe pede.
+> significado do que já está escrito, e é por isso que o servidor recusa metade do que se lhe pede.
 
 ### 1. O que o catálogo já produziu (1 min)
 
@@ -806,13 +804,13 @@ explicáveis. «Este campo não pode mudar» não é uma resposta; «8 documento
 ### 2. A recusa que interessa (1 min 30 s)
 
 Abra os **Campos** de *Fatura de fornecedor*. Repare que os campos preenchidos **não têm botão de
-eliminar** — no lugar dele está o número de documentos que os usam.
+eliminar**: no lugar dele está o número de documentos que os usam.
 
 Agora crie um campo novo e marque-o como **obrigatório**. É recusado, e a mensagem diz quantos
 documentos ficariam inválidos.
 
 Explique porquê: tornar um campo obrigatório é uma afirmação sobre documentos que já existem. Se
-algum não o cumpre, a afirmação é falsa no instante em que é guardada — e o catálogo deixa de poder
+algum não o cumpre, a afirmação é falsa no instante em que é guardada, e o catálogo deixa de poder
 ser lido como verdade.
 
 ### 3. A porta que não se fecha (1 min)
@@ -820,7 +818,7 @@ ser lido como verdade.
 Volte à lista e procure **Por classificar**, marcado como **Entrada**. Não tem botão de desativar:
 diz «sempre ativo».
 
-É por este tipo que entra um ficheiro antes de alguém saber o que é — incluindo os que chegam pela
+É por este tipo que entra um ficheiro antes de alguém saber o que é, incluindo os que chegam pela
 caixa de entrada e pelo portal, onde ninguém está a olhar. Desativá-lo travaria a entrada de
 documentos sem ninguém dar por isso. Pela mesma razão não aceita campos obrigatórios: seria recusar
 o carregamento até alguém responder a uma pergunta que só ler o documento responde.
@@ -828,9 +826,9 @@ o carregamento até alguém responder a uma pergunta que só ler o documento res
 ### 4. O que é permitido (30 s)
 
 Crie um tipo novo, dê-lhe um campo, e apague-o. Enquanto ninguém o preencheu, apagar não destrói
-nada — e por isso é permitido. A regra não é «não se mexe»; é **alargar pode, estreitar não**.
+nada, e por isso é permitido. A regra não é «não se mexe»; é **alargar pode, estreitar não**.
 
-## Demonstração disponível na Fase 8 — Etiquetas e retenção (≈4 minutos)
+## Etiquetas e retenção (≈4 minutos)
 
 Como `admin@asteria.example`, abra **Administração** e o separador **Etiquetas**.
 
@@ -839,11 +837,11 @@ Como `admin@asteria.example`, abra **Administração** e o separador **Etiquetas
 Escolha uma etiqueta com documentos e **remova-a**. Desaparece da lista.
 
 Ligue **«incluir removidas»**: continua lá, marcada como removida. **Restaure-a** e repare no
-número de documentos — voltou ao que era.
+número de documentos: voltou ao que era.
 
 Esta é a parte que vale a pena explicar. No separador **Catálogo**, eliminar um campo de metadados
 com valores é **recusado**. Aqui, remover uma etiqueta é **permitido**. Não é incoerência: um valor
-de metadados é o que o documento *afirma* — o número da fatura, a data —, e destruí-lo destrói o que
+de metadados é o que o documento *afirma* (o número da fatura, a data), e destruí-lo destrói o que
 o documento diz. Uma etiqueta é uma anotação *colocada sobre* ele por quem o organiza. A primeira
 não se recupera de lado nenhum; a segunda está a um sinalizador de distância.
 
@@ -859,7 +857,7 @@ procura de uma cor que escolheu e nunca viu aplicada.
 
 Passe ao separador **Retenção**.
 
-Escolha uma política e **mude a duração**. É permitido — e é o contrário do que o catálogo faz com
+Escolha uma política e **mude a duração**. É permitido, e é o contrário do que o catálogo faz com
 um campo de metadados. A diferença: uma obrigação de retenção que muda é um facto, não uma
 falsificação. Muda a lei, muda o contrato; um catálogo incapaz de a acompanhar é que estaria a
 mentir. O que a mudança faz é mexer na data de eliminação de todos os documentos que a política
@@ -873,18 +871,18 @@ decidiu abandonar, sem nada no ecrã a dizê-lo.
 
 Entre como `sofia.martins@asteria.example`. Os separadores **Etiquetas** e **Retenção** não
 aparecem. Gerir etiquetas exige `admin.documenttypes`; decidir quanto tempo se guardam documentos
-exige `admin.settings` — conformidade e classificação são decisões diferentes, e o servidor recusa
+exige `admin.settings`, porque conformidade e classificação são decisões diferentes, e o servidor recusa
 as duas na mesma.
 
-## Demonstração disponível na Fase 8 — Editor de permissões (≈4 minutos)
+## Editor de permissões (≈4 minutos)
 
 Abra um documento e vá ao separador **Permissões**. Esta é a demonstração que mais peso costuma ter
 numa avaliação técnica, porque autorização é onde os produtos empresariais falham em silêncio.
 
 ### 1. Conceder (1 min 30 s)
 
-Conceda acesso a um **departamento**, depois mude o tipo para **perfil** e para **utilizador**. Os
-três existem porque o briefing os pede, e a lista de perfis **vem do servidor** — é a mesma que a
+Conceda acesso a um **departamento**, depois mude o tipo para **perfil** e para **utilizador**. A
+lista de perfis **vem do servidor**, e é a mesma que a
 camada de autorização usa. Uma lista escrita no ecrã divergiria, e seria a do ecrã que ninguém
 repararia que estava errada.
 
@@ -892,20 +890,20 @@ Repare que **`SystemAdmin` não aparece**. Está acima da organização; concede
 dar acesso a uma conta que esta organização não gere.
 
 Preencha **«expira em»** com uma data futura. É a janela de um auditor externo. Tente uma data
-passada: é recusada — uma janela que fechou antes de abrir não é uma janela.
+passada: é recusada, porque uma janela que fechou antes de abrir não é uma janela.
 
 ### 2. A pergunta que interessa (2 min)
 
 Desça até **«Porque é que alguém alcança este documento»** e escolha uma pessoa.
 
 Explique isto em voz alta: mostrar o acesso **de quem está a olhar** responde a metade da pergunta.
-Quem administra precisa de saber porque é que **outra** pessoa alcança — ou não alcança — um
+Quem administra precisa de saber porque é que **outra** pessoa alcança, ou não alcança, um
 documento. O painel mostra a avaliação regra a regra: o que a posse concede, o que o departamento
 concede, o que uma concessão explícita acrescenta, e o que uma restrição retira.
 
 **E não é um cálculo à parte.** É o mesmo `DocumentAccessEvaluator` que decide de verdade quando
 alguém tenta abrir ou descarregar o documento. Um painel que computasse a sua própria resposta
-acabaria por discordar da regra que diz explicar — e a discordância só se descobriria quando alguém
+acabaria por discordar da regra que diz explicar, e a discordância só se descobriria quando alguém
 alcançasse o que não devia.
 
 ### 3. Quem pode perguntar (30 s)
@@ -914,7 +912,7 @@ Entre como `ana.ferreira@asteria.example` e abra o mesmo separador. Não há for
 nem seletor de pessoa. E se forçasse o pedido, o servidor recusava: perguntar «esta pessoa
 conseguiria fazer isto?» é legítimo para quem decide conceder, e mais ninguém.
 
-## Demonstração disponível na Fase 9 — Saúde do sistema (≈3 minutos)
+## Saúde do sistema (≈3 minutos)
 
 Como `admin@asteria.example`, abra **Administração** e o separador **Sistema**.
 
@@ -924,22 +922,21 @@ Os quatro trabalhos em segundo plano aparecem com a última corrida, o desfecho,
 correram nas últimas 24 horas e quanto demoraram em média.
 
 A parte que vale a pena explicar é **porque é que isto existe em tabela**. As métricas do worker
-saem por OpenTelemetry, que é o sítio certo para elas — e que é outro processo. Sem uma linha
+saem por OpenTelemetry, que é o sítio certo para elas, e que é outro processo. Sem uma linha
 escrita na base de dados, «o trabalho periódico correu esta noite?» é uma pergunta que a aplicação
 não sabe responder sobre si própria.
 
 Repare também que **os quatro aparecem sempre**, mesmo os que nunca correram. Um trabalho ausente do
 ecrã e um trabalho que nunca correu parecem o mesmo a quem lê. Quem nunca correu diz «nunca correu»,
-e a duração média fica a traço — não a zero, que se leria como «instantâneo».
+e a duração média fica a traço, e não a zero, que se leria como «instantâneo».
 
 ### 2. O que as sondas públicas dizem, e o que não dizem (1 min)
 
 Abra `/health` numa janela sem sessão iniciada. Responde, e devolve **nome, estado e duração**. Mais
 nada: nem mensagem de exceção, nem cadeia de ligação, nem nome de máquina.
 
-É o que o briefing quer dizer com *«do not expose sensitive health information»*. Uma sonda de vida
-que descreve a falha é reconhecimento gratuito para quem está a sondar o sistema. O detalhe — qual
-trabalho falhou, o que disse — está no separador **Sistema**, atrás de permissão.
+Uma sonda de vida que descreve a falha é reconhecimento gratuito para quem está a sondar o
+sistema. O detalhe (qual trabalho falhou, o que disse) está no separador **Sistema**, atrás de permissão.
 
 ### 3. Quem opera não é quem administra (30 s)
 
@@ -947,17 +944,17 @@ Entre como `sofia.martins@asteria.example`. O separador **Sistema** não aparece
 plataforma exige `admin.settings`, e administrar pessoas é `admin.users`. São trabalhos diferentes, e
 o servidor recusa na mesma.
 
-## Demonstração disponível na Fase 10 — O ecrã vazio que não mente (≈2 minutos)
+## Estados vazios que não inventam a causa (≈2 minutos)
 
 Entre como `admin@asteria.example` e vá a **Tarefas**, sem tocar em filtro nenhum.
 
-O ecrã está vazio. Esta conta tem tarefas, mas nenhuma em aberto — e a organização tem oito à espera
-de alguém. Os dois filtros que vêm postos por omissão, «as minhas» e «apenas em aberto», bastavam
-para o ecrã dizer, até à Fase 10: *«Quando um processo lhe atribuir trabalho, aparece aqui.»* Quem o
-lia acreditava e saía.
+O ecrã está vazio. Esta conta tem tarefas, mas nenhuma em aberto, e a organização tem oito à espera
+de alguém. Os dois filtros que vêm postos por omissão, «as minhas» e «apenas em aberto», bastam
+para esconder esse trabalho, e uma frase como *«Quando um processo lhe atribuir trabalho, aparece
+aqui.»* levaria quem a lê a acreditar e a sair.
 
-Agora a frase nomeia o que está posto — «está a ver só as suas tarefas e só as que continuam por
-fechar» — e admite as duas leituras possíveis: pode não haver trabalho, ou podem ser os filtros.
+Por isso a frase nomeia o que está posto («está a ver só as suas tarefas e só as que continuam por
+fechar») e admite as duas leituras possíveis: pode não haver trabalho, ou podem ser os filtros.
 Carregue em **Alargar os filtros**: aparecem trinta e três tarefas.
 
 Vale a pena dizer porque é que o botão só aparece a algumas pessoas. Entre como
@@ -968,31 +965,31 @@ conformidade: «ainda não delegou nenhuma tarefa a outra pessoa».
 
 ---
 
-## Demonstração disponível na Fase 10 — Vistas partilháveis e retenção (≈3 minutos)
+## Vistas partilháveis e verificação de retenção (≈3 minutos)
 
 Entre como `admin@asteria.example` e vá a **Documentos**.
 
 Filtre: escreva «contrato» na pesquisa e carregue em **Aguarda aprovação**. **Olhe para a barra de
-endereço** — passou a `?q=contrato&statuses=…`. Copie o endereço, abra um separador novo e cole-o: a
+endereço**: mudou para `?q=contrato&statuses=…`. Copie o endereço, abra um separador novo e cole-o: a
 mesma vista abre lá, com os mesmos filtros marcados e os mesmos documentos.
 
 É a diferença entre uma ferramenta e um ecrã. «As faturas por aprovar do departamento financeiro» é
-uma coisa que se diz a um colega — e até aqui não havia nada para lhe enviar, porque os filtros
-viviam dentro daquele separador e recarregar perdia-os.
+uma coisa que se diz a um colega, e o endereço é o que se lhe envia. Se os filtros vivessem só
+dentro daquele separador, recarregar perdê-los-ia.
 
 Recarregue a página para ver que a vista sobrevive. Depois estrague o endereço de propósito
 (`?page=abc&statuses=nao-e-numero`): a listagem continua a ser uma listagem, na primeira página. Um
 endereço cortado a meio por um cliente de correio chega assim, e não é motivo para partir o ecrã.
 
-**A retenção, do outro lado, não se vê num botão — e é esse o ponto.** Em `/app/admin`, separador
+**A retenção, do outro lado, não se vê num botão, e é esse o ponto.** Em `/app/admin`, separador
 **Retenção**, estão as políticas que dizem quanto tempo cada tipo de documento se conserva; ao
-arquivar, a data de fim é calculada e guardada. Até à Fase 10 ninguém a voltava a ler: a política
-estava certa no ecrã e não produzia nada no dia em que o prazo passasse.
+arquivar, a data de fim é calculada e guardada. Uma data que ninguém volta a ler não produziria nada no dia
+em que o prazo passasse.
 
-Agora o worker verifica-as, e quando um prazo termina **notifica quem administra a organização e não
+Por isso o worker verifica-as, e quando um prazo termina **notifica quem administra a organização e não
 elimina nada**. Vale a pena dizer isto em voz alta numa entrevista: a tentação é agendar a
 eliminação, e seria errado. Um prazo cumprido significa que a organização *pode* dispor do documento,
-não que deva — a base legal que obrigou a guardá-lo é a mesma que faz da destruição uma decisão que
+não que deva: a base legal que obrigou a guardá-lo é a mesma que faz da destruição uma decisão que
 alguém assina. Fica notificação e fica auditoria; a pessoa decide.
 
 O mesmo documento não é anunciado duas vezes: o que já foi avisado reconhece-se pela existência da
@@ -1001,7 +998,7 @@ uma hora, e o documento ficaria por eliminar na mesma.
 
 ---
 
-## Cenário 1 — Fatura de fornecedor (previsto: Fases 5 a 8)
+## Cenário completo: fatura de fornecedor
 
 1. O fornecedor **Northstar Supplies** entra em `/portal` e submete uma fatura.
 2. A fatura aparece na caixa de entrada documental da Asteria Group.
@@ -1017,13 +1014,13 @@ uma hora, e o documento ficaria por eliminar na mesma.
 11. Os indicadores do painel refletem a aprovação.
 12. O documento fica **Aprovado** e **Arquivado**.
 
-## Cenário 2 — Ciclo de vida de contrato (previsto: Fases 5 a 8)
+## Cenário completo: ciclo de vida de um contrato
 
 1. Carregar um contrato.
 2. Extrair metadados, incluindo a data de expiração.
 3. Iniciar a revisão jurídica (Carla Nunes).
 4. Aprovação de direção (Helena Vasconcelos).
-5. Pedido de assinatura eletrónica — **demonstração, sem validade legal**.
+5. Pedido de assinatura eletrónica (**demonstração, sem validade legal**).
 6. Estado assinado, com *hash* do documento e versão registados.
 7. Arquivo.
 8. Trilho de auditoria completo, do carregamento ao arquivo.
@@ -1044,7 +1041,7 @@ uma hora, e o documento ficaria por eliminar na mesma.
 | Impressão digital por versão | Integridade verificável e base para a assinatura eletrónica |
 | Filtro aplicado dentro da consulta SQL | A contagem total não revela documentos que o utilizador não pode ver |
 | Cronologia do processo | O estado atual é explicável passo a passo, não apenas observável |
-| Nó de IA impede a ativação | Falhar explicitamente em vez de saltar um passo do processo |
+| Nó de integração espera fora da transação | Nenhuma chamada lenta a um sistema externo prende a base de dados |
 | Ações da tarefa vindas do servidor | A interface reflete a autorização, não a define |
 | Endereço de uma vista filtrada | O estado da interface é partilhável, não preso a um separador |
 | Retenção que avisa e não elimina | Saber onde a automação tem de parar e devolver a decisão a uma pessoa |
