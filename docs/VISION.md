@@ -53,7 +53,7 @@ As submissões entram no circuito interno com as permissões certas atribuídas.
 
 **Assinatura eletrónica.** Pedido, assinatura pelo signatário nomeado, cancelamento e deteção
 de alteração do conteúdo depois do pedido. É uma demonstração de portefólio, e o projeto declara
-explicitamente que não reclama validade legal.
+explicitamente que não tem validade legal.
 
 **Análises e relatórios.** Indicadores de volume, tempo médio de processamento, taxa de
 automação, estrangulamentos por passo de workflow, distribuições por estado, tipo e

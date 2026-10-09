@@ -8,7 +8,7 @@
 
 O produto precisa de pedidos de assinatura que mostrem o signatário, a data do pedido, o estado, a
 data de assinatura, a versão do documento, o histórico de auditoria e o *hash* do documento. E é uma
-demonstração de portefólio, que **não pode reclamar validade legal**: é essa condição que decide tudo
+demonstração de portefólio, que **não pode alegar validade legal**: é essa condição que decide tudo
 o resto.
 
 A tensão está toda aí. Uma assinatura eletrónica **a sério**, qualificada ou avançada na aceção do
@@ -42,7 +42,7 @@ confiar na aplicação**: recalcula-se o resumo do ficheiro e compara-se.
 
 ## Regras não negociáveis
 
-- **Nunca reclamar validade legal**, em nenhum ecrã, texto de API, mensagem de erro ou documento. O
+- **Nunca alegar validade legal**, em nenhum ecrã, texto de API, mensagem de erro ou documento. O
   aviso aparece no topo do painel, antes de tudo o resto, e não em rodapé.
 
 - **Assinar é pessoal.** Só a pessoa nomeada no pedido assina. Nenhuma permissão, antiguidade ou
