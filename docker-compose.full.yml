@@ -30,11 +30,14 @@ services:
       MSSQL_PID: "Developer"
     volumes:
       - sqldata:/var/opt/mssql
+    # Saudável só quando todas as bases estão online, e não logo que o servidor responde. Depois de um
+    # reinício, o servidor aceita ligações enquanto ainda recupera as bases, e o passo seguinte falha
+    # com o erro 904 se correr nesse intervalo.
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -b -Q \"IF EXISTS (SELECT 1 FROM sys.databases WHERE state_desc <> 'ONLINE') RAISERROR('a recuperar', 16, 1)\" || exit 1"
         ]
       interval: 10s
       timeout: 5s

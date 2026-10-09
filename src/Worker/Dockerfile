@@ -32,11 +32,11 @@ COPY src/ src/
 RUN dotnet publish src/Worker/DocOps.Worker.csproj -c Release -o /app --no-restore
 
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Runtime e nao aspnet: o worker nao serve HTTP nenhum, e uma imagem com ASP.NET Core seria
-# superficie a mais sem utilidade.
+# aspnet e nao runtime, embora o worker nao sirva HTTP: a infraestrutura que partilha com a API usa
+# o ASP.NET Core (o Identity e a protecao de dados), e sem essa framework o processo nem arranca.
 RUN mkdir -p /data/storage && chown -R app:app /data
 
 USER app

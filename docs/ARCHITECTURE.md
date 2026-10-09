@@ -735,7 +735,7 @@ a correr: um `POST` sem `Origin` leva `403`, e o cookie de sessão chega ao brow
 
 ### O que a imagem e o proxy têm de garantir
 
-Quatro pormenores que não aparecem em desenvolvimento, e por isso estão escritos.
+Seis pormenores que não aparecem em desenvolvimento, e por isso estão escritos.
 
 **Os documentos de exemplo têm de entrar na imagem.** Vivem em `samples/` na raiz, e a Infrastructure
 embebe-os com um caminho relativo que sai de `src/`, por isso o Dockerfile copia também essa pasta.
@@ -756,6 +756,15 @@ aparece em desenvolvimento.
 
 **A sonda de saúde usa `curl`, instalado na imagem.** A imagem de execução do .NET não traz `wget`,
 e uma sonda que não consegue correr dá a aplicação como doente quando ela está a responder.
+
+**O worker corre sobre a imagem do ASP.NET Core**, embora não sirva HTTP. A infraestrutura que
+partilha com a API usa o Identity e a proteção de dados, e sobre a imagem base do .NET o processo
+nem arranca: fica a reiniciar sem fazer nada, com a API e a interface a parecerem saudáveis.
+
+**A base só conta como saudável quando todas as bases de dados estão online.** Depois de um
+reinício, o SQL Server aceita ligações enquanto ainda recupera as bases, e o passo das identidades
+falharia com o erro 904 se corresse nesse intervalo. A verificação de saúde pergunta pelo estado das
+bases, e não só se o servidor responde.
 
 ## 11. Processamento em segundo plano
 
