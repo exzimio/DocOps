@@ -600,6 +600,8 @@ correr o projeto localmente.
 
 ### Melhorias futuras
 
+- Pôr o nó de assinatura na paleta do desenhador, com a escolha do signatário no painel de
+  propriedades.
 - A mesma verificação do valor para todos os fornecedores, os números de linha ligados à extração
   guardada com cada versão, e um estado «não verificada» visível em vez de uma citação descartada.
 - Endereço ou campo de organização no início de sessão, criação de organizações pela aplicação, e
@@ -838,9 +840,9 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
   signatário não vê o documento, seja porque não tem permissão para assinar.
 - Cada passo fica no **histórico do documento**, que é onde se procura: quem pediu, quem assinou ou
   recusou, sobre que versão e com que resumo.
-- Nó **`SignatureRequest`** no desenhador de workflows, que espera por uma pessoa como qualquer
-  tarefa humana; um grupo é resolvido para um signatário concreto, porque «o departamento assinou»
-  não é uma afirmação sustentável.
+- Nó **`SignatureRequest`** no motor de workflow, que espera por uma pessoa como qualquer tarefa
+  humana; um grupo é resolvido para um signatário concreto, porque «o departamento assinou» não é uma
+  afirmação sustentável. Está disponível pela API; o desenhador ainda não o oferece na paleta.
 
 Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signature.md).
 
