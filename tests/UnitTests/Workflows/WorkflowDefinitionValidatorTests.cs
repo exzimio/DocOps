@@ -172,9 +172,8 @@ public class WorkflowDefinitionValidatorTests
     }
 
     /// <summary>
-    /// Every node type has an executor since the integrations phase, so nothing is refused for being
-    /// unimplemented any more. The rule itself is still worth a test: a later phase that adds a node
-    /// type before its executor lists it, and this is what would catch a definition activated onto a
+    /// Every node type has an executor, so nothing is refused for being unimplemented. The rule itself
+    /// is still worth a test: a node type added before its executor would be listed, and this is what would catch a definition activated onto a
     /// step that would stop the process.
     /// </summary>
     [Fact]

@@ -11,13 +11,11 @@ namespace DocOps.IntegrationTests;
 /// <summary>
 /// The inbox against a real SQL Server.
 ///
-/// <see cref="A_second_organisation_starts_with_no_messages_of_the_first"/> is a regression test:
-/// the first version of this feature shipped without a tenant query filter on
-/// <c>EmailMessage</c>/<c>EmailAttachment</c>, and every organisation could read every other
-/// organisation's mail. It was caught before commit by
-/// <c>DocOps.UnitTests.Persistence.TenantFilterCoverageTests</c>, which checks that every
-/// tenant-scoped entity has a filter at all; this test checks the other half — that the filter
-/// actually keeps one organisation's inbox out of another's.
+/// <see cref="A_second_organisation_starts_with_no_messages_of_the_first"/> checks the half of tenant
+/// isolation that a coverage test cannot. <c>DocOps.UnitTests.Persistence.TenantFilterCoverageTests</c>
+/// checks that every tenant-scoped entity has a filter at all; this test checks that the filter on
+/// <c>EmailMessage</c> and <c>EmailAttachment</c> actually keeps one organisation's inbox out of
+/// another's.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public class InboxTests(DocOpsApiFactory factory)

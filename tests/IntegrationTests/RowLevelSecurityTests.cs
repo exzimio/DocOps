@@ -13,10 +13,9 @@ namespace DocOps.IntegrationTests;
 /// que os dados continuam separados quando esses filtros são desligados, e que quem se liga sem
 /// declarar nada não vê nada.
 ///
-/// Não é hipótese académica. Na Fase 8 houve uma fuga verdadeira — <c>IgnoreQueryFilters()</c>
-/// dentro de uma projeção desligou os filtros da consulta inteira, e um administrador de uma
-/// organização viu as etiquetas de outra. Existe desde então um analisador que impede esse padrão
-/// de reaparecer, mas um analisador trata o padrão que conhece. SQL escrito à mão não passa por ele.
+/// Não é hipótese académica: <c>IgnoreQueryFilters()</c> dentro de uma projeção desliga os filtros
+/// da consulta inteira. Há um analisador que impede esse padrão, mas um analisador trata o padrão que
+/// conhece. SQL escrito à mão não passa por ele.
 ///
 /// <para>
 /// <b>A política nega por omissão.</b> Sem organização no contexto da sessão não se vê nada, e a
@@ -56,9 +55,8 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
     [Fact]
     public async Task A_connection_that_declares_nothing_sees_nothing()
     {
-        // É a mudança que interessa. Antes, uma ligação sem contexto via tudo, e por isso a política
-        // só protegia quem já estava protegido pelos filtros do EF: uma ferramenta de relatórios
-        // ligada diretamente à base nunca escreve contexto nenhum.
+        // É o caso que interessa: uma ferramenta de relatórios ligada diretamente à base nunca escreve
+        // contexto nenhum, e por isso não pode ver nada.
         await using SqlConnection connection = new(factory.DatabaseConnectionString);
         await connection.OpenAsync();
 
@@ -185,7 +183,7 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
         await DeclareAsync(connection, primeira);
 
         // O `TenantGuardInterceptor` já recusa isto, e há testes disso. Este prova a outra parede:
-        // SQL escrito à mão não passa pelo intercetor, e antes desta migração a escrita passava.
+        // SQL escrito à mão não passa pelo intercetor, e só o predicado de bloqueio o trava.
         await using SqlCommand insercao = new(
             """
             INSERT INTO dbo.Tags (Id, TenantId, Name, CreatedAtUtc, IsDeleted)
@@ -246,9 +244,6 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
     {
         // O intercetor de imutabilidade já recusa isto, e há um teste disso. Este prova a outra
         // parede: SQL escrito à mão não passa pelo intercetor, e a recusa tem de estar na base.
-        //
-        // Esteve oito fases como recomendação no `SECURITY.md`, para um login que nunca existiu.
-        // Enquanto a aplicação se ligava com privilégios altos não havia a quem recusar.
         await using SqlConnection connection = new(factory.TenantConnectionString);
         await connection.OpenAsync();
 

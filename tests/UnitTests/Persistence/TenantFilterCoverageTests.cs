@@ -14,8 +14,8 @@ namespace DocOps.UnitTests.Persistence;
 /// add its filter. Forgetting is silent: the code compiles, the tests pass, and one organisation
 /// reads another's rows.
 ///
-/// It has already happened once, to the inbox in phase 6. This test is why it cannot happen twice:
-/// an entity that carries a tenant and no filter fails the build, by name.
+/// This test is what stops it: an entity that carries a tenant and no filter fails the suite, by
+/// name.
 /// </summary>
 public class TenantFilterCoverageTests
 {

@@ -64,8 +64,8 @@ test.describe('Caixa de entrada', () => {
     await page.goto('/app/inbox')
 
     // O filtro só prova alguma coisa se existir pelo menos uma mensagem arquivada — e numa base
-    // acabada de semear não existe nenhuma. Antes, este teste passava porque uma corrida anterior
-    // tinha deixado uma para trás, o que é o mesmo que não ter precondição nenhuma. Arquiva ele
+    // acabada de semear não existe nenhuma. Depender de uma corrida anterior que tivesse deixado
+    // uma para trás seria o mesmo que não ter precondição nenhuma. Arquiva ele
     // próprio a mensagem em que mais nenhum teste toca, e fica idempotente: se já estiver
     // arquivada de uma corrida do outro perfil de browser, o botão que aparece é «Reabrir».
     await clickReliably(page.getByRole('button', { name: 'Arquivada', exact: true }))

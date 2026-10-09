@@ -12,9 +12,9 @@ import type { Page } from '@playwright/test'
  * usar a aplicacao.
  *
  * Neutraliza-se **so o que esta mesmo fixo**, lido do estilo calculado, e nao por uma regra que
- * apanhe tudo. Uma primeira versao punha `position: static` em todos os elementos e destapou o
+ * apanhe tudo. Por `position: static` em todos os elementos destaparia o
  * link «Saltar para o conteudo principal», que so esta escondido porque esta posicionado fora do
- * ecra — a captura passou a mostrar uma coisa que ninguem ve.
+ * ecra, e a captura mostraria uma coisa que ninguem ve.
  */
 export async function fullPageShot(page: Page, path: string): Promise<void> {
   const marcados = await neutralizar(page)

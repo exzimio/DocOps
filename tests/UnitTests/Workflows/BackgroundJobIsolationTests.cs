@@ -15,10 +15,10 @@ namespace DocOps.UnitTests.Workflows;
 /// The background worker runs four jobs on a cycle, and they are unrelated to one another: resuming
 /// a timer has nothing to do with polling a mailbox.
 ///
-/// Until phase 9 a single failure was caught one level up, around the whole cycle — so a broken
-/// timer job also stopped escalation, the AI queue and the integrations for that tick, and left the
-/// cycle counter untouched, which stalled the cadence of the slower jobs too. Nothing announced any
-/// of it: one error line in the log, and the rest simply did not happen.
+/// Catching a failure one level up, around the whole cycle, would let a broken timer job also stop
+/// escalation, the AI queue and the integrations for that tick, and leave the cycle counter
+/// untouched, which would stall the cadence of the slower jobs too, with nothing to announce it but
+/// one error line in the log.
 /// </summary>
 public class BackgroundJobIsolationTests
 {

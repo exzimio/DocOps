@@ -5,10 +5,9 @@ namespace DocOps.UnitTests.Persistence;
 /// <summary>
 /// The guard against the mistake this test suite makes easy.
 ///
-/// Three times in this project a test asserted a fixed number of rows, was true the day it was
-/// written, and became false the day another suite created legitimate data: the inbox isolation test
-/// in phase 6, and two document tests in phase 7. Each time the failure looked like a regression in
-/// the product and was a regression in the test.
+/// A test that asserts a fixed number of rows is true the day it is written and becomes false the
+/// day another suite creates legitimate data, and the failure looks like a regression in the product
+/// when it is a regression in the test.
 ///
 /// A count over a list the server builds — a paged result, a table of documents, a list of
 /// submissions — is in practice an assertion about execution order, because the integration tests

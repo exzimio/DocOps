@@ -10,8 +10,7 @@ namespace DocOps.IntegrationTests;
 /// The health surface against a real SQL Server.
 ///
 /// Two claims are worth proving. The first is that the anonymous endpoints stay terse: a load
-/// balancer reads them, and «do not expose sensitive health information» is in the brief for a
-/// reason. The second is that the detailed one is not anonymous at all, and not reachable by
+/// balancer reads them, and so can anyone. The second is that the detailed one is not anonymous at all, and not reachable by
 /// somebody who merely administers people.
 /// </summary>
 [Collection(ApiCollection.Name)]

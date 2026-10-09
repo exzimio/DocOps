@@ -7,9 +7,9 @@ namespace DocOps.UnitTests.Documents;
 /// <summary>
 /// O ficheiro tem de ser aquilo que o nome dele promete.
 ///
-/// Antes disto, a validação olhava para a extensão e para o tipo de conteúdo, que vêm ambos do
-/// cliente e se forjam os dois: um executável chamado `relatorio.pdf` e declarado como
-/// `application/pdf` entrava no repositório sem uma única objeção.
+/// A extensão e o tipo de conteúdo vêm ambos do cliente e forjam-se os dois: se a validação olhasse
+/// só para eles, um executável chamado `relatorio.pdf` e declarado como `application/pdf` entraria
+/// no repositório sem uma única objeção.
 /// </summary>
 public class FileSignatureTests
 {

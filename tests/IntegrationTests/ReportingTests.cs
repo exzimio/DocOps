@@ -10,8 +10,8 @@ namespace DocOps.IntegrationTests;
 /// <summary>
 /// The operations dashboard against a real SQL Server.
 ///
-/// The brief's own rule is that every figure comes from the data rather than from somewhere it was
-/// written down, so these tests never assert a number: they assert that the dashboard **agrees with
+/// Every figure comes from the data rather than from somewhere it was written down, so these tests
+/// never assert a number: they assert that the dashboard **agrees with
 /// another way of asking the same question**. A fixed expectation would prove only that the seed
 /// had not changed, which is not what anyone wants to know.
 /// </summary>
@@ -63,8 +63,8 @@ public class ReportingTests(DocOpsApiFactory factory)
         int employeeDocuments = Total(forEmployee, "documents.total");
 
         // Not "fewer by a fixed amount": what has to hold is that a partial view is not a full one.
-        // Counting is information about what exists, which is why the AI statistics had to be
-        // narrowed the same way in phase 5.
+        // Counting is information about what exists, which is why the AI statistics are
+        // narrowed the same way.
         Assert.True(
             employeeDocuments <= adminDocuments,
             $"o empregado viu {employeeDocuments} e o administrador {adminDocuments}");

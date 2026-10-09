@@ -32,9 +32,8 @@ public class GovernanceAdminTests(DocOpsApiFactory factory)
         IReadOnlyList<AdminTagDto> theirs = await TagsAsync(asteria, includeDeleted: true);
         IReadOnlyList<AdminTagDto> ours = await TagsAsync(vertice, includeDeleted: true);
 
-        // This is not hypothetical: the first version of the listing counted documents with
-        // `IgnoreQueryFilters()` inside the projection, which disables the filters of the entire
-        // query — the organisation one included — and Vértice could read Asteria's tags. Identity,
+        // `IgnoreQueryFilters()` inside the projection disables the filters of the entire query, the
+        // organisation one included, so a count written that way would let Vértice read Asteria's tags. Identity,
         // not counts: both organisations grow their own labels.
         Assert.NotEmpty(theirs);
         Assert.DoesNotContain(ours, tag => theirs.Any(other => other.Id == tag.Id));

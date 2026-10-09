@@ -36,8 +36,8 @@ async function primeiraReferencia(page: Page): Promise<string> {
  * Uma vista filtrada tem de caber numa ligação.
  *
  * É o que separa uma ferramenta de um ecrã: «as faturas por aprovar» é uma coisa que se diz a um
- * colega, e dizê-la com um endereço é o que faz a frase chegar lá. Antes disto, os filtros viviam
- * dentro do componente — recarregar perdia-os, e não havia nada para enviar a ninguém.
+ * colega, e dizê-la com um endereço é o que faz a frase chegar lá. Se os filtros vivessem só
+ * dentro do componente, recarregar perdê-los-ia, e não haveria nada para enviar a ninguém.
  */
 test.describe('Vistas que se podem enviar', () => {
   test('filtrar escreve o endereço, e recarregar não perde o que se filtrou', async ({ page }) => {
@@ -45,8 +45,8 @@ test.describe('Vistas que se podem enviar', () => {
     await page.goto('/app/documents')
 
     // Esperar pelo pedido que traz a lista filtrada, e não por um sinal no ecrã. O endereço muda
-    // assim que se escreve, mas a lista só muda quando o servidor responde — ler entre as duas
-    // coisas é ler a lista anterior, que foi exatamente o que a primeira versão deste teste fez.
+    // assim que se escreve, mas a lista só muda quando o servidor responde, e ler entre as duas
+    // coisas é ler a lista anterior.
     const resposta = page.waitForResponse(
       (r) => r.url().includes('/api/documents?') && r.url().includes('query=contrato'),
     )
