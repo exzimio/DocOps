@@ -218,7 +218,7 @@ export function PermissionsPanel({
   const [levels, setLevels] = useState<string[]>(['view', 'download'])
   const [expiresAt, setExpiresAt] = useState('')
 
-  // O briefing pede permissões por pessoa, departamento, perfil e documento. Os perfis vêm do
+  // As permissões concedem-se por pessoa, departamento e perfil. Os perfis vêm do
   // servidor, não de uma lista escrita aqui: duas listas divergem, e a que a interface mostra é a
   // que ninguém repara que está errada.
   const roles = useTenantRoles()
@@ -436,11 +436,10 @@ export function PermissionsPanel({
         </CardBody>
       </Card>
 
-      {/* O briefing pede um painel que mostre exatamente porque é que alguém alcança um documento.
-          Mostrá-lo apenas para quem está a olhar responde a metade da pergunta: quem concede
-          precisa de saber porque é que **outra** pessoa alcança, ou não alcança. O servidor só
-          responde a quem pode partilhar — perguntar «esta pessoa conseguiria?» é legítimo para
-          quem decide conceder, e mais ninguém. */}
+      {/* Mostrar porque é que alguém alcança um documento só a quem está a olhar responde a metade
+          da pergunta: quem concede precisa de saber porque é que **outra** pessoa alcança, ou não
+          alcança. O servidor só responde a quem pode partilhar, porque perguntar «esta pessoa
+          conseguiria?» é legítimo para quem decide conceder, e mais ninguém. */}
       <Card>
         <CardHeader
           title={t('documents.permissionsPanel.whyTitle')}

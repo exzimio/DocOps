@@ -15,9 +15,9 @@ import { LoadingState } from '@/components/ui/Surface'
 /**
  * Cada ecrã chega quando alguém lá vai.
  *
- * Antes, tudo era carregado de uma vez: quem abria o ecrã de entrada descarregava a administração,
- * o centro de IA, os gráficos das análises e o portal de fornecedores — código que a maioria das
- * pessoas nunca abre na sessão. Ficam imediatos apenas os ecrãs anteriores à sessão e o painel, que
+ * Carregar tudo de uma vez faria quem abre o ecrã de entrada descarregar a administração, o centro
+ * de IA, os gráficos das análises e o portal de fornecedores, que é código que a maioria das pessoas
+ * nunca abre na sessão. Ficam imediatos apenas os ecrãs anteriores à sessão e o painel, que
  * é o primeiro a seguir ao início de sessão e onde uma espera se notaria.
  */
 const DocumentsPage = lazy(() =>

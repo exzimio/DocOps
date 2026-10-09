@@ -29,8 +29,7 @@ interface Command {
 /**
  * A paleta de comandos: `Ctrl+K` em qualquer lado.
  *
- * O briefing pede «command/search interaction» e o produto não a tinha — um utilizador que sabe o
- * que quer tinha de o ir buscar pela barra lateral, ecrã a ecrã.
+ * Quem sabe o que quer não tem de o ir buscar pela barra lateral, ecrã a ecrã.
  *
  * Duas fontes, deliberadamente: os ecrãs a que esta pessoa tem acesso, e os documentos que o
  * servidor lhe deixa ver. A segunda passa pela API de sempre, com o predicado de visibilidade de

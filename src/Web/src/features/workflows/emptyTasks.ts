@@ -3,11 +3,10 @@ import { defaultTaskFilters, type TaskFilters, type TaskScope } from './types'
 /**
  * O que dizer quando a lista de tarefas sai vazia.
  *
- * Até aqui o ecrã dizia sempre a mesma coisa — «quando um processo lhe atribuir trabalho, aparece
- * aqui» — e isso só é verdade num dos casos. Os filtros por omissão já são dois (as minhas, e só as
- * que continuam por fechar), portanto a frase aparecia quase sempre a afirmar uma causa que o ecrã
- * não conhecia: a pessoa lia que não tinha trabalho, acreditava, e saía do ecrã quando bastava
- * alargar. Um ecrã que afirma com confiança o que não sabe é a mesma falsidade que uma página de
+ * Uma frase única, «quando um processo lhe atribuir trabalho, aparece aqui», só é verdade num dos
+ * casos. Os filtros por omissão são dois (as minhas, e só as que continuam por fechar), portanto essa
+ * frase apareceria quase sempre a afirmar uma causa que o ecrã não conhece: a pessoa leria que não
+ * tem trabalho, acreditaria, e sairia do ecrã quando bastava alargar. Um ecrã que afirma com confiança o que não sabe é a mesma falsidade que uma página de
  * marcador de posição, só que mais difícil de ver.
  *
  * O que estas funções decidem é o que *pode* ser alargado, e não o que está apertado em abstrato:

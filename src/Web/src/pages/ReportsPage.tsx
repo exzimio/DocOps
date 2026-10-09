@@ -44,8 +44,7 @@ function change(metric: Metric): number | null {
  *
  * Every figure comes from `/api/reports/dashboard`, which computes it from the same rows the rest
  * of the application works on — and from the subset this person is allowed to see. Nothing on this
- * screen is stored as a dashboard number, which is the brief's own rule and the easiest one to
- * break unnoticed: a wrong number on a panel looks exactly like a right one.
+ * screen is stored as a dashboard number, which is the easiest rule to break unnoticed: a wrong number on a panel looks exactly like a right one.
  */
 export function ReportsPage() {
   const { t, i18n } = useTranslation()

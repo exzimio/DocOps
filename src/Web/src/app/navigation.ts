@@ -28,7 +28,7 @@ export interface NavSection {
 }
 
 /**
- * Navigation is data-driven and grows one phase at a time: an entry only appears here once its
+ * Navigation is data-driven: an entry only appears here once its
  * route, API and persistence exist, so the shell never contains a link that leads nowhere.
  */
 export const navigationSections: NavSection[] = [
