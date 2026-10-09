@@ -25,9 +25,9 @@ export default defineConfig({
       use: { ...devices['Pixel 7'] },
 
       // As capturas são o retrato de secretária, e os dois perfis escrevem nos mesmos ficheiros:
-      // corridas em ambos, o último a passar fica com a documentação — e a `dashboard.png` passou
-      // mesmo a ter 1082 px de largura. O que precisa de ser verificado ao tamanho do telemóvel são
-      // os testes funcionais, que correm nos dois perfis e continuam a correr.
+      // corridas em ambos, o último a passar ficaria com a documentação, e o painel visto num
+      // telemóvel passaria a fazer de retrato de secretária. O que precisa de ser verificado ao
+      // tamanho do telemóvel são os testes funcionais, que correm nos dois perfis.
       testIgnore: /(-capture|screenshots)\.spec\.ts$/,
     },
   ],

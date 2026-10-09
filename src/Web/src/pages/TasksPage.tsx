@@ -52,10 +52,10 @@ export function TasksPage() {
   // aí — e só aí — a ausência de tarefas é um facto sobre o trabalho e não sobre os filtros.
   const narrowing = narrowingFilterKeys(filters, canViewAll)
 
-  // Enquanto a consulta nova está a caminho, a lista mostrada ainda é a anterior — é para isso que
-  // serve o `placeholderData`, e com linhas é o comportamento certo. Sem linhas não é: o ecrã
-  // vazio descreveria os filtros novos por cima de um resultado velho, e chegou a afirmar «nenhum
-  // processo criou tarefas até agora» no instante a seguir a alargar. Aí espera-se.
+  // Enquanto a consulta nova está a caminho, a lista mostrada ainda é a anterior, que é para o que
+  // serve o `placeholderData`, e com linhas é o comportamento certo. Sem linhas não é: o ecrã vazio
+  // descreveria os filtros novos por cima de um resultado velho, e afirmaria «nenhum processo criou
+  // tarefas até agora» no instante a seguir a alargar. Aí espera-se.
   const staleAndEmpty = tasksQuery.isPlaceholderData && result?.items.length === 0
 
   const submitAction = async () => {
