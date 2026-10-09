@@ -32,12 +32,38 @@ $root = Split-Path -Parent $PSScriptRoot
 $container = 'docops-sqlserver'
 $database = 'DocOpsControlTower'
 
+# As palavras-passe vêm do `.env` da raiz, o mesmo ficheiro que o Docker Compose e a API leem.
+$ficheiro = Join-Path $root '.env'
+
+if (-not (Test-Path $ficheiro)) {
+    throw "Falta o .env na raiz do repositório. Crie-o a partir do .env.example (ver docs/SETUP.md)."
+}
+
+$env_ = @{}
+
+foreach ($linha in Get-Content $ficheiro) {
+    $l = $linha.Trim()
+
+    if ($l -and -not $l.StartsWith('#') -and $l.Contains('=')) {
+        $i = $l.IndexOf('=')
+        $env_[$l.Substring(0, $i).Trim()] = $l.Substring($i + 1).Trim()
+    }
+}
+
+foreach ($nome in 'MSSQL_SA_PASSWORD', 'DOCOPS_TENANT_PASSWORD', 'DOCOPS_SYSTEM_PASSWORD', 'DOCOPS_MIGRATOR_PASSWORD') {
+    if (-not $env_[$nome]) {
+        throw "O .env não define $nome (ver .env.example)."
+    }
+}
+
+$sa = $env_['MSSQL_SA_PASSWORD']
+
 Write-Host 'A parar a API, se estiver a correr...'
 Get-Process -Name 'DocOps.Api' -ErrorAction SilentlyContinue | Stop-Process -Force
 
 Write-Host "A largar a base de dados $database..."
 $drop = "ALTER DATABASE $database SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE $database;"
-docker exec $container /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Local_Dev_Passw0rd!' -C -Q $drop 2>&1 |
+docker exec $container /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $sa -C -Q $drop 2>&1 |
     Out-String |
     Write-Verbose
 
@@ -50,8 +76,7 @@ docker exec -u root $container bash -c `
 
 # As identidades, outra vez. O guião é repetível e cria a base de dados se ela faltar, que é o
 # caso aqui: a API liga-se como `app_tenant` e `app_system`, e nenhum dos dois existe numa base
-# recém-criada. As palavras-passe são as mesmas do `appsettings.Development.json`, e valem só nesta
-# máquina.
+# recém-criada.
 Write-Host 'A recriar as identidades da base de dados...'
 
 $identidades = Join-Path $PSScriptRoot 'create-database-identities.sql'
@@ -59,9 +84,10 @@ $identidades = Join-Path $PSScriptRoot 'create-database-identities.sql'
 docker cp $identidades "${container}:/tmp/create-database-identities.sql" | Out-Null
 
 docker exec $container /opt/mssql-tools18/bin/sqlcmd `
-    -S localhost -U sa -P 'Local_Dev_Passw0rd!' -C -b `
-    -v AppTenantPassword='Qx7_Local_Dev_91!' AppSystemPassword='Vb3_Local_Dev_42!' `
-    MigratorPassword='Mg5_Local_Dev_73!' `
+    -S localhost -U sa -P $sa -C -b `
+    -v "AppTenantPassword=$($env_['DOCOPS_TENANT_PASSWORD'])" `
+    "AppSystemPassword=$($env_['DOCOPS_SYSTEM_PASSWORD'])" `
+    "MigratorPassword=$($env_['DOCOPS_MIGRATOR_PASSWORD'])" `
     -i /tmp/create-database-identities.sql |
     Out-String |
     Write-Verbose

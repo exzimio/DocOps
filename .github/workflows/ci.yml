@@ -70,22 +70,7 @@ jobs:
     name: End-to-end (Playwright)
     runs-on: ubuntu-latest
     needs: [backend, frontend]
-    services:
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: 'Y'
-          MSSQL_SA_PASSWORD: Local_Dev_Passw0rd!
-          MSSQL_PID: Developer
-        ports:
-          - 14330:1433
     env:
-      # As três identidades, como na implantação. A política de segurança ao nível da linha nega por
-      # omissão e a dispensa exige `app_system`: uma corrida como `sa` veria zero linhas, e a suíte
-      # falharia por uma razão que não é a que se quer testar.
-      ConnectionStrings__DocOpsDatabase: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=app_tenant;Password=Qx7_Ci_91!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
-      ConnectionStrings__DocOpsSystem: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=app_system;Password=Vb3_Ci_42!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
-      ConnectionStrings__DocOpsMigrator: Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=docops_migrator;Password=Mg5_Ci_73!;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True
       Seed__Enabled: 'true'
       Seed__ApplyMigrations: 'true'
     steps:
@@ -99,25 +84,45 @@ jobs:
         with:
           node-version: '24'
 
-      # Cria a base de dados e as três identidades, como o passo `identities` da implantação. A
-      # imagem das ferramentas traz o `sqlcmd`, e `--network host` alcança o porto que o serviço
-      # publica no executor.
-      - name: Create the three database identities
+      # Palavras-passe geradas em cada corrida, para nenhuma ficar escrita no repositório. O SQL
+      # Server arranca num passo, e não como serviço, porque os serviços arrancam antes de qualquer
+      # passo e não podem receber valores gerados.
+      #
+      # As três identidades, como na implantação: a política de segurança ao nível da linha nega por
+      # omissão e a dispensa exige `app_system`, e uma corrida como `sa` veria zero linhas.
+      - name: Generate the database passwords
         run: |
+          for name in MSSQL_SA_PASSWORD DOCOPS_TENANT_PASSWORD DOCOPS_SYSTEM_PASSWORD DOCOPS_MIGRATOR_PASSWORD; do
+            value="Ci$(openssl rand -hex 16)aA1!"
+            echo "::add-mask::$value"
+            echo "$name=$value" >> "$GITHUB_ENV"
+          done
+
+      - name: Start SQL Server
+        run: |
+          docker run -d --name docops-sqlserver -p 127.0.0.1:14330:1433 \
+            -e ACCEPT_EULA=Y -e MSSQL_PID=Developer -e MSSQL_SA_PASSWORD \
+            mcr.microsoft.com/mssql/server:2022-latest
+
+      - name: Create the database and the three identities
+        run: |
+          docker cp scripts/create-database-identities.sql docops-sqlserver:/tmp/
           for try in $(seq 1 30); do
-            docker run --rm --network host \
-              -v "${{ github.workspace }}/scripts:/scripts:ro" \
-              mcr.microsoft.com/mssql-tools:latest \
-              /opt/mssql-tools/bin/sqlcmd -S 127.0.0.1,14330 -U sa -P "$MSSQL_SA_PASSWORD" -b \
-                -v AppTenantPassword="Qx7_Ci_91!" AppSystemPassword="Vb3_Ci_42!" \
-                   MigratorPassword="Mg5_Ci_73!" \
-                -i /scripts/create-database-identities.sql && exit 0
+            docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b \
+              -v AppTenantPassword="$DOCOPS_TENANT_PASSWORD" AppSystemPassword="$DOCOPS_SYSTEM_PASSWORD" \
+                 MigratorPassword="$DOCOPS_MIGRATOR_PASSWORD" \
+              -i /tmp/create-database-identities.sql && break
+            [ "$try" = 30 ] && exit 1
             echo "SQL Server ainda não responde; nova tentativa em 5s ($try/30)"
             sleep 5
           done
-          exit 1
-        env:
-          MSSQL_SA_PASSWORD: Local_Dev_Passw0rd!
+          base="Server=127.0.0.1,14330;Database=DocOpsControlTower;TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+          {
+            echo "ConnectionStrings__DocOpsDatabase=$base;User Id=app_tenant;Password=$DOCOPS_TENANT_PASSWORD"
+            echo "ConnectionStrings__DocOpsSystem=$base;User Id=app_system;Password=$DOCOPS_SYSTEM_PASSWORD"
+            echo "ConnectionStrings__DocOpsMigrator=$base;User Id=docops_migrator;Password=$DOCOPS_MIGRATOR_PASSWORD"
+          } >> "$GITHUB_ENV"
 
       - name: Install web dependencies
         run: npm ci

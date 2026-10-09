@@ -297,15 +297,16 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 ## 11. Gestão de segredos
 
 - O repositório não contém segredos de produção.
-- As credenciais versionadas são as do SQL Server de desenvolvimento: a do contentor e as das três
-  identidades (`app_tenant`, `app_system`, `docops_migrator`). O contentor publica só em `127.0.0.1`, e as
-  palavras-passe estão nos ficheiros de desenvolvimento, no `docker-compose.full.yml` e na integração
-  contínua, cada um com valores próprios e nenhum deles usado fora da máquina ou do executor.
-- **Em produção, as três passam por variáveis de ambiente.** O `docker-compose.full.yml` lê
-  `DOCOPS_TENANT_PASSWORD`, `DOCOPS_SYSTEM_PASSWORD` e `DOCOPS_MIGRATOR_PASSWORD`, e os valores por
-  omissão existem para ver o produto a correr na própria máquina, não para implantar.
-- Em desenvolvimento, use *user secrets* ou `.env` (ambos ignorados pelo Git); em produção, use as
-  variáveis de ambiente da plataforma ou um cofre de segredos.
+- **Nenhuma palavra-passe de base de dados está versionada.** As quatro (a do administrador do
+  contentor e as das três identidades) vivem no `.env`, ignorado pelo Git, que se cria a partir do
+  `.env.example`. O exemplo traz valores de exemplo, que só servem numa máquina local.
+- O `docker compose` e o `docker-compose.full.yml` recusam arrancar sem elas, em vez de caírem num
+  valor escrito no ficheiro. A integração contínua gera-as em cada corrida, e os testes de integração
+  também, para o contentor descartável de cada execução.
+- A API e o worker leem o `.env` apenas em desenvolvimento, e as variáveis de ambiente verdadeiras
+  ganham sempre sobre ele.
+- Em produção, as palavras-passe e as cadeias de ligação vêm das variáveis de ambiente da plataforma
+  ou de um cofre de segredos, e nunca de um ficheiro no repositório.
 
 ## 12. Ameaças consideradas
 
@@ -428,16 +429,12 @@ estado sem origem permitida, a política de segurança ao nível da linha, a cob
 organização e a ausência de `IgnoreQueryFilters` dentro de projeções. Esta última não é um teste:
 falha a **compilação**.
 
-### Duas coisas que estão no repositório de propósito
+### Uma coisa que está no repositório de propósito
 
-Há duas coisas que parecem um defeito e não são, e convém dizê-lo para ninguém as «corrigir».
+Parece um defeito e não é, e convém dizê-lo para ninguém a «corrigir».
 
-- **A cadeia de ligação de desenvolvimento está versionada**, com a palavra-passe do contentor
-  local. É deliberado: o contentor é descartável, publica só em *loopback*, e a cadeia existe para
-  que o projeto arranque sem configuração. Em `appsettings.json`, o ficheiro que vale fora de
-  desenvolvimento, a cadeia está **vazia**, e o valor real vem do ambiente.
 - **A palavra-passe das contas de demonstração está no código do frontend** e é mostrada no ecrã de
-  entrada. Também é deliberado: todas as contas são fictícias e o produto é uma demonstração de
+  entrada. É deliberado: todas as contas são fictícias e o produto é uma demonstração de
   portefólio. Escondê-la seria encenação: quem visita a demonstração precisa de entrar, e fingir
   que aquilo é um segredo não protegeria nada.
 

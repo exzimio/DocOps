@@ -32,6 +32,13 @@ prova.
 
 ## 3. Começar
 
+As palavras-passe locais vivem num ficheiro `.env`, fora do Git, que se cria uma vez a partir do
+exemplo. Os valores de exemplo funcionam como estão; trocá-los é opcional numa máquina local.
+
+```bash
+cp .env.example .env
+```
+
 **Ver o produto a funcionar, sem instalar .NET nem Node:**
 
 ```bash
@@ -40,13 +47,29 @@ docker compose -f docker-compose.full.yml up --build   # → http://localhost:80
 
 Entrar com `admin@asteria.example` e `Demo!Pass123`. A base de dados, as migrações, o catálogo de
 demonstração, a API, o worker e a interface sobem num comando, pela ordem certa: a base fica
-saudável, o passo de migração corre até ao fim, e só então a aplicação arranca.
+saudável, as três identidades de base de dados são criadas, o passo de migração corre até ao fim,
+e só então a aplicação arranca.
 
 **Desenvolver:**
 
 ```bash
 docker compose up -d                                  # SQL Server
+```
+
+Na primeira vez, com a base ainda vazia, criar a base de dados e as três identidades com que a
+aplicação se liga, lendo as palavras-passe do `.env` (detalhe em
+[`docs/SETUP.md`](docs/SETUP.md), secção 3.1):
+
+```bash
+docker cp scripts/create-database-identities.sql docops-sqlserver:/tmp/
+docker exec --env-file .env docops-sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $MSSQL_SA_PASSWORD -C -b -v AppTenantPassword=$DOCOPS_TENANT_PASSWORD AppSystemPassword=$DOCOPS_SYSTEM_PASSWORD MigratorPassword=$DOCOPS_MIGRATOR_PASSWORD -i /tmp/create-database-identities.sql'
+```
+
+Depois, cada um no seu terminal:
+
+```bash
 dotnet run --project src/Api/DocOps.Api.csproj        # API    → http://localhost:5180
+npm --prefix src/Web install                          # só na primeira vez
 npm --prefix src/Web run dev                          # Web    → http://localhost:5173
 dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker (opcional: prazos e temporizadores)
 ```

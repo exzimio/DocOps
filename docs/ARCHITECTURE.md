@@ -735,7 +735,7 @@ a correr: um `POST` sem `Origin` leva `403`, e o cookie de sessão chega ao brow
 
 ### O que a imagem e o proxy têm de garantir
 
-Seis pormenores que não aparecem em desenvolvimento, e por isso estão escritos.
+Sete pormenores que não aparecem em desenvolvimento, e por isso estão escritos.
 
 **Os documentos de exemplo têm de entrar na imagem.** Vivem em `samples/` na raiz, e a Infrastructure
 embebe-os com um caminho relativo que sai de `src/`, por isso o Dockerfile copia também essa pasta.
@@ -765,6 +765,9 @@ nem arranca: fica a reiniciar sem fazer nada, com a API e a interface a parecere
 reinício, o SQL Server aceita ligações enquanto ainda recupera as bases, e o passo das identidades
 falharia com o erro 904 se corresse nesse intervalo. A verificação de saúde pergunta pelo estado das
 bases, e não só se o servidor responde.
+
+**As palavras-passe vêm do `.env`**, e a pilha recusa arrancar sem elas, em vez de cair num valor
+escrito no ficheiro do compose.
 
 ## 11. Processamento em segundo plano
 

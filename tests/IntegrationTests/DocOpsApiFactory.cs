@@ -1,3 +1,4 @@
+using DocOps.Infrastructure.Configuration;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
@@ -21,7 +22,7 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
     public const string SeedPassword = "Demo!Pass123";
 
     private readonly MsSqlContainer _database = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithPassword("Integration_Tests_Passw0rd!")
+        .WithPassword(GeneratePassword())
         .Build();
 
     /// <summary>Connection string of the throw-away container, for tests that build their own context.</summary>
@@ -33,18 +34,21 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
     /// A de cima é a do administrador do contentor, e serve para montar e para ler as vistas de
     /// catálogo. Provar o que a aplicação **não** pode fazer exige a identidade com que ela se liga.
     /// </summary>
-    public string TenantConnectionString => ConnectionStringAs("app_tenant", TenantPassword);
+    public string TenantConnectionString => ConnectionStringAs("app_tenant", _tenantPassword);
+
+    /// <summary>
+    /// As palavras-passe das identidades de teste, geradas em cada corrida: o contentor é descartável e
+    /// ninguém precisa de as saber. Não contêm o nome da conta de propósito: a política do SQL Server
+    /// recusa uma palavra-passe que o contenha, e a recusa aparece como um erro de sintaxe pouco óbvio.
+    /// </summary>
+    private readonly string _tenantPassword = GeneratePassword();
+    private readonly string _systemPassword = GeneratePassword();
+
+    /// <summary>Cumpre a política do SQL Server: maiúscula, minúscula, algarismo e símbolo.</summary>
+    private static string GeneratePassword() => $"Tc{Guid.NewGuid():N}aA1!";
 
     // Explicit implementation: xUnit's IAsyncLifetime returns Task, while WebApplicationFactory
     // already defines a ValueTask-returning DisposeAsync.
-    /// <summary>
-    /// As palavras-passe das identidades de teste. Não contêm o nome da conta de propósito: a
-    /// política do SQL Server recusa uma palavra-passe que o contenha, e a recusa aparece como um
-    /// erro de sintaxe pouco óbvio.
-    /// </summary>
-    private const string TenantPassword = "Qx7_Integration_91!";
-    private const string SystemPassword = "Vb3_Integration_42!";
-
     async Task IAsyncLifetime.InitializeAsync()
     {
         await _database.StartAsync();
@@ -82,8 +86,8 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
 
         foreach (string sql in new[]
         {
-            $"IF SUSER_ID(N'app_tenant') IS NULL CREATE LOGIN [app_tenant] WITH PASSWORD = N'{TenantPassword}';",
-            $"IF SUSER_ID(N'app_system') IS NULL CREATE LOGIN [app_system] WITH PASSWORD = N'{SystemPassword}';",
+            $"IF SUSER_ID(N'app_tenant') IS NULL CREATE LOGIN [app_tenant] WITH PASSWORD = N'{_tenantPassword}';",
+            $"IF SUSER_ID(N'app_system') IS NULL CREATE LOGIN [app_system] WITH PASSWORD = N'{_systemPassword}';",
             "IF DATABASE_PRINCIPAL_ID(N'app_tenant') IS NULL CREATE USER [app_tenant] FOR LOGIN [app_tenant];",
             "IF DATABASE_PRINCIPAL_ID(N'app_system') IS NULL CREATE USER [app_system] FOR LOGIN [app_system];",
             "ALTER ROLE [db_datareader] ADD MEMBER [app_tenant];",
@@ -129,13 +133,14 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
         // é a identidade, e não só a chave no contexto da sessão, que a política aceita para
         // dispensa. Correr tudo como administrador faria os testes passarem sem provar nada.
         Environment.SetEnvironmentVariable(
-            "ConnectionStrings__DocOpsDatabase", ConnectionStringAs("app_tenant", TenantPassword));
+            "ConnectionStrings__DocOpsDatabase", ConnectionStringAs("app_tenant", _tenantPassword));
         Environment.SetEnvironmentVariable(
-            "ConnectionStrings__DocOpsSystem", ConnectionStringAs("app_system", SystemPassword));
+            "ConnectionStrings__DocOpsSystem", ConnectionStringAs("app_system", _systemPassword));
         Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", TestOrigin);
         Environment.SetEnvironmentVariable("Seed__Enabled", "false");
         Environment.SetEnvironmentVariable("Seed__ApplyMigrations", "false");
         Environment.SetEnvironmentVariable("Seed__DefaultPassword", SeedPassword);
+        Environment.SetEnvironmentVariable(LocalEnvironmentFile.IgnoreVariable, "1");
 
         // The whole suite is one process signing in against its own API, so the limiter counts the
         // size of the test suite rather than anything about the product. It started refusing when

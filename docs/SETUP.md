@@ -16,14 +16,21 @@ Nada mais é necessário: não é preciso instalar SQL Server nem qualquer conta
 cp .env.example .env
 ```
 
-O ficheiro `.env` só é lido pelo `docker compose`. A API lê a sua configuração de
-`src/Api/appsettings.Development.json` (já preenchido para o ambiente local) e de variáveis de
-ambiente, que têm sempre precedência.
+O `.env` guarda as palavras-passe locais e as cadeias de ligação, e fica fora do Git. É lido por três
+lados, para cada palavra-passe existir num sítio só:
 
-> **Sobre a palavra-passe local.** `Local_Dev_Passw0rd!` é a credencial do container de
-> desenvolvimento, ligado apenas a `127.0.0.1`. É deliberadamente pública e serve só para que um
-> clone do repositório arranque sem configuração adicional. Nenhuma credencial de produção existe no
-> repositório.
+- o `docker compose`, para a palavra-passe do administrador do contentor;
+- os guiões de `scripts/`, para criar as identidades da base de dados;
+- a API e o worker, em desenvolvimento, como configuração. As variáveis de ambiente verdadeiras têm
+  sempre precedência sobre o ficheiro.
+
+Os valores do `.env.example` funcionam como estão. Trocá-los é opcional numa máquina local, e
+obrigatório em qualquer outro sítio. Sem `.env`, o `docker compose` recusa arrancar e diz porquê, e
+a API recusa arrancar por lhe faltarem as cadeias de ligação.
+
+> **Mudar uma palavra-passe depois de criada a base.** O administrador do contentor fica com a
+> palavra-passe que tinha quando o volume foi criado, e só muda com `docker compose down -v`. As
+> três identidades acompanham o `.env`: voltar a correr o passo da secção 3.1 atualiza-as.
 
 ## 3. Base de dados
 
@@ -58,15 +65,13 @@ aplicação saudável a ver zero linhas, que é a pior falha possível aqui.
 
 ```bash
 docker cp scripts/create-database-identities.sql docops-sqlserver:/tmp/
-docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b \
-  -v AppTenantPassword='Qx7_Local_Dev_91!' AppSystemPassword='Vb3_Local_Dev_42!' \
-     MigratorPassword='Mg5_Local_Dev_73!' \
-  -i /tmp/create-database-identities.sql
+docker exec --env-file .env docops-sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $MSSQL_SA_PASSWORD -C -b -v AppTenantPassword=$DOCOPS_TENANT_PASSWORD AppSystemPassword=$DOCOPS_SYSTEM_PASSWORD MigratorPassword=$DOCOPS_MIGRATOR_PASSWORD -i /tmp/create-database-identities.sql'
 ```
 
-As palavras-passe acima são as que o `appsettings.Development.json` já traz, e valem só nesta
-máquina. O guião cria a base de dados se ela faltar e pode voltar a correr sem efeito.
+As palavras-passe vêm do `.env`, que o `docker exec --env-file` passa ao contentor; nenhuma fica
+escrita no comando nem no histórico do terminal. O comando funciona igual no PowerShell e no Bash; no Git Bash, prefixe-o com
+`MSYS_NO_PATHCONV=1`, para o caminho `/opt/...` não ser traduzido.
+O guião cria a base de dados se ela faltar e pode voltar a correr sem efeito.
 
 | Identidade | Quem a usa | O que pode |
 | --- | --- | --- |
@@ -83,17 +88,16 @@ Em ambiente de desenvolvimento a API aplica as migrações e semeia os dados no 
 idempotente: pode arrancar as vezes que quiser sem duplicar dados nem perder alterações feitas na
 interface.
 
-Para executar as migrações manualmente. **A cadeia tem de ser indicada**: sem `--connection`, o
-`dotnet ef` liga-se pela configuração da API, que é `app_tenant`, e essa identidade não altera o
-esquema.
+Para migrar e semear sem deixar a API a correr, há o mesmo passo que a implantação usa: aplica as
+migrações com `docops_migrator`, semeia, e termina.
 
 ```bash
-dotnet tool restore
-dotnet ef database update \
-  --project src/Infrastructure/DocOps.Infrastructure.csproj \
-  --startup-project src/Api/DocOps.Api.csproj \
-  --connection "Server=127.0.0.1,14330;Database=DocOpsControlTower;User Id=docops_migrator;Password=Mg5_Local_Dev_73!;TrustServerCertificate=True;Encrypt=True"
+DOCOPS_MIGRATE_ONLY=true dotnet run --project src/Api/DocOps.Api.csproj          # Bash
+$env:DOCOPS_MIGRATE_ONLY='true'; dotnet run --project src/Api/DocOps.Api.csproj  # PowerShell
 ```
+
+O `dotnet ef database update` não serve aqui sem `--connection`: liga-se pela configuração da API,
+que é `app_tenant`, e essa identidade não altera o esquema.
 
 Criar uma nova migração:
 
@@ -194,9 +198,10 @@ npm --prefix src/Web run format:check
 
 | Variável | Predefinição | Para que serve |
 | --- | --- | --- |
-| `ConnectionStrings__DocOpsDatabase` | ver `appsettings.Development.json` | Ligação como `app_tenant`, para os pedidos normais |
-| `ConnectionStrings__DocOpsSystem` | ver `appsettings.Development.json` | Ligação como `app_system`. **Obrigatória**: sem ela a aplicação recusa arrancar, porque cair para a cadeia normal faria os caminhos de sistema ver zero linhas sem erro |
-| `ConnectionStrings__DocOpsMigrator` | ver `appsettings.Development.json` | Ligação como `docops_migrator`. Exigida só por quem migra |
+| `ConnectionStrings__DocOpsDatabase` | ver `.env.example` | Ligação como `app_tenant`, para os pedidos normais |
+| `ConnectionStrings__DocOpsSystem` | ver `.env.example` | Ligação como `app_system`. **Obrigatória**: sem ela a aplicação recusa arrancar, porque cair para a cadeia normal faria os caminhos de sistema ver zero linhas sem erro |
+| `ConnectionStrings__DocOpsMigrator` | ver `.env.example` | Ligação como `docops_migrator`. Exigida só por quem migra |
+| `DOCOPS_TENANT_PASSWORD`, `DOCOPS_SYSTEM_PASSWORD`, `DOCOPS_MIGRATOR_PASSWORD` | sem valor por omissão | Palavras-passe das três identidades. As cadeias acima referem-nas, e o passo da secção 3.1 e o `docker-compose.full.yml` usam-nas |
 | `Cors__AllowedOrigins__0` | `http://localhost:5173` | Origens autorizadas a chamar a API com credenciais |
 | `Seed__ApplyMigrations` | `true` em desenvolvimento | Aplicar migrações no arranque |
 | `Seed__Enabled` | `true` em desenvolvimento | Criar os dados de demonstração |
@@ -207,7 +212,7 @@ npm --prefix src/Web run format:check
 | `BackgroundJobs__IntervalSeconds` | `60` (30 em desenvolvimento) | Intervalo entre ciclos do worker |
 | `BackgroundJobs__EscalateOverdueTasks` | `true` | Escalonamento de tarefas em atraso |
 | `BackgroundJobs__ResumeWorkflowTimers` | `true` | Retoma de instâncias paradas num temporizador |
-| `MSSQL_SA_PASSWORD` | `Local_Dev_Passw0rd!` | Palavra-passe do container de desenvolvimento |
+| `MSSQL_SA_PASSWORD` | sem valor por omissão | Palavra-passe do administrador do container. Só cria a base e as identidades |
 | `MSSQL_HOST_PORT` | `14330` | Porto publicado pelo container |
 | `VITE_API_PROXY_TARGET` | `http://localhost:5180` | Destino do proxy do servidor de desenvolvimento |
 
@@ -229,7 +234,8 @@ variáveis de ambiente correspondentes (`Ai__Provider`, `Ai__Endpoint`, `Ai__Api
 | `401` inesperado após alterar permissões | O cookie ainda tem as *claims* antigas | Aguardar até 5 minutos (revalidação do *security stamp*) ou terminar e reiniciar sessão |
 | `MSB1009` ao compilar ou testar | A solução está no formato `.slnx`, o do .NET 10 | Indicar `DocOpsControlTower.slnx` nos comandos |
 | A compilação falha porque não consegue escrever `DocOps.Api.dll` | A API está a correr e tem a DLL aberta | Parar a API antes de compilar |
-| A API recusa arrancar com «Connection string 'DocOpsSystem' is not configured» | Falta a cadeia da identidade `app_system`, que é obrigatória | Configurar as três cadeias (secção 9) e criar as identidades (secção 3.1) |
+| A API recusa arrancar com «Connection string '…' is not configured» | Falta o `.env`, ou falta-lhe uma das cadeias | Criar o `.env` a partir do `.env.example` (secção 2) e as identidades (secção 3.1) |
+| O `docker compose` recusa arrancar com «required variable MSSQL_SA_PASSWORD is missing a value» | Falta o `.env` na raiz do repositório | `cp .env.example .env` |
 | A API deixa de arrancar depois de largar a base de dados | Os utilizadores de base de dados vivem dentro dela e foram largados com ela | Correr `scripts/reset-demo-db.ps1`, que recria a base e as três identidades |
 | `npm run dev` termina com «Port 5173 is already in use» | Outro servidor de desenvolvimento ocupa o porto, e o Vite está configurado para não mudar de porto sozinho | Libertar o porto, ou correr com `--port 5174` e acrescentar `http://localhost:5174` a `Cors__AllowedOrigins__1` |
 | `sqlcmd` dentro do contentor falha no Git Bash com um caminho estranho | O Git Bash traduz `/opt/...` para um caminho do Windows | Correr o comando no PowerShell, ou prefixá-lo com `MSYS_NO_PATHCONV=1` |

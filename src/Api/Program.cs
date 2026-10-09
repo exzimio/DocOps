@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using DocOps.Api.Infrastructure;
 using DocOps.Application;
 using DocOps.Infrastructure;
+using DocOps.Infrastructure.Configuration;
 using DocOps.Infrastructure.Persistence;
 using DocOps.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Localization;
@@ -17,6 +18,13 @@ using DocOps.Infrastructure.Observability;
 using DocOps.Application.Abstractions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+// As palavras-passe locais vêm do `.env` da raiz, o mesmo que o Docker Compose lê. Só em
+// desenvolvimento: fora dele, a configuração vem toda do ambiente.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddLocalEnvironmentFile(builder.Environment.ContentRootPath);
+}
 
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)

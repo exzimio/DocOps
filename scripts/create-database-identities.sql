@@ -33,6 +33,9 @@
 USE [master];
 GO
 
+-- Um login que já existe fica com a palavra-passe que lhe é passada agora, e não com a que tinha:
+-- é o .env que manda, e mudá-lo e voltar a correr isto põe a base de acordo com ele.
+
 -- A base de dados antes das identidades: os utilizadores vivem dentro dela, e largar a base
 -- leva-os com ela: o arranque seguinte procuraria `app_system` e já não o encontraria.
 IF DB_ID(N'$(BaseDeDados)') IS NULL
@@ -41,14 +44,20 @@ GO
 
 IF SUSER_ID(N'app_tenant') IS NULL
     CREATE LOGIN [app_tenant] WITH PASSWORD = N'$(AppTenantPassword)', CHECK_POLICY = ON;
+ELSE
+    ALTER LOGIN [app_tenant] WITH PASSWORD = N'$(AppTenantPassword)';
 GO
 
 IF SUSER_ID(N'app_system') IS NULL
     CREATE LOGIN [app_system] WITH PASSWORD = N'$(AppSystemPassword)', CHECK_POLICY = ON;
+ELSE
+    ALTER LOGIN [app_system] WITH PASSWORD = N'$(AppSystemPassword)';
 GO
 
 IF SUSER_ID(N'docops_migrator') IS NULL
     CREATE LOGIN [docops_migrator] WITH PASSWORD = N'$(MigratorPassword)', CHECK_POLICY = ON;
+ELSE
+    ALTER LOGIN [docops_migrator] WITH PASSWORD = N'$(MigratorPassword)';
 GO
 
 USE [$(BaseDeDados)];

@@ -2,6 +2,9 @@
 #
 #   docker compose -f docker-compose.full.yml up --build
 #
+# Antes, uma vez: `cp .env.example .env`. As palavras-passe da base de dados vêm desse ficheiro, e a
+# pilha recusa arrancar sem elas, em vez de cair numa palavra-passe escrita aqui.
+#
 # Depois: http://localhost:8080, com `admin@asteria.example` e a palavra-passe de demonstração.
 #
 # O `docker-compose.yml` ao lado deste levanta só a base de dados, para desenvolvimento com a API e
@@ -26,7 +29,7 @@ services:
     image: docops-sqlserver-fts:2022
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!}"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?defina-a no .env, a partir do .env.example}"
       MSSQL_PID: "Developer"
     volumes:
       - sqldata:/var/opt/mssql
@@ -49,8 +52,7 @@ services:
   # aplicação, e é por isso que está num passo separado que acaba antes de ela existir.
   #
   # Repetível: voltar a subir a pilha com o volume da base intacto encontra tudo no sítio e não faz
-  # nada. As palavras-passe por omissão valem para ver o produto a correr na própria máquina; uma
-  # implantação a sério passa as três variáveis.
+  # nada.
   identities:
     image: docops-sqlserver-fts:2022
     entrypoint:
@@ -60,13 +62,13 @@ services:
       - -U
       - sa
       - -P
-      - "${MSSQL_SA_PASSWORD:-Local_Dev_Passw0rd!}"
+      - "${MSSQL_SA_PASSWORD:?defina-a no .env, a partir do .env.example}"
       - -C
       - -b
       - -v
-      - AppTenantPassword=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!}
-      - AppSystemPassword=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!}
-      - MigratorPassword=${DOCOPS_MIGRATOR_PASSWORD:-Mg5_Container_73!}
+      - AppTenantPassword=${DOCOPS_TENANT_PASSWORD:?defina-a no .env, a partir do .env.example}
+      - AppSystemPassword=${DOCOPS_SYSTEM_PASSWORD:?defina-a no .env, a partir do .env.example}
+      - MigratorPassword=${DOCOPS_MIGRATOR_PASSWORD:?defina-a no .env, a partir do .env.example}
       - -i
       - /scripts/create-database-identities.sql
     volumes:
@@ -88,9 +90,9 @@ services:
       # Três cadeias, e cada passo usa a que lhe compete: o esquema muda com `docops_migrator`, e a
       # semeadura escreve com `app_system`, que é a identidade que o predicado aceita para dispensa.
       # A cadeia normal está aqui porque o arranque a exige, e não porque este passo a use.
-      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
-      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
-      ConnectionStrings__DocOpsMigrator: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=docops_migrator;Password=${DOCOPS_MIGRATOR_PASSWORD:-Mg5_Container_73!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsMigrator: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=docops_migrator;Password=${DOCOPS_MIGRATOR_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
       Seed__ApplyMigrations: "true"
       Seed__Enabled: "true"
 
@@ -109,8 +111,8 @@ services:
     environment:
       # Sem a cadeia do migrador, de propósito: a aplicação não altera o esquema, e não poder
       # alterá-lo é o que impede um pedido de largar a política de segurança.
-      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
-      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
 
       # A aplicação não migra nem semeia: isso foi feito pelo passo acima.
       Seed__ApplyMigrations: "false"
@@ -140,8 +142,8 @@ services:
     environment:
       # O worker corre acima de todas as organizações, e isso é uma declaração feita com
       # `app_system`, não a ausência de contexto que antes bastava.
-      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:-Qx7_Container_91!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
-      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:-Vb3_Container_42!};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsDatabase: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_tenant;Password=${DOCOPS_TENANT_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
+      ConnectionStrings__DocOpsSystem: "Server=sqlserver,1433;Database=DocOpsControlTower;User Id=app_system;Password=${DOCOPS_SYSTEM_PASSWORD:?defina-a no .env, a partir do .env.example};TrustServerCertificate=True;MultipleActiveResultSets=True;Encrypt=True"
     volumes:
       - storage:/data/storage
     depends_on:

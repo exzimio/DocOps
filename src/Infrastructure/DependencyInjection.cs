@@ -282,8 +282,9 @@ public static class DependencyInjection
         // A cadeia de sistema liga-se com `app_system`, a identidade que o predicado da política
         // aceita para dispensa. É obrigatória, e não tem alternativa por omissão.
         //
-        // Cair para a cadeia normal seria o pior resultado possível. O código julgaria ter dispensa, `USER_NAME()` não seria
-        // `app_system`, a base continuaria a filtrar, e cada caminho de sistema devolveria uma lista
+        // Cair para a cadeia normal seria o pior resultado possível. O código julgaria ter dispensa,
+        // `USER_NAME()` não seria `app_system`, a base continuaria a filtrar, e cada caminho de
+        // sistema devolveria uma lista
         // vazia sem erro nenhum: a autenticação não encontraria o utilizador, o worker não veria
         // tarefas, a semeadura semearia por cima do que não vê. Recusar arrancar diz o que falta.
         string systemConnectionString = Required(configuration, SystemConnectionStringName);

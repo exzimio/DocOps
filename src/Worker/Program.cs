@@ -1,4 +1,5 @@
 using DocOps.Infrastructure;
+using DocOps.Infrastructure.Configuration;
 using DocOps.Infrastructure.Observability;
 using DocOps.Worker;
 using DocOps.Worker.Jobs;
@@ -9,6 +10,12 @@ using Serilog;
 using DocOps.Domain.Operations;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+
+// O mesmo `.env` da API, e pela mesma razão.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddLocalEnvironmentFile(builder.Environment.ContentRootPath);
+}
 
 builder.Services.AddSerilog((services, configuration) => configuration
     .ReadFrom.Configuration(builder.Configuration)
