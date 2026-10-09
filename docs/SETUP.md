@@ -46,7 +46,7 @@ docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa   
 ```
 
 Um servidor **sem** o componente também serve: a migração que cria os índices está protegida, a
-aplicação arranca na mesma, e a pesquisa passa a comparar por subcadeia — dizendo-o em cada
+aplicação arranca na mesma, e a pesquisa passa a comparar por subcadeia, e di-lo em cada
 resposta e no ecrã. É o que acontece nos testes de integração, que levantam a imagem oficial.
 
 ## 3.1 As três identidades da base de dados
@@ -131,8 +131,8 @@ npm --prefix src/Web install     # apenas na primeira vez
 npm --prefix src/Web run dev
 ```
 
-O **worker** de segundo plano é opcional para a demonstração — os dados semeados já incluem tarefas
-em atraso e escaladas — mas é o que faz o escalonamento e a retoma de temporizadores acontecerem em
+O **worker** de segundo plano é opcional para a demonstração, porque os dados semeados já incluem tarefas
+em atraso e escaladas, mas é o que faz o escalonamento e a retoma de temporizadores acontecerem em
 tempo real:
 
 ```bash
@@ -158,7 +158,7 @@ Palavra-passe de todas as contas: `Demo!Pass123`
 | `contacto@northstar.example` | Tiago Ribeiro | External Partner | Northstar Supplies |
 | `admin@vertice.example` | Beatriz Sousa | Tenant Admin | Vértice Industrial |
 
-A segunda organização (**Vértice Industrial**) existe para demonstrar — e testar — o isolamento entre
+A segunda organização (**Vértice Industrial**) existe para demonstrar, e testar, o isolamento entre
 organizações. Entre com `admin@vertice.example` e confirme que não vê nada da Asteria Group.
 
 ## 7. Testes
@@ -215,8 +215,8 @@ npm --prefix src/Web run format:check
 
 Sem configuração, a aplicação usa o fornecedor de IA de demonstração: determinístico, explicável e
 sempre identificado como demonstração na interface. Para ligar um fornecedor real, defina as
-variáveis de ambiente correspondentes (`Ai__Provider`, `Ai__Endpoint`, `Ai__ApiKey`) — nenhuma chave
-é guardada no repositório. *Disponível a partir da Fase 5.*
+variáveis de ambiente correspondentes (`Ai__Provider`, `Ai__Endpoint`, `Ai__ApiKey`); nenhuma chave
+é guardada no repositório.
 
 ## 11. Resolução de problemas
 
