@@ -201,7 +201,12 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
     [Fact]
     public async Task Raw_sql_cannot_move_a_row_to_another_organisation()
     {
-        (Guid primeira, Guid segunda) = await TwoTenantsAsync();
+        // A recusa só acontece se o `UPDATE` tocar numa linha, e só uma das organizações semeadas tem
+        // etiquetas. A ordem de `TwoTenantsAsync` não serve para escolher: o SQL Server ordena um
+        // identificador pelos últimos bytes, que num UUIDv7 são aleatórios. Começar pela organização
+        // sem etiquetas daria um `UPDATE` sem linhas, que passa sem pôr a política à prova.
+        (Guid uma, Guid outra) = await TwoTenantsAsync();
+        (Guid primeira, Guid segunda) = await HasTagsAsync(uma) ? (uma, outra) : (outra, uma);
 
         await using SqlConnection connection = new(factory.TenantConnectionString);
         await connection.OpenAsync();
@@ -226,6 +231,14 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
         await using SqlCommand contagem = new("SELECT COUNT(*) FROM dbo.Tags;", connection);
 
         Assert.True((int)(await contagem.ExecuteScalarAsync())! > 0);
+    }
+
+    private async Task<bool> HasTagsAsync(Guid tenantId)
+    {
+        await using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
+
+        return await context.Tags.IgnoreQueryFilters().AnyAsync(tag => tag.TenantId == tenantId);
     }
 
     private static async Task DeclareAsync(SqlConnection connection, Guid tenantId)
