@@ -1,20 +1,20 @@
 import type { Page } from '@playwright/test'
 
 /**
- * Uma captura de pagina inteira sem o cabecalho repetido a meio.
+ * Uma captura de página inteira sem o cabeçalho repetido a meio.
  *
- * `fullPage` nao tira uma fotografia: costura varias, uma por altura de janela. Um elemento
- * `sticky` ou `fixed` e repintado em cada faixa, pelo que o cabecalho e a barra lateral apareciam
- * outra vez no meio da imagem, por cima do conteudo. Nas capturas mais altas isso chegava a tapar
- * a mensagem que a captura existia para mostrar, e dava a impressao de um ecra partido.
+ * `fullPage` não tira uma fotografia: costura várias, uma por altura de janela. Um elemento
+ * `sticky` ou `fixed` é repintado em cada faixa, e o cabeçalho e a barra lateral apareceriam outra
+ * vez no meio da imagem, por cima do conteúdo. Nas capturas mais altas isso chega a tapar a
+ * mensagem que a captura existe para mostrar, e dá a impressão de um ecrã partido.
  *
- * A correcao e na fotografia e nao no produto: o cabecalho fixo esta certo, e e o que se quer ao
- * usar a aplicacao.
+ * A correção é na fotografia, e não no produto: o cabeçalho fixo está certo, e é o que se quer ao
+ * usar a aplicação.
  *
- * Neutraliza-se **so o que esta mesmo fixo**, lido do estilo calculado, e nao por uma regra que
- * apanhe tudo. Por `position: static` em todos os elementos destaparia o
- * link «Saltar para o conteudo principal», que so esta escondido porque esta posicionado fora do
- * ecra, e a captura mostraria uma coisa que ninguem ve.
+ * Neutraliza-se **só o que está mesmo fixo**, lido do estilo calculado, e não por uma regra que
+ * apanhe tudo. Pôr `position: static` em todos os elementos destaparia a ligação «Saltar para o
+ * conteúdo principal», que só está escondida porque está posicionada fora do ecrã, e a captura
+ * mostraria uma coisa que ninguém vê.
  */
 export async function fullPageShot(page: Page, path: string): Promise<void> {
   const marcados = await neutralizar(page)

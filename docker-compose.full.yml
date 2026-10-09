@@ -96,7 +96,7 @@ services:
       Seed__ApplyMigrations: "true"
       Seed__Enabled: "true"
 
-    # Semear cria documentos, e documentos sao ficheiros. Sem o mesmo volume, os ficheiros ficavam
+    # Semear cria documentos, e documentos são ficheiros. Sem o mesmo volume, os ficheiros ficavam
     # no sistema de ficheiros deste contentor e morriam com ele, deixando as linhas da base a
     # apontar para nada.
     volumes:

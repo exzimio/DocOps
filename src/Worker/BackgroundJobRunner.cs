@@ -130,10 +130,10 @@ public sealed class BackgroundJobRunner(
         // declaração explícita, e não o que acontece por ausência de contexto.
         await using ISystemScope scope = systemScopes.Create();
 
-        // Um worker de cada vez por trabalho. Nada impedia que houvesse dois processos, e dois a
-        // correr o mesmo trabalho analisariam o mesmo documento duas vezes e varreriam a mesma
-        // caixa de correio em duplicado — sem erro nenhum, que e o que torna isto dificil de ver.
-        // Quem nao consegue o bloqueio nao espera: volta no ciclo seguinte.
+        // Um worker de cada vez por trabalho. Nada impede que haja dois processos, e dois a correr
+        // o mesmo trabalho analisariam o mesmo documento duas vezes e varreriam a mesma caixa de
+        // correio em duplicado, sem erro nenhum, que é o que torna isto difícil de ver. Quem não
+        // consegue o bloqueio não espera: volta no ciclo seguinte.
         IJobLock locking = scope.Services.GetRequiredService<IJobLock>();
         await using IAsyncDisposable? held = await locking.TryAcquireAsync(name, cancellationToken);
 

@@ -95,9 +95,9 @@ public sealed class AiProcessingService(
             .Where(r => r.DocumentId == documentId && r.Status != AiRunStatus.Queued)
             .OrderByDescending(r => r.CreatedAtUtc)
 
-            // «A mais recente» tem de ser uma so: com duas corridas no mesmo instante, sem
-            // desempate a resposta muda de consulta para consulta. O identificador e da versao 7,
-            // ordenado pelo tempo, portanto o maior e mesmo o ultimo.
+            // «A mais recente» tem de ser uma só: com duas corridas no mesmo instante, sem
+            // desempate a resposta muda de consulta para consulta. O identificador é da versão 7,
+            // ordenado pelo tempo, portanto o maior é mesmo o último.
             .ThenByDescending(r => r.Id)
             .Select(r => (Guid?)r.Id)
             .FirstOrDefaultAsync(cancellationToken);

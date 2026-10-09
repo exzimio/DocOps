@@ -31,9 +31,9 @@
 
 
   <!--
-    O analisador viaja como analisador e nao como dependencia: o codigo compilado nao o referencia,
-    so o compilador o carrega. E por isso que a violacao passa a ser um erro de compilacao a serio,
-    e aparece sublinhada no editor enquanto se escreve.
+    O analisador viaja como analisador, e não como dependência: o código compilado não o
+    referencia, só o compilador o carrega. É por isso que a violação passa a ser um erro de
+    compilação a sério, e aparece sublinhada no editor enquanto se escreve.
   -->
   <ItemGroup>
     <ProjectReference Include="..\Analyzers\DocOps.Analyzers.csproj"

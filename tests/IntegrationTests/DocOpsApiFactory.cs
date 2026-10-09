@@ -55,10 +55,10 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
 
         await CreateDatabaseIdentitiesAsync();
 
-        // Semear em ambito de sistema. Com a politica a negar por omissao, um ambito normal sem
-        // organizacao nao ve linha nenhuma — e o Identity le isso como conflito de concorrencia, nao
-        // como ausencia de permissao. E a falha silenciosa que esta protecao tem de ter cuidado em
-        // nao criar: o codigo julga ter dispensa e a base continua a filtrar.
+        // Semear em âmbito de sistema. Com a política a negar por omissão, um âmbito normal sem
+        // organização não vê linha nenhuma, e o Identity lê isso como conflito de concorrência, e
+        // não como ausência de permissão. É a falha silenciosa que esta proteção tem de ter cuidado
+        // em não criar: o código julga ter dispensa e a base continua a filtrar.
         await using ISystemScope scope = Services.GetRequiredService<ISystemScopeFactory>().Create();
 
         // The test host stops at host construction, so migrations and seeding are applied explicitly here.
@@ -169,12 +169,12 @@ public sealed class DocOpsApiFactory : WebApplicationFactory<Program>, IAsyncLif
     }
 
     /// <summary>
-    /// Um ambito para os testes lerem a base de dados diretamente.
+    /// Um âmbito para os testes lerem a base de dados diretamente.
     ///
-    /// E de sistema de proposito: um teste que confirma uma entrada de auditoria ou conta linhas
-    /// esta a observar **acima** das organizacoes, tal como o worker. Com a politica a negar por
-    /// omissao, um ambito normal sem organizacao nao veria nada, e a asserção falharia a dizer que
-    /// o produto esta errado quando o errado seria o observador.
+    /// É de sistema de propósito: um teste que confirma uma entrada de auditoria ou conta linhas
+    /// está a observar **acima** das organizações, tal como o worker. Com a política a negar por
+    /// omissão, um âmbito normal sem organização não veria nada, e a asserção falharia a dizer que
+    /// o produto está errado quando o errado seria o observador.
     /// </summary>
     public ISystemScope CreateServiceScope() =>
         Services.GetRequiredService<ISystemScopeFactory>().Create();

@@ -1,14 +1,14 @@
 # Imagem do worker.
 #
-# Construida a partir da raiz do repositorio:
+# Construída a partir da raiz do repositório:
 #
 #   docker build -f src/Worker/Dockerfile -t docops-worker .
 #
-# Processo a parte da API de proposito: retoma de temporizadores, escalonamento de prazos, fila de
-# IA, varrimento das integracoes e verificacao de retencao. Nenhum pedido de utilizador espera por
-# trabalho periodico.
+# Processo à parte da API, de propósito: retoma de temporizadores, escalonamento de prazos, fila de
+# IA, varrimento das integrações e verificação de retenção. Nenhum pedido de utilizador espera por
+# trabalho periódico.
 #
-# Varios worker podem correr em paralelo sem repetirem trabalho: cada tarefa toma um bloqueio
+# Vários workers podem correr em paralelo sem repetirem trabalho: cada tarefa toma um bloqueio
 # aplicacional antes de correr (`IJobLock`, sobre `sp_getapplock`).
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -23,9 +23,9 @@ COPY src/Worker/DocOps.Worker.csproj            src/Worker/
 
 RUN dotnet restore src/Worker/DocOps.Worker.csproj
 
-# Os documentos de exemplo vivem na raiz, nao em src/: a Infrastructure embebe-os com
-# `..\..\samples\*.txt`. Sem esta linha a imagem compila na mesma, porque um padrao de recurso
-# embebido que nao encontra nada nao da erro nenhum, e so falha ao semear.
+# Os documentos de exemplo vivem na raiz, e não em src/: a Infrastructure embebe-os com
+# `..\..\samples\*.txt`. Sem esta linha a imagem compila na mesma, porque um padrão de recurso
+# embebido que não encontra nada não dá erro nenhum, e só falha ao semear.
 COPY samples/ samples/
 COPY src/ src/
 
@@ -35,14 +35,15 @@ RUN dotnet publish src/Worker/DocOps.Worker.csproj -c Release -o /app --no-resto
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# aspnet e nao runtime, embora o worker nao sirva HTTP: a infraestrutura que partilha com a API usa
-# o ASP.NET Core (o Identity e a protecao de dados), e sem essa framework o processo nem arranca.
+# A imagem do ASP.NET Core, e não a base do .NET, embora o worker não sirva HTTP: a infraestrutura
+# que partilha com a API usa o Identity e a proteção de dados, e sem essa framework o processo nem
+# arranca.
 RUN mkdir -p /data/storage && chown -R app:app /data
 
 USER app
 
-# Le a mesma pasta de armazenamento da API: a importacao de ficheiros e as integracoes mexem nos
-# documentos que la estao.
+# Lê a mesma pasta de armazenamento da API: a importação de ficheiros e as integrações mexem nos
+# documentos que lá estão.
 ENV FileStorage__RootPath=/data/storage
 
 VOLUME ["/data/storage"]

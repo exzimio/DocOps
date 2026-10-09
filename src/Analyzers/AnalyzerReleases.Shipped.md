@@ -1,1 +1,1 @@
-; Regras ja publicadas. Vazio enquanto o analisador nao tiver versoes.
+; Regras já publicadas. Vazio enquanto o analisador não tiver versões.

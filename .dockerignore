@@ -1,7 +1,7 @@
-# O que nunca entra no contexto de construcao.
+# O que nunca entra no contexto de construção.
 #
-# Sem isto, cada build envia o repositorio inteiro ao motor: node_modules, bin, obj e o historico
-# do git. Sao centenas de megabytes a atravessar o socket antes de a primeira camada comecar, e o
+# Sem isto, cada build envia o repositório inteiro ao motor: node_modules, bin, obj e o histórico
+# do git. São centenas de megabytes a atravessar o socket antes de a primeira camada começar, e a
 # cache invalida-se a cada ficheiro que mude, mesmo os que a imagem nunca usa.
 
 **/node_modules
@@ -23,7 +23,7 @@ tests/e2e/playwright-report
 # Ficheiros carregados em desenvolvimento.
 src/Api/storage
 
-# Documentacao: nao e preciso compilar nada a partir dela.
+# Documentação: não é preciso compilar nada a partir dela.
 docs
 *.md
 !README.md

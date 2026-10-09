@@ -114,9 +114,9 @@ public static class DocumentFilters
             _ => query.OrderByDescending(d => d.CreatedAtUtc)
         };
 
-        // Desempate final pela chave. Nenhuma destas colunas e unica, e sem ultimo criterio o SQL
-        // Server e livre de devolver os empatados por qualquer ordem: duas paginas sao duas
-        // consultas independentes, logo um documento podia aparecer nas duas e outro em nenhuma.
+        // Desempate final pela chave. Nenhuma destas colunas é única, e sem último critério o SQL
+        // Server é livre de devolver os empatados por qualquer ordem: duas páginas são duas
+        // consultas independentes, e um documento podia aparecer nas duas e outro em nenhuma.
         return ordered.ThenBy(document => document.Id);
     }
 

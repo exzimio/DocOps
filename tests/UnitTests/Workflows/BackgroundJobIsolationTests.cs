@@ -78,8 +78,8 @@ public class BackgroundJobIsolationTests
         services.AddMetrics();
         services.AddSingleton<DocOpsMetrics>();
 
-        // Sem varios processos a coordenar, o bloqueio concede sempre. Fica declarado em vez
-        // de ausente, para o que esta sob teste continuar a ser o isolamento entre trabalhos.
+        // Sem vários processos a coordenar, o bloqueio concede sempre. Fica declarado em vez
+        // de ausente, para o que está sob teste continuar a ser o isolamento entre trabalhos.
         services.AddSingleton<IJobLock, NoJobLock>();
 
         // A fabrica de ambitos de sistema precisa de encontrar o acessor do modo no ambito que cria.
