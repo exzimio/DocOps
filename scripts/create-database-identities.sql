@@ -133,4 +133,11 @@ GO
 -- -------------------------------------------------------------------------------------------
 
 PRINT 'Identidades criadas: app_tenant, app_system, docops_migrator.';
+
+-- Dito aqui porque é o primeiro passo que corre contra o servidor, e um servidor sem o componente
+-- arranca na mesma: a diferença só se notaria mais tarde, na pesquisa.
+IF CAST(SERVERPROPERTY('IsFullTextInstalled') AS int) = 1
+    PRINT N'Pesquisa de texto integral: instalada.';
+ELSE
+    PRINT N'Pesquisa de texto integral: não instalada; a pesquisa vai comparar por subcadeia.';
 GO

@@ -45,12 +45,8 @@ ajuste a cadeia de ligação.
 
 **A imagem é construída, não puxada.** A oficial do SQL Server não traz o componente de pesquisa de
 texto integral, de que a pesquisa documental depende (ADR-005); `docker/sql-server/Dockerfile`
-acrescenta-o. A primeira construção demora alguns minutos e as seguintes vêm da cache. Para confirmar
-que ficou instalado:
-
-```bash
-docker exec docops-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa   -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT SERVERPROPERTY('IsFullTextInstalled')"   # 1
-```
+acrescenta-o. A primeira construção demora alguns minutos e as seguintes vêm da cache. O passo
+seguinte (3.1) diz no fim se o componente ficou instalado.
 
 Um servidor **sem** o componente também serve: a migração que cria os índices está protegida, a
 aplicação arranca na mesma, e a pesquisa passa a comparar por subcadeia, e di-lo em cada
@@ -69,9 +65,11 @@ docker exec --env-file .env docops-sqlserver bash -c '/opt/mssql-tools18/bin/sql
 ```
 
 As palavras-passe vêm do `.env`, que o `docker exec --env-file` passa ao contentor; nenhuma fica
-escrita no comando nem no histórico do terminal. O comando funciona igual no PowerShell e no Bash; no Git Bash, prefixe-o com
-`MSYS_NO_PATHCONV=1`, para o caminho `/opt/...` não ser traduzido.
-O guião cria a base de dados se ela faltar e pode voltar a correr sem efeito.
+escrita no comando nem no histórico do terminal. O comando funciona igual no PowerShell e no Bash;
+no Git Bash, prefixe-o com `MSYS_NO_PATHCONV=1`, para o caminho `/opt/...` não ser traduzido.
+
+O guião cria a base de dados se ela faltar, e pode voltar a correr: atualiza as palavras-passe das
+identidades que já existem, e no fim diz se a pesquisa de texto integral está instalada.
 
 | Identidade | Quem a usa | O que pode |
 | --- | --- | --- |
