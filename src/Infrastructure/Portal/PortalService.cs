@@ -137,8 +137,8 @@ public sealed class PortalService(
         // is visible to its owner alone, so without this the supplier would submit into a void.
         // Naming the receiving department is what opens it to the people who handle supplier
         // paperwork, through the classification rule that already exists, rather than by granting a
-        // special permission the portal invented. Configurable in the administration phase; for now
-        // it is finance, because that is who receives supplier invoices.
+        // special permission the portal invented. It is finance, because that is who receives
+        // supplier invoices, and it is not configurable.
         var receiving = await dbContext.Departments
             .Where(department => department.TenantId == tenantId && department.Code == ReceivingDepartmentCode)
             .Select(department => new { department.Id, department.Name })

@@ -18,17 +18,18 @@ const linhas = (page: Page) => page.getByRole('main').locator('table tbody tr')
 /**
  * Um ecrã vazio não pode inventar a razão de estar vazio.
  *
- * A mensagem antiga — «quando um processo lhe atribuir trabalho, aparece aqui» — aparecia em todos
- * os casos de lista vazia, incluindo aqueles em que havia trabalho de sobra e eram os filtros a
- * escondê-lo. Quem a lia acreditava e saía do ecrã, quando bastava alargar. É o mesmo defeito de um
- * botão sem ação, só que ao contrário: em vez de prometer o que não faz, afirma o que não sabe.
+ * Uma frase única para todos os casos de lista vazia, como «quando um processo lhe atribuir
+ * trabalho, aparece aqui», apareceria também quando há trabalho de sobra e são os filtros a
+ * escondê-lo. Quem a lesse acreditaria e sairia do ecrã, quando bastava alargar. É o mesmo defeito
+ * de um botão sem ação, só que ao contrário: em vez de prometer o que não faz, afirma o que não sabe.
  */
 test.describe('O ecrã vazio das tarefas', () => {
-  test('o ecrã de abertura do administrador é o caso em que a mensagem antiga mentia', async ({ page }) => {
+  test('no ecrã de abertura do administrador, a frase nomeia os filtros que escondem o trabalho', async ({
+    page,
+  }) => {
     // Sem tocar em filtro nenhum: o administrador do catálogo tem tarefas, mas nenhuma em aberto,
     // enquanto a organização tem oito à espera de alguém. Os dois filtros que vêm postos por
-    // omissão — «as minhas» e «apenas em aberto» — bastavam para o ecrã afirmar que não havia
-    // trabalho.
+    // omissão, «as minhas» e «apenas em aberto», bastam para esconder esse trabalho.
     await signIn(page, admin)
     await page.goto('/app/tasks')
 

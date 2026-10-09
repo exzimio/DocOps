@@ -115,8 +115,8 @@ export function CommandPalette() {
     queryFn: () =>
       api.get<PagedDocuments>(
         // `query`, e não `search`: é assim que o parâmetro se chama no contrato. Com o nome errado
-        // o servidor ignora-o em silêncio e devolve o catálogo inteiro — que foi o que aconteceu, e
-        // só se viu ao ler a captura de ecrã e reparar que «contrato» trazia faturas.
+        // o servidor ignora-o em silêncio e devolve o catálogo inteiro, e a paleta mostraria faturas
+        // a quem procurou «contrato», sem erro nenhum.
         `/api/documents?page=1&pageSize=5&query=${encodeURIComponent(settled)}`,
       ),
     // Só depois de três letras: uma letra devolveria meio catálogo e não ajudaria ninguém.

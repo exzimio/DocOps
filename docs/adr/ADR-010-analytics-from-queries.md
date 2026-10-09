@@ -59,9 +59,9 @@ afirmação: mediu-se e deu zero. Numa janela em que nada aconteceu, «0% de aut
 mau resultado quando na verdade não houve resultado nenhum: é uma mentira com aspeto de facto, e
 das piores, porque é plausível.
 
-Este foi um defeito a sério, encontrado a olhar para o ecrã com uma janela de sete dias (defeito
-43), não por um teste. Nenhum teste o teria apanhado: o contrato dizia `decimal`, o valor era zero,
-e zero é um `decimal` perfeitamente válido.
+Nenhum teste de contrato apanha este erro: o tipo é `decimal`, o valor é zero, e zero é um
+`decimal` perfeitamente válido. Por isso a regra tem um teste de ponta a ponta próprio, que abre o
+painel numa janela de sete dias e exige «Sem base de cálculo no período» em vez de um zero.
 
 ## Consequências
 

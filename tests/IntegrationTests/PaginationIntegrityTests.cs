@@ -21,11 +21,10 @@ namespace DocOps.IntegrationTests;
 /// Páginas pequenas de propósito, para haver muitos cortes e, portanto, muitas oportunidades de o
 /// corte cair a meio de um grupo empatado.
 ///
-/// <b>Honestamente: este teste não falhava antes da correção.</b> Com o catálogo semeado, quarenta
-/// e uma linhas e sem paralelismo, o SQL Server devolvia sempre a mesma ordem, e oito leituras
-/// seguidas confirmaram-no. O desempate não foi corrigir um defeito observado: foi deixar de
-/// depender de um comportamento que o motor nunca prometeu. Este teste fica como rede para o dia em
-/// que o volume, um índice novo ou um plano paralelo mudem essa sorte.
+/// <b>Com o catálogo semeado, este teste passa com ou sem o desempate.</b> Com quarenta e uma
+/// linhas e sem paralelismo, o SQL Server devolve sempre a mesma ordem. O desempate existe para não
+/// depender de um comportamento que o motor nunca prometeu, e este teste é a rede para o dia em que
+/// o volume, um índice novo ou um plano paralelo mudem essa ordem.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public class PaginationIntegrityTests(DocOpsApiFactory factory)

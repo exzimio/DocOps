@@ -25,9 +25,8 @@ public static class TenantScopedContext
         DbContextOptions<DocOpsDbContext> options = new DbContextOptionsBuilder<DocOpsDbContext>()
             .UseSqlServer(connectionString)
             .AddInterceptors(
-                // Sem este, a organizacao nunca chega ao contexto da sessao e a politica de
-                // seguranca ao nivel da linha nega tudo. Faltava aqui porque, enquanto o predicado
-                // deixava passar sem organizacao, a ausencia nao se notava.
+                // Sem este, a organização nunca chega ao contexto da sessão e a política de
+                // segurança ao nível da linha nega tudo.
                 new TenantSessionContextInterceptor(principal),
                 new AuditableEntityInterceptor(principal, clock),
                 new TenantGuardInterceptor(principal, loggerFactory.CreateLogger<TenantGuardInterceptor>()),

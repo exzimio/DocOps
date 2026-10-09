@@ -34,8 +34,8 @@ namespace DocOps.IntegrationTests;
 /// <remarks>
 /// Na mesma coleção do resto, embora não use o mesmo contentor. A coleção não é sobre partilhar a
 /// base: é sobre <b>não correr ao mesmo tempo</b>. Esta classe levanta um SQL Server só para si, e
-/// dois servidores a disputar a mesma máquina fazem falhar testes que nada têm que ver com carga —
-/// aconteceu, e os que caíram foram os de isolamento entre organizações, que estavam certos.
+/// dois servidores a disputar a mesma máquina fazem falhar testes que nada têm que ver com carga,
+/// como os de isolamento entre organizações, que estão certos.
 /// </remarks>
 [Collection(ApiCollection.Name)]
 public class ReportingLoadTests(ITestOutputHelper output) : IAsyncLifetime

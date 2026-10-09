@@ -110,8 +110,8 @@ GO
 -- -------------------------------------------------------------------------------------------
 -- O que nenhuma delas pode.
 --
--- `IMPERSONATE` dava a quem o tivesse a identidade de outra, e com ela a dispensa. A recusa fica
--- explícita em vez de implícita, para quem ler isto não ter de deduzir a ausência.
+-- `IMPERSONATE` daria a quem o tivesse a identidade de outra, e com ela a dispensa. A recusa fica
+-- explícita em vez de implícita: uma ausência tem de ser deduzida, uma recusa lê-se.
 -- -------------------------------------------------------------------------------------------
 DENY IMPERSONATE ON USER::[app_system] TO [app_tenant];
 DENY IMPERSONATE ON USER::[app_system] TO [docops_migrator];

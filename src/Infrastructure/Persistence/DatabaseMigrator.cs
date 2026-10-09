@@ -12,9 +12,9 @@ namespace DocOps.Infrastructure.Persistence;
 /// esquema também não pode largar a política.
 ///
 /// <para>
-/// O contexto construído aqui não leva interceptores nenhum. É deliberado: os interceptores escrevem
+/// O contexto construído aqui não leva interceptor nenhum. É deliberado: os interceptores escrevem
 /// o contexto da sessão e vigiam a organização das entidades, e uma migração não tem organização.
-/// O que isto implica, e que fica escrito para quem escrever a próxima: <b>uma migração que mexa em
+/// O que isto implica: <b>uma migração que mexa em
 /// dados de tabelas com organização é filtrada pela política como qualquer outra ligação</b>, e vê
 /// zero linhas em silêncio. Migrações de dados sobre essas tabelas precisam de desligar a política
 /// no seu próprio <c>Up</c>, explicitamente.

@@ -3,10 +3,10 @@ import { expect, test } from '@playwright/test'
 /**
  * A sessão vive num cookie `HttpOnly`, e em mais lado nenhum.
  *
- * É uma das regras não-negociáveis do projeto e, até agora, a única sem prova. O modo como se perde
- * é banal: alguém depara-se com um problema de sessão — uma janela nova que não herda o estado, um
- * pedido que falha depois de recarregar — e resolve-o guardando o token no `localStorage`. Passa a
- * funcionar, ninguém repara, e a partir daí qualquer script injetado na página lê a sessão.
+ * É uma garantia que se perde de forma banal: alguém depara-se com um problema de sessão, como uma
+ * janela nova que não herda o estado ou um pedido que falha depois de recarregar, e resolve-o
+ * guardando o token no `localStorage`. Passa a funcionar, ninguém repara, e a partir daí qualquer
+ * script injetado na página lê a sessão.
  *
  * O teste não confia em procurar a palavra «token»: enumera tudo o que a página guardou e recusa
  * qualquer valor com ar de credencial.

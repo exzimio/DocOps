@@ -79,8 +79,8 @@ public class DocumentsTests(DocOpsApiFactory factory)
         Assert.NotNull(result);
 
         // Identidade, não contagem. "Zero documentos" é uma afirmação sobre o que mais ninguém
-        // criou, e parte no dia em que um teste de administração criar algo nesta organização —
-        // já aconteceu duas vezes neste projeto. O que tem de valer é que nenhuma linha atravessa.
+        // criou, e parte no dia em que um teste de administração criar algo nesta organização. O
+        // que tem de valer é que nenhuma linha atravessa.
         HttpClient asteria = await factory.SignInAsync(Administrator);
         PagedResult<DocumentListItemDto>? theirs =
             await asteria.GetFromJsonAsync<PagedResult<DocumentListItemDto>>("/api/documents?pageSize=200", Json);

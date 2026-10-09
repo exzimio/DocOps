@@ -98,7 +98,7 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
 
         try
         {
-            // `IgnoreQueryFilters` é exatamente o que causou a fuga. Aqui já não chega para nada.
+            // `IgnoreQueryFilters` desliga os filtros do EF Core, mas não a política da base de dados.
             List<Guid> vistas = await context.Users
                 .IgnoreQueryFilters()
                 .Select(user => user.TenantId)
@@ -149,8 +149,8 @@ public class RowLevelSecurityTests(DocOpsApiFactory factory)
     [Fact]
     public async Task The_system_mode_reaches_every_organisation()
     {
-        // O worker corre acima de todas, e as migrações e a semeadura também. Isso continua a
-        // funcionar — mas agora é uma declaração, e não o que acontece por ausência de contexto.
+        // O worker corre acima de todas, e as migrações e a semeadura também. Fá-lo por declaração
+        // explícita, e não por ausência de contexto.
         await using ISystemScope scope = factory.Services.GetRequiredService<ISystemScopeFactory>().Create();
         DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
 

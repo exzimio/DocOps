@@ -13,9 +13,9 @@ public enum IntegrationRequestStatus
 /// <summary>
 /// A workflow step asking for an integration to run.
 ///
-/// It exists for the same reason the AI phase's queued analysis exists: a step that called the far
-/// system itself would hold the engine's transaction open for as long as that system took to
-/// answer — and an integration answers over the network, or not at all. The step records the request
+/// It exists for the same reason the queued AI analysis exists: a step that called the far system
+/// itself would hold the engine's transaction open for as long as that system took to answer, and
+/// an integration answers over the network, or not at all. The step records the request
 /// and parks the instance; the worker runs it and resumes the instance, which then reads the result
 /// out of this row.
 ///

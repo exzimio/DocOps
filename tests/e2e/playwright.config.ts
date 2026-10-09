@@ -55,9 +55,9 @@ export default defineConfig({
       url: webBaseUrl,
 
       // Em modo compilado, não reaproveitar nada: reutilizar um servidor de desenvolvimento que já
-      // esteja de pé desfazia exatamente o que esta opção existe para garantir, e um servidor de
-      // longa duração, com horas de recarregamentos acumulados, foi metade da instabilidade que
-      // esta suíte mostrou num dia. Quem pediu `E2E_DEV` pode reaproveitar o seu.
+      // esteja de pé desfaria exatamente o que esta opção existe para garantir, e um servidor de
+      // longa duração, com horas de recarregamentos acumulados, torna a suíte instável. Quem pediu
+      // `E2E_DEV` pode reaproveitar o seu.
       reuseExistingServer: !!process.env.E2E_DEV,
       timeout: 180_000,
     },

@@ -17,18 +17,17 @@ public enum WorkflowNodeType
     Delay = 7,
     End = 8,
 
-    /// <summary>Implemented in the AI phase; definitions may already be designed with it.</summary>
+    /// <summary>Queues an analysis that suggests the document's type, and waits for it.</summary>
     AiClassification = 9,
 
-    /// <summary>Implemented in the AI phase.</summary>
+    /// <summary>Queues an analysis that suggests the document's metadata values, and waits for it.</summary>
     AiExtraction = 10,
 
-    /// <summary>Implemented in the integrations phase.</summary>
+    /// <summary>Asks for an integration to run against an external system, and waits for its result.</summary>
     Integration = 11,
 
     /// <summary>
-    /// Asks a named person to sign the document the process is running on, and waits. The
-    /// contract-review process ends on one of these.
+    /// Asks a named person to sign the document the process is running on, and waits.
     /// </summary>
     SignatureRequest = 12
 }

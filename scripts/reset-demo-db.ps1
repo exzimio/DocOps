@@ -4,22 +4,19 @@
 
 .DESCRIPTION
     Os testes end-to-end correm contra a base de dados de desenvolvimento, e alguns criam dados
-    verdadeiros — é isso que os torna testes e não encenações. O efeito colateral é que o catálogo
+    verdadeiros, que é o que os torna testes e não encenações. O efeito colateral é que o catálogo
     cresce a cada execução: documentos submetidos pelo portal, processos iniciados, pedidos de
     assinatura.
 
-    Isso partiu testes três vezes neste projeto, sempre da mesma maneira: uma asserção sobre uma
-    contagem que era verdadeira quando foi escrita e deixou de ser quando outra suite criou dados
-    legítimos. As asserções foram corrigidas para verificarem identidade em vez de totais, mas a
-    correção de fundo é esta — começar cada execução de uma base conhecida, em vez de confiar em que
-    cada teste limpe o que criou.
+    Uma asserção sobre uma contagem, verdadeira quando foi escrita, deixa de o ser quando outra
+    suíte cria dados legítimos. As asserções verificam identidade em vez de totais, e cada execução
+    começa de uma base conhecida, em vez de confiar em que cada teste limpe o que criou.
 
     Não arranca a API: o Playwright faz isso por si, e ao arrancar ela remigra e semeia de novo.
 
     Recria as três identidades depois de largar a base. Os utilizadores de base de dados vivem
-    dentro dela, e largá-la leva-os com ela: a suíte deixou de arrancar por isto, com a API a
-    procurar `app_system` numa base onde já não havia nenhum. Os logins ficam, porque são do
-    servidor; os utilizadores não.
+    dentro dela, e largá-la leva-os com ela: sem os recriar, a API procuraria `app_system` numa
+    base onde já não há nenhum. Os logins ficam, porque são do servidor; os utilizadores não.
 
 .EXAMPLE
     pwsh scripts/reset-demo-db.ps1

@@ -22,8 +22,8 @@ test.describe('Capturas de ecrã', () => {
 
     // Esperar pelo conteúdo, e não só pelo endereço. `fullPage` fotografa a altura que a página tem
     // no instante do disparo: com os cartões ainda por chegar, essa altura é a da janela, e o
-    // retrato sai cortado a meio de uma linha. Foi o que aconteceu — a captura clara media 853 px e
-    // a escura, da mesma página momentos depois, media 1224.
+    // retrato sai cortado a meio de uma linha, e duas capturas da mesma página, tiradas com
+    // segundos de diferença, saem com alturas diferentes.
     await page.getByRole('heading', { name: 'Departamentos' }).waitFor()
     await page.waitForLoadState('networkidle')
     await fullPageShot(page, 'screenshots/dashboard.png')

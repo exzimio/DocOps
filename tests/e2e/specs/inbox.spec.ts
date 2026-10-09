@@ -92,8 +92,8 @@ test.describe('Caixa de entrada', () => {
     await expect(list.getByRole('button').first()).toBeVisible()
 
     // Uma asserção que espera, em vez de um ciclo sobre `all()`: este fotografa a lista no
-    // instante em que é chamado, e a lista ainda está a ser refeita com o filtro novo. Não havia
-    // defeito no produto — havia uma corrida no teste, que o telemóvel perdia e o desktop ganhava.
+    // instante em que é chamado, quando ela pode ainda estar a ser refeita com o filtro novo, e o
+    // resultado dependeria de quem chegasse primeiro.
     await expect(list.getByRole('button').filter({ hasNotText: 'Arquivada' })).toHaveCount(0)
   })
 

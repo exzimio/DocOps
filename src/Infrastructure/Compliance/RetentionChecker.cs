@@ -22,7 +22,8 @@ namespace DocOps.Infrastructure.Compliance;
 /// The dates are calculated on archiving and written down, and without this nothing would ever look
 /// at them again: a policy of «invoices: ten years» would be configuration nobody is reminded of.
 ///
-/// Runs in a system scope, which is what lets it see every organisation at once. That is confined to background work: nothing here is reachable from an HTTP request.
+/// Runs in a system scope, which is what lets it see every organisation at once. That is confined
+/// to background work: nothing here is reachable from an HTTP request.
 /// </summary>
 public sealed class RetentionChecker(
     DocOpsDbContext dbContext,

@@ -5,13 +5,12 @@ import { expect, test, type Page } from '@playwright/test'
  *
  * A auditoria de acessibilidade não apanha isto: o `axe` verifica contraste, nomes acessíveis e
  * estrutura, e uma página que rola de lado passa em todos esses critérios. Mas num telemóvel é dos
- * defeitos que mais se sente, e foi assim que a administração andou a transbordar 340 px sem que
- * nenhum dos 204 testes reparasse.
+ * defeitos que mais se sente, e nenhum outro teste o apanha.
  *
- * A causa foi a armadilha clássica das grelhas: um item de grelha tem `min-width: auto` e recusa-se
- * a encolher abaixo do conteúdo, portanto uma tabela larga empurra o cartão, o cartão empurra a
- * página, e o `overflow-x-auto` que existia nunca chegava a entrar em ação. Quando um ecrã novo
- * falhar aqui, é quase sempre a mesma coisa: procurar por `minmax(0, 1fr)` e por `min-w-0`.
+ * A causa costuma ser a armadilha clássica das grelhas: um item de grelha tem `min-width: auto` e
+ * recusa-se a encolher abaixo do conteúdo, portanto uma tabela larga empurra o cartão, o cartão
+ * empurra a página, e um `overflow-x-auto` lá dentro nunca chega a entrar em ação. Quando um ecrã
+ * novo falhar aqui, procurar por `minmax(0, 1fr)` e por `min-w-0`.
  */
 const rotas = [
   '/app/dashboard',
