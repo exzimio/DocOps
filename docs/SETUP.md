@@ -227,3 +227,9 @@ variáveis de ambiente correspondentes (`Ai__Provider`, `Ai__Endpoint`, `Ai__Api
 | `403` com `code: origin_not_allowed` | Pedido sem cabeçalho `Origin` permitido | Aceder pela aplicação web ou acrescentar a origem a `Cors:AllowedOrigins` |
 | Testes de integração falham a arrancar | Docker parado | Iniciar o Docker Desktop e repetir |
 | `401` inesperado após alterar permissões | O cookie ainda tem as *claims* antigas | Aguardar até 5 minutos (revalidação do *security stamp*) ou terminar e reiniciar sessão |
+| `MSB1009` ao compilar ou testar | A solução está no formato `.slnx`, o do .NET 10 | Indicar `DocOpsControlTower.slnx` nos comandos |
+| A compilação falha porque não consegue escrever `DocOps.Api.dll` | A API está a correr e tem a DLL aberta | Parar a API antes de compilar |
+| A API recusa arrancar com «Connection string 'DocOpsSystem' is not configured» | Falta a cadeia da identidade `app_system`, que é obrigatória | Configurar as três cadeias (secção 9) e criar as identidades (secção 3.1) |
+| A API deixa de arrancar depois de largar a base de dados | Os utilizadores de base de dados vivem dentro dela e foram largados com ela | Correr `scripts/reset-demo-db.ps1`, que recria a base e as três identidades |
+| `npm run dev` termina com «Port 5173 is already in use» | Outro servidor de desenvolvimento ocupa o porto, e o Vite está configurado para não mudar de porto sozinho | Libertar o porto, ou correr com `--port 5174` e acrescentar `http://localhost:5174` a `Cors__AllowedOrigins__1` |
+| `sqlcmd` dentro do contentor falha no Git Bash com um caminho estranho | O Git Bash traduz `/opt/...` para um caminho do Windows | Correr o comando no PowerShell, ou prefixá-lo com `MSYS_NO_PATHCONV=1` |
