@@ -105,12 +105,9 @@ test.describe('Administração', () => {
 
     await clickReliably(page.getByRole('tab', { name: 'Departamentos' }))
 
-    const code = unique('E').toUpperCase().slice(0, 6)
-
-    await page.getByLabel('Nome').fill('Ensaio ponta a ponta')
-    await page.getByLabel('Código').fill(code)
-    await clickReliably(page.getByRole('button', { name: 'Guardar' }))
-
+    // O código de um departamento semeado: um departamento não se apaga, e um criado aqui ficaria
+    // para sempre na base de demonstração.
+    const code = 'LEG'
     await expect(page.getByRole('row').filter({ hasText: code })).toBeVisible()
 
     await page.getByLabel('Nome').fill('Outro qualquer')
