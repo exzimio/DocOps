@@ -28,3 +28,8 @@ indent_size = 2
 
 [*.{csproj,props,targets}]
 indent_size = 2
+
+# Windows PowerShell 5.1 reads a script without a byte order mark in the system code page, and the
+# accented messages come out garbled.
+[*.ps1]
+charset = utf-8-bom

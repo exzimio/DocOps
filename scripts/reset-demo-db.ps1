@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Repõe a base de dados de demonstração no estado semeado.
 
