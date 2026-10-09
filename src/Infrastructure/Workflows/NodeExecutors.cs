@@ -292,7 +292,7 @@ public sealed class NotificationNodeExecutor(
 }
 
 /// <summary>
-/// Placeholder-free failure for node types whose phase has not arrived: the instance stops with a
+/// Explicit failure for node types that have no executor: the instance stops with a
 /// clear reason instead of silently skipping a step that the process depends on.
 /// </summary>
 public sealed class UnimplementedNodeExecutor(WorkflowNodeType nodeType, string phase) : INodeExecutor

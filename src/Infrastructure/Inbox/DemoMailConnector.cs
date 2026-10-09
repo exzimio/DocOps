@@ -11,9 +11,8 @@ namespace DocOps.Infrastructure.Inbox;
 /// The demonstration mailbox: a fixed catalogue of realistic messages, served through the same
 /// interface a real mail system would be.
 ///
-/// It needs no account, no tenant, no consent screen and no network — which is the point. The brief
-/// requires the inbox to work without Microsoft credentials, and an inbox that only works once
-/// somebody has an Office subscription is an inbox nobody can review.
+/// It needs no account, no tenant, no consent screen and no network, which is the point: an inbox
+/// that only works once somebody has an Office subscription is an inbox nobody can try.
 ///
 /// It is a simulation and says so: <see cref="Info"/> carries <see cref="MailSource.Demo"/>, which
 /// travels with every message to the interface. The same rule as the demonstration AI provider — a

@@ -53,7 +53,7 @@ public sealed class Document : TenantEntity, ISoftDeletable
     /// <summary>Status the document held before archiving, so a restore returns it to where it was.</summary>
     public DocumentStatus? PreArchiveStatus { get; set; }
 
-    /// <summary>Set by the workflow engine once an instance is running against this document (Phase 3).</summary>
+    /// <summary>Set by the workflow engine once an instance is running against this document.</summary>
     public Guid? ActiveWorkflowInstanceId { get; set; }
 
     public ICollection<DocumentVersion> Versions { get; set; } = [];

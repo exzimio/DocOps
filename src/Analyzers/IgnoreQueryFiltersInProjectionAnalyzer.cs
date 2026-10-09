@@ -16,8 +16,6 @@ namespace DocOps.Analyzers;
 ///
 /// Nada falha. Nenhuma exceção, nenhum aviso, nenhum teste vermelho. A lista simplesmente passa a
 /// incluir linhas de outra organização, e só quem entrasse como a outra organização daria por isso.
-/// Aconteceu na Fase 8, na lista de etiquetas: um administrador da Vértice via as etiquetas da
-/// Asteria Group, e foi uma sondagem à API real que o apanhou.
 ///
 /// Usar o operador no topo de uma consulta é legítimo e frequente aqui: a semeadura corre antes de
 /// existir organização, o worker corre acima de todas, e às vezes é preciso reler de propósito uma

@@ -11,7 +11,7 @@ namespace DocOps.Infrastructure.Persistence.Seed;
 /// Fills the demonstration inbox, through the same connector the application uses at run time.
 ///
 /// Writing the messages directly would have been shorter and would have proved nothing: this way the
-/// path that a reviewer exercises by pressing "Synchronise" is the path that produced the data they
+/// path that someone exercises by pressing "Synchronise" is the path that produced the data they
 /// are looking at. The seeder only decides what is already dealt with — an inbox where every message
 /// is unread is as unconvincing as one that is empty.
 /// </summary>

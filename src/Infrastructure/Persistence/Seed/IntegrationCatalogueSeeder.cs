@@ -13,7 +13,7 @@ namespace DocOps.Infrastructure.Persistence.Seed;
 /// integration exists on the screen because there is code behind it, and a card that outlived its
 /// adapter would be exactly the decoration this project refuses to ship.
 ///
-/// It is idempotent and additive — a new adapter in a later phase gets its row on the next start-up
+/// It is idempotent and additive: a new adapter gets its row on the next start-up
 /// without disturbing the counters of the ones already running.
 /// </summary>
 public sealed class IntegrationCatalogueSeeder(

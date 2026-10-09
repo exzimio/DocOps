@@ -10,7 +10,7 @@ namespace DocOps.Application.Inbox;
 /// <param name="Description">One sentence saying plainly what this connector does and does not do.</param>
 /// <param name="RequiresCredentials">
 /// Whether the connector needs an account to work. The demonstration one does not, which is the
-/// point: the brief requires the inbox to be usable without Microsoft credentials.
+/// point: the inbox has to be usable without Microsoft credentials.
 /// </param>
 public sealed record MailConnectorInfo(MailSource Source, string Name, string Description, bool RequiresCredentials);
 

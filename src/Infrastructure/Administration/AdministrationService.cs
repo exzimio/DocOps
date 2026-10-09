@@ -313,7 +313,7 @@ public sealed class AdministrationService(
         // Uma conta de administração da plataforma está acima desta organização: um administrador de
         // organização que a pudesse desativar cortaria o acesso de quem o supervisiona, e guardar as
         // alterações despromovia-a em silêncio, porque SystemAdmin não está entre os perfis que este
-        // ecrã oferece. Apanhado ao ler a captura, não a código.
+        // ecrã oferece.
         if (user.IsPlatformAdministrator)
         {
             throw new ForbiddenOperationException(

@@ -5,15 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DocOps.Infrastructure.Persistence.Migrations
 {
     /// <summary>
-    /// A política passa a negar por omissão.
+    /// A política nega por omissão.
     ///
-    /// Até aqui deixava passar quando não havia organização no contexto da sessão. Era deliberado —
-    /// o worker corre acima de todas, e as migrações e a semeadura não pertencem a nenhuma — mas
-    /// tinha uma consequência que a documentação chegou a negar: **uma ferramenta ligada diretamente
-    /// à base nunca escreve contexto nenhum, logo via todas as organizações**. A segunda parede só
-    /// protegia quem já estava protegido pela primeira.
+    /// Deixar passar quando não há organização no contexto da sessão seria cómodo, porque o worker
+    /// corre acima de todas e as migrações e a semeadura não pertencem a nenhuma. Mas **uma ferramenta
+    /// ligada diretamente à base nunca escreve contexto nenhum, e veria todas as organizações**: a
+    /// segunda parede só protegeria quem já está protegido pela primeira.
     ///
-    /// Agora a dispensa é explícita, e não basta pedi-la. São duas condições ao mesmo tempo:
+    /// Por isso a dispensa é explícita, e não basta pedi-la. São duas condições ao mesmo tempo:
     ///
     /// 1. A ligação declara o modo de sistema no contexto da sessão, e
     /// 2. faz-se com a identidade de base de dados <c>app_system</c>.

@@ -21,8 +21,8 @@ namespace DocOps.Infrastructure.Operations;
 /// someone here has to do.
 ///
 /// Nothing in the platform-wide half carries an organisation's data — only job names, times and
-/// outcomes. That is what makes it safe to show a tenant administrator at all, and it is also what
-/// the brief means by «do not expose sensitive health information».
+/// outcomes. That is what makes it safe to show a tenant administrator at all: no sensitive health
+/// information leaves through it.
 /// </summary>
 public sealed class SystemHealthService(
     DocOpsDbContext dbContext,
@@ -87,9 +87,9 @@ public sealed class SystemHealthService(
         // Os documentos passam pelo mesmo predicado de visibilidade da listagem e dos relatórios.
         // O filtro por organização sozinho responderia «quantos documentos desta organização
         // aguardam aprovação»; a pergunta que o ecrã diz responder é «quantos é que **eu** vejo a
-        // aguardar aprovação». Um administrador vê tudo na prática — mas um perfil com
+        // aguardar aprovação». Um administrador vê tudo na prática, mas um perfil com
         // `admin.settings` e sem administração documental não veria, e a contagem contá-los-ia na
-        // mesma. É a fuga por contagem do defeito 18, num sítio novo.
+        // mesma. Uma contagem revela tanto como a lista que resume.
         AccessSubject subject = await accessResolver.GetSubjectAsync(cancellationToken);
 
         IQueryable<Document> visible = dbContext.Documents

@@ -34,8 +34,7 @@ USE [master];
 GO
 
 -- A base de dados antes das identidades: os utilizadores vivem dentro dela, e largar a base
--- leva-os com ela. Foi assim que a suíte end-to-end deixou de arrancar: o repor largava a base, o
--- arranque seguinte procurava `app_system`, e já não havia nenhum.
+-- leva-os com ela: o arranque seguinte procuraria `app_system` e já não o encontraria.
 IF DB_ID(N'$(BaseDeDados)') IS NULL
     CREATE DATABASE [$(BaseDeDados)];
 GO

@@ -19,12 +19,10 @@ namespace DocOps.Infrastructure.Compliance;
 /// legal basis that required keeping it is the same basis that makes destroying it a decision
 /// somebody signs for. So this produces a notification and an audit entry, and a person decides.
 ///
-/// Until phase 10 this was the one duty the brief names — «retention checks» — with no code behind
-/// it. The dates were calculated on archiving and written down; nothing ever looked at them again,
-/// so a policy of «invoices: ten years» was configuration nobody would be reminded of.
+/// The dates are calculated on archiving and written down, and without this nothing would ever look
+/// at them again: a policy of «invoices: ten years» would be configuration nobody is reminded of.
 ///
-/// Runs with no tenant on the ambient context, which is what lets it see every organisation at
-/// once. That is confined to background work: nothing here is reachable from an HTTP request.
+/// Runs in a system scope, which is what lets it see every organisation at once. That is confined to background work: nothing here is reachable from an HTTP request.
 /// </summary>
 public sealed class RetentionChecker(
     DocOpsDbContext dbContext,

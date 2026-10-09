@@ -390,10 +390,9 @@ public sealed class SignatureService(
     /// <summary>
     /// Writes the signature event against the **document**, not against the signature request.
     ///
-    /// The brief asks for audit history on a signature, and the place people go looking for a
-    /// document's history is the document. Anchoring these entries to the request id would have put
-    /// them somewhere technically correct and practically invisible — the document's trail would
-    /// show the status change and give no hint of who signed or over what content. The request's own
+    /// A signature needs an audit history, and the place people go looking for a document's history is
+    /// the document. Anchoring these entries to the request id would put them somewhere technically
+    /// correct and practically invisible: the document's trail would show the status change and give no hint of who signed or over what content. The request's own
     /// identity is kept in the metadata, where it is still queryable.
     /// </summary>
     private Task AuditAsync(

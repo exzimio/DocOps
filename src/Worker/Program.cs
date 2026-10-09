@@ -25,7 +25,7 @@ builder.Services.Configure<BackgroundJobOptions>(
     builder.Configuration.GetSection(BackgroundJobOptions.SectionName));
 
 // O trabalho em segundo plano é o que ninguém está a ver acontecer. Sem isto, as métricas de
-// trabalhos falhados — que o briefing pede por esse nome — existiriam e não sairiam do processo.
+// trabalhos falhados existiriam e não sairiam do processo.
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(
         serviceName: "docops-worker",

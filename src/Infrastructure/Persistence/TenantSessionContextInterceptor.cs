@@ -14,16 +14,14 @@ namespace DocOps.Infrastructure.Persistence;
 ///
 /// <b>Porque é que isto existe, se já há filtros globais no EF Core.</b> Os filtros do EF são uma
 /// defesa na camada de aplicação: protegem as consultas que passam pelo EF, e só enquanto ninguém
-/// as desligar. Já falharam uma vez neste projeto — <c>IgnoreQueryFilters()</c> dentro de uma
-/// projeção desligou-os para a consulta inteira e um administrador de uma organização viu etiquetas
-/// de outra. O guarda que impede esse padrão de voltar é bom, mas trata aquele padrão: SQL escrito
-/// à mão dentro da aplicação, um procedimento armazenado, ou um caminho novo que não passe pelo EF
+/// as desligar, e desligá-los por engano é fácil: <c>IgnoreQueryFilters()</c> dentro de uma projeção
+/// desliga-os para a consulta inteira. O analisador que impede esse padrão trata aquele padrão: SQL
+/// escrito à mão dentro da aplicação, um procedimento armazenado, ou um caminho novo que não passe pelo EF
 /// não passam por nenhum dos dois. Passam pelo motor, e é aí que esta segunda parede está.
 ///
-/// <b>O que ela não alcança:</b> quem se liga à base por fora da aplicação nunca escreve este
-/// valor, e o predicado deixa passar quando ele está vazio. Uma ferramenta de relatórios ligada
-/// diretamente vê todas as organizações. Fechar isso obrigaria a negar por omissão, com uma chave
-/// de dispensa explícita para o worker e para a semeadura.
+/// <b>Quem se liga por fora</b> nunca escreve este valor, e o predicado nega por omissão: sem
+/// organização no contexto não se vê nada. A dispensa para o worker, a autenticação e a semeadura
+/// exige o modo de sistema e a identidade <c>app_system</c> ao mesmo tempo (ADR-011).
 ///
 /// O valor é escrito em cada abertura de ligação, e não uma vez por processo, porque o agrupamento
 /// de ligações entrega a mesma ligação física a pedidos de organizações diferentes. O

@@ -5,8 +5,8 @@ namespace DocOps.Application.Signatures;
 /// <summary>
 /// One signature request, as the screens show it.
 ///
-/// Every field the brief enumerates is here — signer, request date, status, signed date, document
-/// version, hash — plus the one it does not ask for and that matters most:
+/// Every field a signature record needs is here (signer, request date, status, signed date, document
+/// version, hash), plus the one that matters most:
 /// <see cref="ContentStillMatches"/>. A record that said "signed" without saying whether it still
 /// refers to the current content would be the dishonest half of the feature.
 /// </summary>

@@ -9,7 +9,7 @@ namespace DocOps.Infrastructure.Search;
 /// Whether this server can answer a full-text query, asked once and remembered.
 ///
 /// Full-text search is an optional SQL Server component. The container this project ships with has
-/// it, but the one the integration tests start does not, and neither does every server a reviewer
+/// it, but the one the integration tests start does not, and neither does every server someone
 /// might point the application at. Rather than assume, the search asks — and when the answer is no,
 /// it matches by substring instead and says so in the response, so nobody mistakes a scan for a
 /// ranked search.

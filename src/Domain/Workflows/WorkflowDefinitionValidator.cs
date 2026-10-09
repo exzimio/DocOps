@@ -18,9 +18,8 @@ public static class WorkflowDefinitionValidator
     /// <summary>
     /// Node types the engine cannot execute yet. Designing with them is allowed; activating is not.
     ///
-    /// Empty since the integrations phase gave every type an executor. It stays because the rule
-    /// it encodes is the useful part: a later phase that adds a node type before adding its
-    /// executor lists it here, and the designer keeps saying so instead of letting a process be
+    /// Empty, because every type has an executor. It stays because the rule it encodes is the
+    /// useful part: a node type added before its executor is listed here, and the designer keeps saying so instead of letting a process be
     /// activated onto a step that would stop it.
     /// </summary>
     private static readonly Dictionary<WorkflowNodeType, string> NotYetExecutable = [];

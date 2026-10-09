@@ -49,7 +49,7 @@ public sealed record SeriesDto
 
 /// <summary>
 /// A step that processes hold still at, with how long they have been held and how many are waiting.
-/// The brief calls these bottlenecks, and they are the one part of a dashboard that tells someone
+/// These are the bottlenecks, and they are the one part of a dashboard that tells someone
 /// what to do next rather than how things went.
 /// </summary>
 public sealed record BottleneckDto
@@ -70,8 +70,8 @@ public sealed record BottleneckDto
 /// panels disagree with each other: counted at slightly different moments, they would not add up,
 /// and a dashboard whose own numbers contradict each other is worse than no dashboard.
 ///
-/// **Every figure is a query.** Nothing here is stored, cached or seeded as a "dashboard number" —
-/// the brief is explicit about that, and it is the rule most easily broken without anyone noticing,
+/// **Every figure is a query.** Nothing here is stored, cached or seeded as a "dashboard number".
+/// It is the rule most easily broken without anyone noticing,
 /// because a wrong number on a panel looks exactly like a right one.
 /// </summary>
 public sealed record DashboardDto

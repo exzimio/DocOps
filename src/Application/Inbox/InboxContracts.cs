@@ -108,8 +108,8 @@ public sealed record SaveAttachmentAsDocumentRequest
 
     /// <summary>
     /// Metadata values keyed by field code, for a type that requires them. Choosing "Por classificar"
-    /// needs none, which is the usual path: nobody has read the attachment yet, and the intelligence
-    /// review of phase 5 is what reads it.
+    /// needs none, which is the usual path: nobody has read the attachment yet, and the document
+    /// intelligence review is what reads it.
     /// </summary>
     public IReadOnlyDictionary<string, string?> Metadata { get; init; } = new Dictionary<string, string?>();
 }

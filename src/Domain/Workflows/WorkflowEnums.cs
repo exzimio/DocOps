@@ -27,8 +27,8 @@ public enum WorkflowNodeType
     Integration = 11,
 
     /// <summary>
-    /// Asks a named person to sign the document the process is running on, and waits. Implemented in
-    /// the signature phase; the brief's contract-review example ends on one of these.
+    /// Asks a named person to sign the document the process is running on, and waits. The
+    /// contract-review process ends on one of these.
     /// </summary>
     SignatureRequest = 12
 }

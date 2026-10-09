@@ -126,8 +126,8 @@ public sealed class BackgroundJobRunner(
         using Activity? activity = DocOpsMetrics.ActivitySource.StartActivity($"job {name}");
 
         // O worker corre acima de todas as organizações, de propósito: escalonar prazos e processar
-        // a fila de IA não pertence a nenhuma. Com a política a negar por omissão, isso deixou de
-        // ser o que acontece por ausência de contexto e passou a ser uma declaração.
+        // a fila de IA não pertence a nenhuma. Com a política a negar por omissão, isso é uma
+        // declaração explícita, e não o que acontece por ausência de contexto.
         await using ISystemScope scope = systemScopes.Create();
 
         // Um worker de cada vez por trabalho. Nada impedia que houvesse dois processos, e dois a

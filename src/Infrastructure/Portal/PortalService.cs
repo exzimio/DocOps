@@ -119,7 +119,7 @@ public sealed class PortalService(
         // Submitted as "unclassified" on purpose, and not as a supplier invoice: the invoice type
         // requires supplier, number, date and total, and a portal that demanded all four before
         // accepting a file would be a worse front door than e-mail. The document lands where the
-        // Phase 5 intelligence picks it up — which is exactly the brief's headline demo.
+        // document intelligence picks it up.
         Guid typeId = await dbContext.DocumentTypes
             .Where(type => type.TenantId == tenantId && type.Code == DocumentTypeCodes.Unclassified)
             .Select(type => type.Id)

@@ -15,16 +15,15 @@ namespace DocOps.Infrastructure.Reporting;
 /// <summary>
 /// The operations dashboard.
 ///
-/// Two rules, and the brief states the first one itself: **every figure is a query**. Nothing here
+/// Two rules. The first: **every figure is a query**. Nothing here
 /// is stored as a "dashboard number", cached, or seeded alongside the data it describes. It is the
 /// rule most easily broken without anyone noticing, because a wrong number on a panel looks exactly
 /// like a right one — there is no screen where it is cheaper to lie.
 ///
 /// The second: **the panels are built from what the caller may see**. The document visibility
 /// predicate is applied before anything is counted, which means two managers of different
-/// departments get different totals. That is correct, and it is also the lesson from phase 5, where
-/// the AI statistics counted analyses of documents the reader could not open — a small leak, only
-/// counts, but a leak. A total is information about what exists.
+/// departments get different totals. That is correct: a total is information about what
+/// exists, and counting documents the reader cannot open would leak it, even if only as a number.
 /// </summary>
 public sealed class ReportingService(
     DocOpsDbContext dbContext,

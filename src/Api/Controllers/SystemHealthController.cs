@@ -11,9 +11,8 @@ namespace DocOps.Api.Controllers;
 ///
 /// Deliberately <b>not</b> the public health endpoints. <c>/health</c>, <c>/health/live</c> and
 /// <c>/health/ready</c> stay terse and anonymous because a load balancer reads them; this one
-/// carries detail — which job failed, what it said, how much work is waiting — and detail is what
-/// the brief means when it says not to expose sensitive health information. So it sits behind a
-/// permission, like everything else that says more than «up».
+/// carries detail (which job failed, what it said, how much work is waiting), and that detail is
+/// sensitive health information. So it sits behind a permission, like everything else that says more than «up».
 /// </summary>
 [ApiController]
 [Route("api/system")]

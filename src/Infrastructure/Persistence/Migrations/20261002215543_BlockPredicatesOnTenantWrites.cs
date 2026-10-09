@@ -5,12 +5,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DocOps.Infrastructure.Persistence.Migrations
 {
     /// <summary>
-    /// A política passa a recusar escritas, e não só a esconder leituras.
+    /// A política recusa escritas, e não só esconde leituras.
     ///
-    /// Até aqui havia só predicados de filtro: o motor escondia as linhas de outras organizações, e
-    /// quem tentasse escrever uma linha para outra organização era travado pelo
-    /// <c>TenantGuardInterceptor</c> — que é código da aplicação, e portanto a mesma classe de
-    /// defesa que já falhou uma vez neste projeto. SQL escrito à mão não passa por ele.
+    /// Só com predicados de filtro, o motor esconderia as linhas de outras organizações, mas quem
+    /// tentasse escrever uma linha para outra organização seria travado apenas pelo
+    /// <c>TenantGuardInterceptor</c>, que é código da aplicação. SQL escrito à mão não passa por ele.
     ///
     /// <para>
     /// <b>Três predicados de bloqueio por tabela</b>, e cada um responde a uma pergunta diferente:
@@ -33,9 +32,9 @@ namespace DocOps.Infrastructure.Persistence.Migrations
     /// </para>
     ///
     /// <para>
-    /// A política é largada e recriada, como na migração que a passou a negar por omissão: o
+    /// A política é largada e recriada, como em <c>DenyByDefaultRowLevelSecurity</c>: o
     /// <c>SCHEMABINDING</c> prende a função enquanto a política a referenciar. A função em si não
-    /// muda — a mesma que decide quem lê decide quem escreve, e é isso que torna impossível as duas
+    /// muda: a mesma que decide quem lê decide quem escreve, e é isso que torna impossível as duas
     /// regras divergirem.
     /// </para>
     /// </summary>

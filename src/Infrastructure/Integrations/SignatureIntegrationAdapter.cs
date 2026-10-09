@@ -12,7 +12,7 @@ namespace DocOps.Infrastructure.Integrations;
 /// There is no signature provider configured, and this says so rather than pretending — which is the
 /// whole difference between a card and a placeholder. What it is **not** is empty: it counts the
 /// documents that really are sitting in "aguarda assinatura" right now and reports that number, so
-/// the card answers a question an operator actually has. When the signature phase adds a provider,
+/// the card answers a question an operator actually has. When a provider is configured,
 /// this adapter starts sending those same documents instead of only counting them; the card does not
 /// change shape.
 ///
