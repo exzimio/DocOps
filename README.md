@@ -574,9 +574,11 @@ correr o projeto localmente.
 - **A IA de demonstração não é um modelo de linguagem.** O fornecedor por omissão é determinista,
   baseado em regras, e diz que é uma demonstração em todos os ecrãs onde aparece. O adaptador
   compatível com OpenAI existe, mas não foi exercitado contra um serviço real.
-- **A verificação das citações não decide se a sugestão está certa.** Confirma que as palavras citadas
-  estão na linha indicada e que o valor se relê a partir delas; se é o valor certo para aquele campo,
-  decide quem revê, e nenhuma sugestão chega ao documento sem essa decisão.
+- **A verificação das citações tem dois limites.** O servidor descarta qualquer citação cujas palavras
+  não estejam na linha indicada, e a um modelo exige ainda que o valor, lido pelo tipo do campo, saia
+  dessas palavras; ao fornecedor de demonstração não exige essa segunda parte. E uma citação
+  descartada desaparece, em vez de ficar visível como não verificada. Se a sugestão é a certa para o
+  campo, decide quem revê, e nenhuma chega ao documento sem essa decisão.
 - **A assinatura eletrónica não tem validade legal.** Demonstra o fluxo de pedido, assinatura e
   registo; ver [ADR-009](docs/adr/ADR-009-electronic-signature.md).
 - **Os conetores simulam o lado de lá.** Os adaptadores de correio e de integrações são reais, mas os
@@ -598,6 +600,8 @@ correr o projeto localmente.
 
 ### Melhorias futuras
 
+- A mesma verificação do valor para todos os fornecedores, os números de linha ligados à extração
+  guardada com cada versão, e um estado «não verificada» visível em vez de uma citação descartada.
 - Endereço ou campo de organização no início de sessão, criação de organizações pela aplicação, e
   adesão de uma pessoa a várias, com seletor de contexto auditado.
 - OIDC com o padrão BFF, mantendo a sessão em cookie `HttpOnly`, e autenticação multifator.
