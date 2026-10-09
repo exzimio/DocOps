@@ -772,8 +772,8 @@ escrito no ficheiro do compose.
 ## 11. Processamento em segundo plano
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento
-de prazos, fila de processamento de IA e varrimento periódico das integrações. Nenhum pedido de
-utilizador espera por trabalho periódico.
+de prazos, os passos de IA e de integração dos processos, as integrações agendadas e a verificação
+de retenção. Nenhum pedido de utilizador espera por trabalho periódico.
 
 O worker vê todas as organizações, e é uma exceção deliberada, confinada a trabalho que nenhum pedido
 HTTP alcança. Corre num âmbito de sistema, ligado com a identidade `app_system`, que é a que a

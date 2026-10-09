@@ -133,9 +133,11 @@ npm --prefix src/Web install     # apenas na primeira vez
 npm --prefix src/Web run dev
 ```
 
-O **worker** de segundo plano é opcional para a demonstração, porque os dados semeados já incluem tarefas
-em atraso e escaladas, mas é o que faz o escalonamento e a retoma de temporizadores acontecerem em
-tempo real:
+O **worker** corre o trabalho de segundo plano: os passos de IA e de integração dos processos, as
+integrações agendadas, a verificação de retenção, a escalada das tarefas em atraso e a retoma dos
+temporizadores. A aplicação funciona sem ele: a análise de IA e o «Executar agora» das integrações,
+pedidos no ecrã, correm na API, e os dados semeados já incluem tarefas em atraso e escaladas. Um
+processo que chegue a um passo de IA ou de integração fica à espera até o worker arrancar:
 
 ```bash
 dotnet run --project src/Worker/DocOps.Worker.csproj

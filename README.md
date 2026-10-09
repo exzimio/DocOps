@@ -71,7 +71,7 @@ Depois, cada um no seu terminal:
 dotnet run --project src/Api/DocOps.Api.csproj        # API    → http://localhost:5180
 npm --prefix src/Web install                          # só na primeira vez
 npm --prefix src/Web run dev                          # Web    → http://localhost:5173
-dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker (opcional: prazos e temporizadores)
+dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker: passos de IA e integrações, prazos
 ```
 
 Pré-requisitos, comandos e credenciais: [`docs/SETUP.md`](docs/SETUP.md).
@@ -330,7 +330,7 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | Método e rota | Descrição |
 | --- | --- |
 | `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | Sessão e perfil do chamador |
-| `GET /api/tenants/current` · `GET /api/tenants/current/departments` | Organização do chamador |
+| `GET /api/tenants/current` · `/departments` · `/users` | Organização do chamador, os seus departamentos e as suas pessoas |
 | `GET /api/documents` | Lista paginada e filtrada, limitada ao que o chamador pode ver |
 | `POST /api/documents` | Cria um documento a partir de um ficheiro (multipart) |
 | `GET /api/documents/{id}` | Detalhe, versões, metadados e acesso efetivo |
@@ -349,17 +349,17 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET /api/workflows/instances` · `/{id}` | Execuções, com cronologia, tarefas e variáveis |
 | `POST /api/workflows/instances` | Inicia um processo sobre um documento |
 | `POST /api/workflows/instances/{id}/cancel` | Cancela um processo e fecha as tarefas em aberto |
-| `GET /api/tasks` · `/statistics` | Centro de tarefas e indicadores |
+| `GET /api/tasks` · `/{id}` · `/statistics` | Centro de tarefas, detalhe de uma tarefa e indicadores |
 | `POST /api/tasks/{id}/approve` · `/reject` · `/complete` · `/request-information` | Decisões sobre uma tarefa |
 | `POST /api/tasks/{id}/claim` · `/reassign` | Assumir e reatribuir |
 | `GET /api/notifications` · `/unread-count` | Notificações do utilizador |
-| `GET/POST/DELETE /api/documents/{id}/permissions` | Permissões do documento |
-| `GET /api/documents/{id}/effective-access` | Acesso efetivo, com a razão de cada regra |
+| `POST /api/notifications/{id}/read` · `/read-all` | Marcar uma ou todas como lidas |
+| `GET/POST /api/documents/{id}/permissions` · `DELETE /{permissionId}` | Permissões do documento |
 | `GET /api/document-catalogue/types` · `/tags` · `/retention-policies` | Dados de referência dos formulários |
 | `GET /api/documents/{id}/text` | Texto da versão atual, numerado como as citações o numeram |
 | `POST /api/documents/{id}/process-ai` | Analisa o documento e produz sugestões para revisão |
 | `GET /api/documents/{id}/ai-runs/latest` | A análise mais recente de um documento |
-| `GET /api/ai/provider` · `/statistics` · `/runs` | Fornecedor ativo, indicadores e fila de revisão |
+| `GET /api/ai/provider` · `/statistics` · `/runs` · `/runs/{id}` | Fornecedor ativo, indicadores, fila de revisão e uma análise |
 | `POST /api/ai/runs/{id}/classification` · `/fields/{id}/decision` · `/accept-all` | Decisões sobre as sugestões |
 | `POST /api/ai/runs/{id}/apply` · `/discard` | Aplicar ao documento ou rejeitar a análise |
 | `POST /api/ai/document-question` | Pergunta sobre um documento, com citações verificadas |
@@ -368,7 +368,8 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET /api/inbox` · `/summary` · `/connector` · `/{id}` | Caixa de entrada, contagens, origem do correio e leitura de uma mensagem |
 | `POST /api/inbox/sync` | Sincroniza pelo conetor de correio (idempotente) |
 | `POST /api/inbox/{id}/read` · `/archive` · `/reopen` · `/processed` | Estado de uma mensagem |
-| `POST /api/inbox/{id}/attachments/save` · `/document` · `/link` · `/workflow` | Anexo como documento, documento a partir da mensagem, associação e início de processo |
+| `POST /api/inbox/{id}/attachments/save` | Guarda um anexo como documento |
+| `POST /api/inbox/{id}/document` · `/link` · `/workflow` | Documento a partir da mensagem, associação a um documento e início de processo |
 | `GET /api/integrations` · `/{id}` · `/{id}/log` | Cartões das integrações e o registo de cada uma |
 | `POST /api/integrations/{id}/run` | Executa uma integração agora (exige `integrations.manage`) |
 | `PUT /api/integrations/{id}` | Ativa, desativa e configura (destino do webhook validado no servidor) |
@@ -380,7 +381,7 @@ Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante 
 | `GET /api/signatures/mine` | O que aguarda a assinatura de quem pergunta |
 | `POST /api/signatures/{id}/sign` · `/decline` · `/cancel` | Assinar, recusar com motivo, retirar o pedido |
 | `GET /api/reports/dashboard` | Indicadores, tendências, distribuições e estrangulamentos do período pedido, limitados ao que o chamador pode ver |
-| `GET /api/reports/export` | O mesmo conjunto em CSV; exige `reports.export` |
+| `GET /api/reports/dashboard.csv` | O mesmo conjunto em CSV; exige `reports.export` |
 | `GET /api/admin/users` | Contas da organização do chamador (`includeInactive` traz as desativadas) |
 | `POST /api/admin/users` | Cria uma conta e devolve a palavra-passe inicial, uma única vez |
 | `PUT /api/admin/users/{id}` | Nome, função, perfis e departamentos; recusa a própria conta e `SystemAdmin` |
@@ -427,9 +428,9 @@ Princípios que valem a pena destacar:
 - **O motor não contorna as regras do documento.** Uma alteração de estado configurada num nó passa
   pela máquina de estados do documento; se a transição for ilegal, a instância para com o motivo
   registado em vez de forçar um estado inválido.
-- **Tipos de nó sem executor falham de forma explícita.** Um processo desenhado com um nó de IA não
-  pode sequer ser ativado, porque a validação o recusa, e, se lá chegasse, pararia com a razão visível na
-  cronologia em vez de saltar o passo.
+- **Um passo que o motor não soubesse correr interromperia o processo, em vez de ser saltado**, com a
+  razão na cronologia. Na prática não acontece: um teste de integração confirma que cada tipo de nó
+  tem exatamente um executor registado.
 - **As condições não são uma linguagem de expressões**, mas um operador de um conjunto fechado sobre
   uma variável nomeada: suficiente para as regras que um utilizador de negócio desenha, e impossível
   de transformar num meio de executar código a partir de dados guardados.
@@ -447,6 +448,13 @@ O projeto `src/Worker` é um processo separado da API. Corre, num intervalo conf
 - **Escalonamento de prazos**: tarefas em aberto que passaram a data limite são escaladas uma única
   vez, notificando o responsável do departamento (ou quem iniciou o processo), com entrada na
   cronologia e registo de auditoria.
+- **Passos de IA e de integração dos processos**: a chamada ao fornecedor ou ao sistema externo
+  acontece aqui, fora da transação do motor, e o processo retoma quando ela termina.
+- **Integrações agendadas**, para todas as organizações. As que precisam de alguém que responda pelo
+  que fazem, como a importação de ficheiros, que cria documentos com dono, dizem-no e não correm.
+- **Verificação de retenção**: os documentos cujo prazo de retenção chegou geram uma notificação e um
+  registo de auditoria. Não se apaga nada: o fim do prazo permite eliminar, não obriga, e essa
+  decisão é de uma pessoa.
 
 Corre sem organização no contexto ambiente, o que é precisamente o que lhe permite ver todas as
 organizações. É uma exceção deliberada e confinada: nada disto é alcançável a partir de um pedido HTTP.
@@ -566,8 +574,9 @@ correr o projeto localmente.
 - **A IA de demonstração não é um modelo de linguagem.** O fornecedor por omissão é determinista,
   baseado em regras, e diz que é uma demonstração em todos os ecrãs onde aparece. O adaptador
   compatível com OpenAI existe, mas não foi exercitado contra um serviço real.
-- **As citações da IA não são confirmadas pelo servidor.** O ecrã mostra cada uma ao lado do texto de
-  origem, para quem revê a sugestão a confirmar; a verificação automática ainda não existe.
+- **A verificação das citações não decide se a sugestão está certa.** Confirma que as palavras citadas
+  estão na linha indicada e que o valor se relê a partir delas; se é o valor certo para aquele campo,
+  decide quem revê, e nenhuma sugestão chega ao documento sem essa decisão.
 - **A assinatura eletrónica não tem validade legal.** Demonstra o fluxo de pedido, assinatura e
   registo; ver [ADR-009](docs/adr/ADR-009-electronic-signature.md).
 - **Os conetores simulam o lado de lá.** Os adaptadores de correio e de integrações são reais, mas os
@@ -589,7 +598,6 @@ correr o projeto localmente.
 
 ### Melhorias futuras
 
-- Verificação, no servidor, de que cada citação da IA existe no texto de origem.
 - Endereço ou campo de organização no início de sessão, criação de organizações pela aplicação, e
   adesão de uma pessoa a várias, com seletor de contexto auditado.
 - OIDC com o padrão BFF, mantendo a sessão em cookie `HttpOnly`, e autenticação multifator.
@@ -620,7 +628,8 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
   de palavra-passe.
 - Autorização por permissões (não por perfis) com permissões guardadas em base de dados e
   políticas geradas a pedido.
-- Trilho de auditoria imutável, já a registar autenticações, com identificador de correlação.
+- Trilho de auditoria imutável, de autenticações a decisões, com o identificador de correlação do
+  pedido em cada registo.
 - API REST documentada em OpenAPI, `ProblemDetails` consistente, *rate limiting*, cabeçalhos de
   segurança e proteção CSRF por validação de origem.
 - Observabilidade: logging estruturado (Serilog), OpenTelemetry e *health checks* `/health`,
@@ -655,16 +664,17 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
   leitura desatualizada é recusada.
 - Auditoria documental completa: criação, consulta, descarregamento, alteração de metadados, mudança
   de estado, nova versão, concessão e revogação de permissões, arquivo, restauro e eliminação.
-- Dados de demonstração: 37 documentos consistentes (com versões, etiquetas, metadados, permissões e
-  histórico de auditoria retroativo) em 8 tipos de documento.
+- Dados de demonstração: 41 documentos consistentes (com versões, etiquetas, metadados, permissões e
+  histórico de auditoria retroativo), 37 em 8 tipos de documento e 4 por classificar.
 
 ### Tarefas e motor de workflow
 
 - **Motor de workflow próprio**, orientado a dados: definições com nós e ligações persistidas,
   executadas como instâncias com estado, variáveis e cronologia.
 - Tipos de nó executáveis: início, tarefa humana, aprovação, condição, notificação, ramificação
-  paralela, junção, temporizador, IA, integração e fim. Um tipo de nó sem executor **falha de forma
-  explícita** em vez de ser ignorado, e a validação impede ativar uma definição que o use.
+  paralela, junção, temporizador, IA, integração, assinatura e fim. Um passo que o motor não
+  soubesse correr **interromperia a instância** em vez de ser ignorado, e um teste de integração
+  confirma que cada tipo tem o seu executor.
 - **Uma travessia é uma transação**: o motor percorre os nós até cada ramo ficar parado ou terminado
   e só então persiste: instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
 - **Centro de tarefas** com âmbitos (minhas / organização / delegadas), indicadores de SLA, prazos,
@@ -676,10 +686,10 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
   escalonamentos.
 - **Validação de definições** (nós sem saída, ramos em falta, nós inalcançáveis, atribuição em falta),
   distinguindo os erros, que impedem a ativação, dos avisos.
-- **Worker em processo separado** para o que não pertence ao pedido HTTP: escalonamento de prazos e
-  retoma de temporizadores.
+- **Worker em processo separado** para o que não pertence ao pedido HTTP: escalonamento de prazos,
+  retoma de temporizadores, passos de IA e de integração, integrações agendadas e retenção.
 - Notificações na aplicação, com contador por ler no cabeçalho.
-- Dados de demonstração: 3 definições e 15 instâncias com tarefas pendentes, em atraso, escaladas,
+- Dados de demonstração: 3 definições e 16 instâncias com tarefas pendentes, em atraso, escaladas,
   concluídas e uma rejeitada, coerentes com o estado dos documentos.
 
 ### Desenhador visual de processos
@@ -779,8 +789,7 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
 - O destino dos webhooks é validado **no servidor**, com HTTPS obrigatório e *loopback* e gamas privadas
   recusados, porque um endereço que este servidor vai chamar é uma superfície de SSRF.
 - O nó **`Integration`** do workflow é executável: enfileira o pedido, larga a transação
-  do motor e o worker retoma a instância quando a execução termina. Com ele, **nenhum tipo de nó do
-  desenhador falha já por não estar implementado**.
+  do motor e o worker retoma a instância quando a execução termina.
 
 ### Portal externo e assinatura eletrónica
 
@@ -792,7 +801,7 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
 - Submeter um documento, acompanhar o estado, descarregar o que enviou e **responder a pedidos de
   informação**.
 - **O portal não tem autorização própria.** Quem vê o quê é decidido pelo mesmo avaliador de acesso
-  da aplicação interna, que já dizia que um utilizador externo alcança um documento apenas por
+  da aplicação interna, para o qual um utilizador externo alcança um documento apenas por
   propriedade ou concessão explícita (ADR-008).
 - Os contratos do portal são **tipos próprios, escritos à mão**, e não os internos com menos campos:
   é isso que impede que um campo acrescentado do lado de dentro atravesse sozinho.

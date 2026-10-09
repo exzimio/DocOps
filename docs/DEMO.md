@@ -111,8 +111,9 @@ imutável nas duas camadas.
 
 ### 1. Lista de documentos (60 s)
 
-Entre como `ricardo.lopes@asteria.example` e abra **Documentos**. São 41 documentos de demonstração
-em 8 tipos, com estados, classificações, versões e etiquetas coerentes.
+Entre como `ricardo.lopes@asteria.example` e abra **Documentos**. A lista mostra 24 dos 41
+documentos da organização, os que as regras de acesso lhe dão, com estados, classificações, versões
+e etiquetas coerentes. O administrador vê os 41.
 
 - Escreva `Northstar` na pesquisa: a lista reduz-se aos documentos desse fornecedor. A pesquisa corre
   no servidor, sobre título, referência, descrição e metadados.
