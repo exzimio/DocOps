@@ -134,15 +134,22 @@ exigia. Um teste de integração apanhou-o.
 ## 7. Persistência
 
 - **EF Core 10 com SQL Server.** Configuração por *Fluent API* em classes `IEntityTypeConfiguration`.
-- **Identificadores UUIDv7** (`Guid.CreateVersion7()`): únicos e sequenciais, o que evita a
-  fragmentação de índice típica de GUIDs aleatórios.
-- **Concorrência otimista** por coluna `rowversion` nas entidades mutáveis.
+- **Identificadores UUIDv7** (`Guid.CreateVersion7()`), gerados pela aplicação e declarados
+  `ValueGeneratedNever`: a entidade tem identidade antes de ser gravada, e o EF não confunde uma
+  versão nova de um documento com uma existente. Por serem sequenciais, evitam a fragmentação de
+  índice típica de GUIDs aleatórios.
+- **Concorrência otimista** por coluna `rowversion` nas entidades mutáveis. Um agregado guardado em
+  várias tabelas, como a definição de um processo com os seus nós e ligações, marca sempre a linha
+  principal como alterada ao gravar: assim o `rowversion` da definição é verificado mesmo quando só
+  o desenho muda, e duas pessoas a editar o mesmo processo não se sobrepõem em silêncio.
 - **Soft delete** com filtro global; a eliminação é reversível e o histórico preserva-se.
 - **Índices únicos filtrados** (por exemplo, código de departamento único por organização, ignorando
   registos eliminados) e índices compostos orientados às consultas reais.
 - **Intercetores** para carimbos temporais, autor da alteração, *soft delete*, isolamento de tenant e
   imutabilidade da auditoria — comportamento transversal fora do código de negócio.
-- **Paginação no servidor** e projeções (`Select`) em vez de carregar grafos inteiros.
+- **Paginação no servidor** e projeções (`Select`) em vez de carregar grafos inteiros. Toda a
+  ordenação paginada termina na chave: cada página é uma consulta independente, e com a ordenação a
+  empatar a mesma linha podia aparecer em duas páginas e outra em nenhuma.
 
 ### Ciclo de vida do documento (Fase 2)
 
@@ -177,8 +184,9 @@ que endereço, com que identificador de correlação e — quando aplicável —
 - A escrita ocorre num contexto próprio, para que um registo de auditoria não seja revertido com a
   transação de negócio que descreve.
 - Campos sensíveis (palavras-passe, segredos, chaves) são redigidos antes da serialização.
-- `AuditImmutabilityInterceptor` recusa qualquer `UPDATE` ou `DELETE`; a base de dados revoga essas
-  permissões ao *login* aplicacional (ver `SECURITY.md`).
+- `AuditImmutabilityInterceptor` recusa qualquer `UPDATE` ou `DELETE`, e a base de dados recusa-os
+  também às duas identidades com que a aplicação se liga, para que SQL escrito à mão não passe ao
+  lado do intercetor (ver `SECURITY.md`).
 
 ## 9. Frontend
 
@@ -186,8 +194,11 @@ que endereço, com que identificador de correlação e — quando aplicável —
   elimina a duplicação entre "estado de autenticação" e "dados do utilizador".
 - **Formulários** com React Hook Form e esquemas Zod; as mensagens de erro são chaves de tradução,
   não texto fixo.
-- **Erros da API** são convertidos em `ApiError` com `code` estável, que o frontend traduz — o
-  servidor não precisa de conhecer o idioma do utilizador para produzir uma mensagem correta.
+- **Erros da API** chegam como `application/problem+json` e são convertidos em `ApiError`, com um
+  `code` estável que o frontend traduz: o servidor não precisa de conhecer o idioma do utilizador
+  para produzir uma mensagem correta. O cliente reconhece qualquer `content-type` terminado em
+  `+json`, porque `application/problem+json` não contém o texto `application/json`, e um teste por
+  esse texto descartaria os códigos de erro e as mensagens por campo.
 - **Design system** em *tokens* CSS (cor, espaçamento, tipografia, raio, sombra) com tema claro e
   escuro; os componentes referenciam *tokens* semânticos (`surface`, `ink`, `border`), nunca cores
   diretas.
@@ -754,8 +765,22 @@ ficheiros de captura que apodreciam: o instrumento a acusar o que não devia.
 
 O projeto `src/Worker` corre num processo separado da API: retoma de temporizadores, escalonamento
 de prazos, fila de processamento de IA e varrimento periódico das integrações. Nenhum pedido de
-utilizador espera por trabalho periódico, e o worker vê todas as organizações — uma exceção
-deliberada, confinada a trabalho que nenhum pedido HTTP alcança.
+utilizador espera por trabalho periódico.
+
+O worker vê todas as organizações, e é uma exceção deliberada, confinada a trabalho que nenhum pedido
+HTTP alcança. Corre num âmbito de sistema, ligado com a identidade `app_system`, que é a que a
+política de segurança ao nível da linha aceita para dispensa
+([ADR-011](adr/ADR-011-row-level-security-deny-by-default.md)).
+
+**Cada trabalho corre no seu próprio âmbito**, com a sua captura de erros e a sua medição. Uma
+integração que falha não impede que um prazo seja escalonado no mesmo ciclo, e o ciclo avança sempre.
+
+**Dois workers não correm o mesmo trabalho.** Cada trabalho toma primeiro um bloqueio aplicacional do
+SQL Server (`sp_getapplock`), sem espera: se outro processo o tem, este desiste e volta no ciclo
+seguinte. A base de dados já é o ponto comum a todos os processos, por isso não é preciso um serviço
+de eleição de líder, e o bloqueio pertence à sessão, pelo que desaparece sozinho se o processo cair.
+Sem isto, dois workers não davam erro nenhum: davam trabalho repetido, como a mesma análise de IA
+duas vezes ou o mesmo aviso de retenção enviado em duplicado.
 
 As integrações não correm a cada ciclo: `IntegrationEveryNCycles` espaça-as, porque sincronizar
 correio e reconciliar catálogos não tem a urgência de um prazo a expirar.
