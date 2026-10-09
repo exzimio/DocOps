@@ -30,30 +30,30 @@ O `Domain` não conhece EF Core, HTTP nem React.
 ### Uma exceção consciente
 
 `Domain` referencia `Microsoft.Extensions.Identity.Stores` para que `ApplicationUser` derive de
-`IdentityUser<Guid>`. A alternativa pura — uma entidade de domínio `User` separada do utilizador de
-autenticação — obrigaria a sincronizar dois modelos do mesmo conceito, um custo permanente para um
+`IdentityUser<Guid>`. A alternativa pura, uma entidade de domínio `User` separada do utilizador de
+autenticação, obrigaria a sincronizar dois modelos do mesmo conceito, um custo permanente para um
 benefício teórico. Ver [ADR-002](adr/ADR-002-authentication.md).
 
 ## 3. Módulos de domínio
 
-| Módulo | Responsabilidade | Fase |
-| --- | --- | --- |
-| Identity & Access | Autenticação, perfis, permissões, sessão | 1 ✅ |
-| Organizations / Tenancy | Organizações, departamentos, adesões | 1 ✅ |
-| Audit & Compliance | Registo imutável, retenção, classificação, retenção legal | 1 (base) ✅ |
-| Document Management | Documentos, versões, metadados, permissões documentais | 2 ✅ |
-| Document Classification | Tipos de documento e campos de metadados | 2 ✅ |
-| Workflow Management / Execution | Definições, instâncias, estados, prazos | 3 ✅ (designer visual na 4) |
-| Tasks & Approvals | Tarefas humanas, aprovações, delegação, SLA | 3 ✅ |
-| AI Intelligence | Classificação, extração, perguntas sobre documentos | 5 ✅ |
-| Search | Pesquisa por metadados, texto integral e linguagem natural | 6 ✅ |
-| Email / Inbox | Caixa de entrada e processamento de anexos | 6 ✅ |
-| Integrations | Adaptadores externos, execução e registo por organização | 6 ✅ |
-| External Portal | Submissões de parceiros e o seu acompanhamento | 7 ✅ |
-| Electronic Signature | Pedidos e estados de assinatura | 7 ✅ |
-| Reporting & Analytics | Indicadores e gráficos a partir de dados reais | 8 |
-| Notifications | Notificações e escalonamentos | 3 ✅ |
-| Administration | Gestão de utilizadores, perfis, departamentos e definições | 8 |
+| Módulo | Responsabilidade |
+| --- | --- |
+| Identity & Access | Autenticação, perfis, permissões, sessão |
+| Organizations / Tenancy | Organizações, departamentos, adesões |
+| Audit & Compliance | Registo imutável, retenção, classificação, retenção legal |
+| Document Management | Documentos, versões, metadados, permissões documentais |
+| Document Classification | Tipos de documento e campos de metadados |
+| Workflow Management / Execution | Definições, desenho visual, instâncias, estados, prazos |
+| Tasks & Approvals | Tarefas humanas, aprovações, delegação, SLA |
+| AI Intelligence | Classificação, extração, perguntas sobre documentos |
+| Search | Pesquisa por metadados, texto integral e linguagem natural |
+| Email / Inbox | Caixa de entrada e processamento de anexos |
+| Integrations | Adaptadores externos, execução e registo por organização |
+| External Portal | Submissões de parceiros e o seu acompanhamento |
+| Electronic Signature | Pedidos e estados de assinatura |
+| Reporting & Analytics | Indicadores e gráficos a partir de dados reais |
+| Notifications | Notificações e escalonamentos |
+| Administration | Gestão de utilizadores, perfis, departamentos e definições |
 
 ## 4. Pipeline de pedido
 
@@ -97,7 +97,7 @@ flowchart TB
 ```
 
 O tenant é lido exclusivamente das *claims* da sessão (`ICurrentUser` → `ITenantContext`). Contextos
-sem utilizador autenticado — migrações, semeadura, trabalhos em segundo plano — não aplicam filtro,
+sem utilizador autenticado (migrações, semeadura, trabalhos em segundo plano) não aplicam filtro,
 o que é seguro porque não existe *endpoint* com dados de organização acessível sem autenticação.
 
 Administradores de plataforma não contornam o filtro implicitamente: o acesso entre organizações
@@ -127,9 +127,9 @@ as permissões explícitas, e devolve os níveis concedidos **com a razão de ca
 explicação que alimenta o painel de *acesso efetivo* na interface.
 
 Uma separação deliberada: o avaliador responde a *quem pode agir*; `DocumentLifecycle` responde a *o
-que pode ser feito no estado atual*. A primeira versão misturava as duas — e tornava impossível
-arquivar um documento aprovado, porque o estado "aprovado" retirava o direito de edição que o arquivo
-exigia. Um teste de integração apanhou-o.
+que pode ser feito no estado atual*. Misturá-las tornaria impossível
+arquivar um documento aprovado, porque o estado "aprovado" retira o direito de edição que o arquivo
+exige.
 
 ## 7. Persistência
 
@@ -146,12 +146,12 @@ exigia. Um teste de integração apanhou-o.
 - **Índices únicos filtrados** (por exemplo, código de departamento único por organização, ignorando
   registos eliminados) e índices compostos orientados às consultas reais.
 - **Intercetores** para carimbos temporais, autor da alteração, *soft delete*, isolamento de tenant e
-  imutabilidade da auditoria — comportamento transversal fora do código de negócio.
+  imutabilidade da auditoria: comportamento transversal fora do código de negócio.
 - **Paginação no servidor** e projeções (`Select`) em vez de carregar grafos inteiros. Toda a
   ordenação paginada termina na chave: cada página é uma consulta independente, e com a ordenação a
   empatar a mesma linha podia aparecer em duas páginas e outra em nenhuma.
 
-### Ciclo de vida do documento (Fase 2)
+### Ciclo de vida do documento
 
 ```mermaid
 stateDiagram-v2
@@ -177,7 +177,7 @@ conteúdo cria sempre uma nova versão; versões anteriores nunca são sobrescri
 ## 8. Auditoria
 
 Um registo de auditoria contém o que aconteceu, quem o fez, quando, em que organização, a partir de
-que endereço, com que identificador de correlação e — quando aplicável — o estado antes e depois.
+que endereço, com que identificador de correlação e, quando aplicável, o estado antes e depois.
 
 - O ator é resolvido pelo serviço a partir do contexto do pedido, nunca indicado pelo chamador: uma
   ação não pode ser atribuída ao utilizador errado por engano de quem chama.
@@ -223,8 +223,8 @@ erro.
 
 **As rotas chegam quando alguém lá vai.** Ficam imediatos os ecrãs anteriores à sessão e o painel,
 que é o primeiro a seguir ao início de sessão; as outras catorze são adiadas atrás de uma fronteira
-`Suspense` única. O pacote de entrada passou de 226 kB para 168 kB comprimidos — o que se descarrega
-antes de se ver seja o que for.
+`Suspense` única. Assim, o pacote de entrada, que é o que se descarrega antes de se ver seja o que for,
+leva só o que esses ecrãs precisam.
 
 ## 10. Motor de workflow
 
@@ -251,7 +251,7 @@ flowchart TB
     W -->|"estado configurado no nó"| D["DocumentLifecycle<br/>valida a transição"]
 ```
 
-O motor percorre os nós até cada ramo ficar parado — à espera de uma pessoa ou de um temporizador — ou
+O motor percorre os nós até cada ramo ficar parado, à espera de uma pessoa ou de um temporizador, ou
 terminado, e só então persiste. Consequências que importam:
 
 - **Consistência**: instância, tarefas, cronologia e estado do documento gravam juntos. Uma falha a
@@ -314,14 +314,14 @@ flowchart TB
     H --> W["DocumentMetadataWriter<br/>a mesma escrita da edição manual"]
 ```
 
-Três invariantes sustentam esta fase, e estão no código, não na interface.
+Três invariantes sustentam a inteligência documental, e estão no código, e não na interface.
 
 **A origem viaja com o resultado.** `AiSource` (`Demo` ou `Model`) faz parte de cada contrato que
 carrega saída de IA. Nenhum cliente consegue mostrar uma resposta de demonstração como sendo de um
 modelo, porque não lhe chega nada sem essa etiqueta.
 
 **Uma citação é um sítio onde ir ver, não uma afirmação.** `DocumentText` numera as linhas do
-documento — a mesma numeração que o endpoint `/text` serve à interface — e `Verifies` confirma que
+documento, a mesma numeração que o endpoint `/text` serve à interface, e `Verifies` confirma que
 as palavras citadas estão mesmo na linha indicada. O `AiDocumentAnalyzer` aplica essa guarda a tudo
 o que um fornecedor devolve, seja ele qual for. Ao fornecedor de modelo exige-se mais: o valor tem
 de se poder reler a partir da citação, porque um modelo pode citar bem e inventar o número ao lado.
@@ -332,8 +332,8 @@ cada sugestão tem a sua decisão, o seu autor e o seu momento. Aplicar escreve 
 e por isso herda a tipagem, a validação e a regra de campos obrigatórios sem as duplicar.
 
 O tipo **«Por classificar»** existe para que o resto seja possível: sem campos obrigatórios, um
-ficheiro pode ser guardado antes de alguém o ler. Reclassificar nunca baixa a sensibilidade — o
-documento fica com a classificação mais restritiva entre a sua e a do tipo novo — e a política de
+ficheiro pode ser guardado antes de alguém o ler. Reclassificar nunca baixa a sensibilidade (o
+documento fica com a classificação mais restritiva entre a sua e a do tipo novo), e a política de
 retenção acompanha o tipo apenas quando era a do tipo anterior.
 
 Nos workflows, um passo de IA **não chama o fornecedor**: cria uma análise em fila e estaciona a
@@ -348,7 +348,7 @@ peso de relevância e a página resolvem-se todos no SQL Server, dentro do conju
 quem pergunta pode ver. Daí que o total apresentado seja o total que essa pessoa pode conhecer, e
 não o que existe: contar primeiro e filtrar depois transformaria a contagem numa fuga.
 
-Os filtros vivem num sítio só — `DocumentFilters` —, partilhado entre a lista de documentos e o ecrã
+Os filtros vivem num sítio só, `DocumentFilters`, partilhado entre a lista de documentos e o ecrã
 de pesquisa, para que um filtro não signifique uma coisa num ecrã e outra no outro. Dois deles são
 **derivados** e não guardados: o estado do processo lê-se da instância de workflow mais recente do
 documento, e o estado de aprovação lê-se das tarefas de decisão levantadas para ele. Uma cópia no
@@ -363,8 +363,8 @@ O texto integral depende de um componente **opcional** do SQL Server. A aplicaç
 - Cada resposta declara qual dos dois caminhos correu, e a interface mostra-o. Uma pesquisa
   degradada em silêncio pareceria uma pesquisa que encontrou menos.
 
-O que a interface realça num excerto vem do servidor, que encontrou as palavras no texto guardado —
-a mesma disciplina das citações da Fase 5: o ecrã não volta a procurar, e por isso não pode realçar
+O que a interface realça num excerto vem do servidor, que encontrou as palavras no texto guardado,
+com a mesma disciplina das citações da IA: o ecrã não volta a procurar, e por isso não pode realçar
 algo que o documento não diga.
 
 As perguntas em linguagem natural passam por `IAiSearchService`, que devolve **filtros** e nunca
@@ -378,7 +378,7 @@ convencido a alcançar dados que quem pergunta não pode ver. Detalhes e alterna
 
 O correio entra por um adaptador e sai como documento pelos serviços que já existiam.
 
-`IMailConnector` tem a forma do Microsoft Graph de propósito — listar mensagens de uma caixa, depois
+`IMailConnector` tem a forma do Microsoft Graph de propósito: listar mensagens de uma caixa, depois
 buscar o conteúdo de **um** anexo por identificador. Daí decorre uma escolha que parece pequena e não
 é: os bytes de um anexo **não** são copiados na sincronização, só quando alguém decide que o ficheiro
 vale a pena. Copiar tudo encheria o repositório com os anexos que ninguém quis, e obrigaria a uma
@@ -392,12 +392,12 @@ mensagem é só o da organização, não o do documento.
 
 Nada aqui escreve no repositório por atalho. Um anexo guardado como documento é criado pelo
 `IDocumentService`; um processo iniciado a partir de uma mensagem é iniciado pelo `IWorkflowService`.
-Cada um aplica a sua própria permissão por cima da permissão de processar a caixa — guardar um anexo
+Cada um aplica a sua própria permissão por cima da permissão de processar a caixa: guardar um anexo
 exige também `documents.create`, e iniciar um processo exige `workflows.start`.
 
 O ciclo de vida da mensagem é deliberadamente curto: por ler, lida, processada, arquivada.
 `EmailLifecycle` diz o que o estado permite, tal como `DocumentLifecycle` faz para documentos, e o
-que a interface esconde é conveniência — o servidor recusa na mesma.
+que a interface esconde é conveniência, e o servidor recusa na mesma.
 
 Detalhes e alternativas rejeitadas em [ADR-007](adr/ADR-007-external-connectors.md).
 
@@ -405,25 +405,25 @@ Detalhes e alternativas rejeitadas em [ADR-007](adr/ADR-007-external-connectors.
 
 `IIntegrationAdapter` é o `IMailConnector` generalizado: um adaptador recebe um contexto com a
 organização e devolve um resultado com o que fez, quantos registos tocou, que estado deixa a
-integração e as linhas que quer ver no registo. Seis estão escritos — correio, ERP, CRM, assinatura
+integração e as linhas que quer ver no registo. Seis estão escritos: correio, ERP, CRM, assinatura
 eletrónica, webhooks e importação de ficheiros.
 
 **Quem escreve o estado é o executor, não o adaptador.** `IntegrationExecutor` recebe o resultado e
 é ele que grava `Status`, `RecordsProcessed`, `ErrorCount` e `LastRunAtUtc`, e que converte uma
-exceção do adaptador em estado «Com falha» com a mensagem — nunca a pilha. Se cada adaptador
+exceção do adaptador em estado «Com falha» com a mensagem, e nunca a pilha. Se cada adaptador
 escrevesse o seu próprio estado, o cartão passaria a ser a opinião do adaptador sobre si mesmo em
 vez do registo do que aconteceu.
 
 **Dois caminhos de execução, um executor.** `IntegrationService` corre no pedido do utilizador e usa
 o `DbContext` filtrado pela organização, pelo que só alcança a integração de quem a pediu;
 `IntegrationRunner` corre no worker, sem utilizador, e passa por `IgnoreQueryFilters` para varrer
-todas as organizações — a mesma exceção consciente que o resto do trabalho periódico já tinha. Os
+todas as organizações, a mesma exceção consciente que o resto do trabalho periódico já tinha. Os
 dois terminam no mesmo `IntegrationExecutor`, para que não haja duas formas de uma integração correr.
 
 **O nó de workflow não chama nada dentro da transação do motor.** Uma travessia do grafo é uma
 transação; uma chamada externa lá dentro manteria-a aberta à espera da rede.
 `IntegrationNodeExecutor` enfileira um `IntegrationRunRequest` e devolve `Wait()`; o processador da
-fila corre o pedido e retoma a instância. É a mesma forma dos nós de IA — de propósito.
+fila corre o pedido e retoma a instância. É a mesma forma dos nós de IA, de propósito.
 
 **O registo de uma integração não é auditoria.** `IntegrationLog` é operacional: pode ser truncado,
 não faz parte do trilho imutável. O que vai para a auditoria é o facto de alguém ter executado ou
@@ -437,7 +437,7 @@ A primeira vez que o produto deixa entrar alguém de fora da organização, e a 
 aplicação cuja audiência não é um colaborador.
 
 **Não tem autorização própria.** `PortalService` filtra com
-`DocumentAccessResolver.BuildVisibilityPredicate` — o mesmo predicado da listagem interna, que já
+`DocumentAccessResolver.BuildVisibilityPredicate`, o mesmo predicado da listagem interna, que já
 concede a um utilizador externo apenas o que ele possui ou lhe foi explicitamente concedido, nunca
 por rótulo de sensibilidade. Dois conjuntos de regras sobre os mesmos documentos acabariam por
 divergir, e quando divergem é o mais permissivo que prevalece.
@@ -448,8 +448,8 @@ acrescentado do lado interno não atravesse sozinho no dia em que alguém o acre
 
 **A cronologia é construída por seleção, não por exclusão.** O fornecedor vê os eventos
 `information.requested` e `information.provided`, nomeados um a um. Uma lista construída como «tudo
-menos o que é interno» deixaria entrar, por omissão, o tipo de evento que a próxima fase
-acrescentar.
+menos o que é interno» deixaria entrar, por omissão, o tipo de evento que alguém
+acrescentar a seguir.
 
 **A separação corre nos dois sentidos**, e é navegação por cima de autorização: `RequirePortal`
 reencaminha quem está do lado errado, e o servidor recusa de qualquer forma, porque nenhum perfil
@@ -465,12 +465,12 @@ resumo.
 
 **A ligação ao conteúdo é o que torna o registo útil.** O pedido fixa `DocumentVersionId` e copia o
 `ContentHash` dessa versão. Assinar compara; se divergir, recusa. Uma versão posterior não reescreve
-o registo — `ContentStillMatches` passa a falso, que é a única das três leituras possíveis que é
+o registo: `ContentStillMatches` passa a falso, que é a única das três leituras possíveis que é
 verdadeira (as outras seriam apagar a prova, ou re-apontá-la em silêncio para conteúdo que ninguém
 consentiu).
 
 **Assinar não é editar.** A transição do documento para «assinado» é aplicada diretamente, validada
-pelo `DocumentLifecycle` e não pelos direitos de quem age — exatamente como o motor de workflow
+pelo `DocumentLifecycle` e não pelos direitos de quem age, exatamente como o motor de workflow
 aplica estados. Exigir `Edit` obrigaria a distribuir direitos de edição só para recolher assinaturas.
 
 **Assinar é pessoal.** `SignatureLifecycle.CanSign` compara o utilizador com o signatário nomeado, e
@@ -482,7 +482,7 @@ Detalhes e alternativas rejeitadas em [ADR-009](adr/ADR-009-electronic-signature
 
 **Nenhum número é guardado.** Não há tabela de agregados nem cache: cada indicador do painel é uma
 consulta executada no momento, sobre as mesmas tabelas que a aplicação usa para trabalhar. É uma
-decisão com um custo assumido — o painel paga latência de consulta a cada abertura — e a alternativa,
+decisão com um custo assumido, porque o painel paga latência de consulta a cada abertura, e a alternativa,
 agregados mantidos por um processo à parte, traz a única avaria que este projeto não pode ter: um
 painel que discorda da lista que está ao lado dele. Ver [ADR-010](adr/ADR-010-analytics-from-queries.md).
 
@@ -492,7 +492,7 @@ usam. Uma contagem é uma fuga de informação como qualquer outra: saber que ex
 confidenciais no departamento jurídico é saber alguma coisa sobre eles.
 
 **Tudo tem de ser traduzível para SQL.** O agrupamento por dia usa
-`EF.Functions.DateDiffDay(início, data)` — inteiros que o motor sabe agrupar — e as datas são
+`EF.Functions.DateDiffDay(início, data)`, inteiros que o motor sabe agrupar, e as datas são
 reconstruídas depois de ler. `DateOnly.FromDateTime` compila e rebenta em tempo de execução, que é a
 pior ordem possível para descobrir o problema.
 
@@ -509,11 +509,11 @@ reconverte para nomes legíveis, porque um ficheiro não tem quem o traduza.
 ## 10.8 Administração
 
 **A organização vem sempre das *claims*.** `AdministrationService` nunca aceita um identificador de
-organização vindo do pedido — o mesmo princípio de todo o resto, aplicado ao sítio onde a tentação é
+organização vindo do pedido: o mesmo princípio de todo o resto, aplicado ao sítio onde a tentação é
 maior, porque uma administração parece o lugar natural para «escolher a organização».
 
 **Há uma mudança que o serviço recusa sempre: a própria conta.** `LoadEditableAsync` compara com o
-utilizador atual e recusa antes de olhar para o que foi pedido. Não é cautela de interface — um
+utilizador atual e recusa antes de olhar para o que foi pedido. Não é cautela de interface: um
 administrador que se desative, ou que se retire o perfil, cria uma avaria sem reparação de dentro do
 produto. O DTO expõe `CanEdit` para o ecrã não oferecer o que o servidor vai recusar, mas a decisão é
 do servidor.
@@ -530,20 +530,20 @@ enviar o nome à mão para uma organização se promover para fora da sua fronte
 **Contas desativam-se, não se eliminam.** `IsActive` a falso tira a conta da lista de trabalho e
 impede o início de sessão; a linha permanece, porque a auditoria, os documentos e as decisões
 referem-se a ela. A palavra-passe inicial é gerada com `RandomNumberGenerator` e devolvida uma única
-vez — o servidor guarda o resumo e não a sabe recuperar.
+vez: o servidor guarda o resumo e não a sabe recuperar.
 
 ## 10.9 Catálogo de documentos
 
 **O catálogo não é configuração: é uma promessa já cumprida.** Quando um tipo ganha um campo,
 documentos passam a ser descritos por ele; quando um campo muda, muda o significado do que já está
 escrito. Por isso o `DocumentCatalogueAdminService` faz a cada alteração uma única pergunta antes de
-a aplicar — **torna falso alguma coisa que já está escrita?** Alargar é permitido; estreitar é
+a aplicar: **torna falso alguma coisa que já está escrita?** Alargar é permitido; estreitar é
 recusado, com a contagem que o explica.
 
 **Os valores vivem em colunas tipadas.** `DocumentMetadataValue` guarda o texto em `TextValue`, o
 número em `NumberValue`, e assim por diante, para filtrar e ordenar em SQL em vez de em memória. A
 consequência é que mudar o tipo de um campo **não move o que lá está**: o número fica em
-`NumberValue` e o campo passa a ler `TextValue`. O documento não dá erro — fica em branco, ou mostra
+`NumberValue` e o campo passa a ler `TextValue`. O documento não dá erro: fica em branco, ou mostra
 outra coisa. Por isso a mudança de tipo é recusada a partir do primeiro valor.
 
 **Tornar obrigatório é uma afirmação retroativa.** `EnsureNothingBecomesInvalidAsync` conta os
@@ -552,7 +552,7 @@ documentos não cumprem não descreve a organização: descreve uma intenção, 
 poder ser lido como verdade.
 
 **O tipo de entrada é intocável em dois pontos.** Não se desativa, porque é por ele que entra um
-ficheiro antes de alguém saber o que é — e a caixa de entrada e o portal criam documentos sem
+ficheiro antes de alguém saber o que é, e a caixa de entrada e o portal criam documentos sem
 ninguém a olhar. E não aceita campos obrigatórios, porque isso significaria recusar o carregamento
 até alguém responder a uma pergunta que só ler o documento responde. O seu código também não muda:
 é por código que o resto do produto o encontra.
@@ -564,11 +564,11 @@ deles.
 ## 10.10 Etiquetas e retenção
 
 **A etiqueta e o campo de metadados parecem o mesmo problema e não são.** Um valor de metadados é o
-que o documento **afirma** — o número da fatura, a data de vencimento — e destruí-lo destrói o que o
+que o documento **afirma**, como o número da fatura ou a data de vencimento, e destruí-lo destrói o que o
 documento diz. Uma etiqueta é uma anotação **colocada sobre** o documento por quem o organiza. Por
 isso o catálogo recusa eliminar um campo com valores, e aqui remover é permitido: `Tag` é
 `ISoftDeletable`, as linhas de `DocumentTag` não são tocadas, e restaurar devolve exatamente os
-mesmos documentos. A reversibilidade não é uma promessa da interface — é o que o filtro global de
+mesmos documentos. A reversibilidade não é uma promessa da interface: é o que o filtro global de
 `DocumentTag` já garantia, porque exclui as ligações cuja etiqueta está removida sem as apagar.
 
 **A unicidade do nome olha só para o que está em circulação.** Um nome libertado por uma remoção
@@ -576,7 +576,7 @@ volta a estar livre; restaurar uma etiqueta cujo nome foi entretanto ocupado é 
 produziria dois rótulos iguais em documentos diferentes.
 
 **A retenção inverte a regra do catálogo, de propósito.** Mudar a duração de uma política é
-permitido: as obrigações de retenção mudam — muda a lei, muda o contrato — e um catálogo incapaz de
+permitido: as obrigações de retenção mudam, com a lei e com os contratos, e um catálogo incapaz de
 as acompanhar é que seria a falsidade. O que a mudança faz é mexer na data de eliminação de todos os
 documentos que a política governa, e por isso `AuditPolicyAsync` escreve o valor antigo **e** o novo.
 Nem toda a alteração que afeta dados existentes é uma falsificação; distinguir as duas é a decisão de
@@ -585,17 +585,15 @@ desenho deste bloco.
 **O que é recusado é retirar de circulação uma política que tipos ainda adotam**, e a mensagem
 nomeia-os: esses tipos continuariam a aplicar uma regra abandonada, e nada no ecrã o diria.
 
-**Uma armadilha do EF Core que este bloco expôs.** `IgnoreQueryFilters()` é um operador **de
-consulta**, não de subconsulta: escrito dentro da projeção de outra consulta, desliga os filtros
-dessa consulta inteira — incluindo o da organização. A primeira versão da lista de etiquetas contava
-documentos assim, e um administrador de uma organização passou a ver as etiquetas de outra. Não
-falhava nada: nem exceção, nem aviso, nem teste vermelho. A contagem passou a ser uma consulta
-própria com a condição de organização escrita à mão, e
-`tests/UnitTests/Persistence/QueryFilterUsageTests.cs` falha a suite de testes se o padrão reaparecer.
+**Uma armadilha do EF Core.** `IgnoreQueryFilters()` é um operador **de consulta**, e não de
+subconsulta: escrito dentro da projeção de outra consulta, desliga os filtros dessa consulta
+inteira, incluindo o da organização, sem exceção, sem aviso e sem nenhum teste a falhar. Por isso a
+contagem de documentos por etiqueta é uma consulta própria, com a condição de organização escrita à
+mão, e o analisador `DOCOPS001` falha a compilação se o padrão aparecer (secção 10.12).
 
 ## 10.11 Editor de permissões
 
-**O painel não calcula nada.** `EffectiveAccess` — os níveis, as razões e as restrições — é produzido
+**O painel não calcula nada.** `EffectiveAccess`, com os níveis, as razões e as restrições, é produzido
 pelo `DocumentAccessEvaluator`, o mesmo que decide de verdade quando alguém tenta abrir, editar ou
 descarregar. Um painel de autorização que computasse a sua própria resposta acabaria por discordar da
 regra que diz explicar, e a discordância seria invisível até alguém alcançar o que não devia.
@@ -613,23 +611,22 @@ organização não gere.
 
 **As concessões podem expirar.** `DocumentPermission.ExpiresAtUtc` sempre existiu e o predicado de
 visibilidade sempre o respeitou; faltava poder pedi-lo. Uma data no passado é recusada pelo
-validador — uma janela que fechou antes de abrir não é uma janela. A interface interpreta uma data
+validador: uma janela que fechou antes de abrir não é uma janela. A interface interpreta uma data
 sem hora como o fim desse dia, porque quem escreve «31 de dezembro» quer o dia inteiro.
 
 **`Administer` não é oferecido no formulário.** Os outros seis níveis são. Administrar um documento
 é conceder o poder de redistribuir acesso a ele, e essa é uma decisão de administração da
-organização, não de partilha — quem a tem, tem-na pelo perfil.
+organização, e não de partilha: quem a tem, tem-na pelo perfil.
 
-## 10.10.2 O analisador que torna a regra impossível de violar
+## 10.12 O analisador que torna a regra impossível de violar
 
 `DOCOPS001` recusa `IgnoreQueryFilters()` escrito dentro de uma projeção. É um analisador de Roslyn:
 corre dentro do compilador, sublinha a chamada no editor enquanto se escreve, e **falha a
-compilação** — não a suite de testes.
+compilação**, e não apenas a suite de testes.
 
-A distinção importa, e durante meses esta documentação afirmou o contrário. Antes disto havia um
-teste que abria os ficheiros `.cs` como texto e contava parênteses para adivinhar se a chamada
-estava dentro de um `Select`. Funcionava, e tinha três fragilidades que se resolvem por construção
-quando se pergunta ao compilador em vez de ler texto:
+A alternativa era um teste que abrisse os ficheiros `.cs` como texto e contasse parênteses para
+adivinhar se a chamada está dentro de um `Select`. Tem três fragilidades que se resolvem por
+construção quando se pergunta ao compilador em vez de ler texto:
 
 | O parser de texto | O analisador |
 | --- | --- |
@@ -638,17 +635,17 @@ quando se pergunta ao compilador em vez de ler texto:
 | Não sabe se aquele `IgnoreQueryFilters` é o do EF | O símbolo é resolvido pelo modelo semântico |
 | Só corre quando alguém corre os testes | Corre a cada compilação e a cada tecla no editor |
 
-O analisador foi validado como o teste anterior: a reintroduzir o defeito. Uma contagem com
+O analisador foi validado a introduzir o padrão de propósito: uma contagem com
 `IgnoreQueryFilters()` metida numa projeção da administração produz
-`error DOCOPS001`, com ficheiro, linha e coluna. Com o código correto, os 59 usos legítimos que
-existem no projeto compilam sem uma objeção — porque o uso no topo de uma consulta é deliberado e
+`error DOCOPS001`, com ficheiro, linha e coluna. Os usos legítimos que existem no projeto compilam
+sem uma objeção, porque o uso no topo de uma consulta é deliberado e
 visível, e é só o enterrado numa projeção que engana.
 
 Viaja como analisador e não como dependência (`OutputItemType="Analyzer"`), portanto nada do que é
 compilado o referencia: só o compilador o carrega. Está ligado aos três projetos que consultam a
 base de dados: Infrastructure, Api e Worker.
 
-## 10.10.1 Duas paredes entre organizações
+## 10.13 Duas paredes entre organizações
 
 O isolamento entre organizações não vive numa camada só, e a razão é histórica: a camada de
 aplicação já falhou aqui. A primeira parede são os filtros globais do EF Core, declarados por
@@ -661,24 +658,22 @@ armazenados, caminhos novos que não passem pelo EF, e também um cliente de SQL
 relatórios que abra a sua própria ligação.
 
 A ligação entre elas é o `SESSION_CONTEXT`: o interceptor escreve nele a organização a cada abertura
-de ligação, e o predicado da política lê-o. **Sem esse valor escrito não se vê nada**, e isso é uma
-mudança recente com uma história: a política deixava passar quando o contexto estava vazio, o que a
-tornava inútil contra quem se liga por fora, porque quem se liga por fora nunca o escreve. Era uma
-contradição que este documento afirmava ao contrário, e foi um revisor externo que a apanhou.
+de ligação, e o predicado da política lê-o. **Sem esse valor escrito não se vê nada.** É isso que torna a política útil contra quem se liga por
+fora, porque quem se liga por fora nunca o escreve.
 
-O worker, a autenticação e a semeadura correm acima de todas as organizações, e isso deixou de
-acontecer por ausência de contexto: agora é uma declaração, e a declaração só é aceite a quem se
-liga com a identidade `app_system`. São três as identidades de base de dados, com `docops_migrator`
-a ser a única que pode alterar o esquema — porque quem pode alterar o esquema pode largar a política.
+O worker, a autenticação e a semeadura correm acima de todas as organizações, e isso é uma
+declaração explícita, só aceite a quem se liga com a identidade `app_system`. São três as identidades
+de base de dados, e `docops_migrator` é a única que pode alterar o esquema, porque quem pode alterar
+o esquema pode largar a política.
 
 O desenho completo, o que foi medido e o que fica por fechar está em
 [`SECURITY.md`](SECURITY.md), secção 4.1, e a decisão com as alternativas rejeitadas no
 [ADR-011](adr/ADR-011-row-level-security-deny-by-default.md).
 
-## 10.11 Estados vazios que não inventam a causa
+## 10.14 Estados vazios que não inventam a causa
 
-Uma lista vazia tem sempre pelo menos duas explicações — não há nada, ou os filtros escondem o que
-há — e o ecrã só conhece uma delas com certeza: a que ele próprio tem posta. O centro de tarefas
+Uma lista vazia tem sempre pelo menos duas explicações (não há nada, ou os filtros escondem o que
+há), e o ecrã só conhece uma delas com certeza: a que ele próprio tem posta. O centro de tarefas
 decide pelo que **sobra para alargar**, e não por «há filtros postos»: quem não tem
 `tasks.view.all` já está a ver o seu universo inteiro, e um botão de alargar que não mudasse nada
 seria um botão sem ação. A frase nomeia exatamente os filtros que o botão desfaz, para o texto e a
@@ -695,42 +690,42 @@ comportamento certo enquanto há linhas para mostrar. Sem linhas deixa de o ser:
 descreveria os filtros novos por cima de um resultado velho. Enquanto o resultado é o anterior e
 está vazio, espera-se.
 
-## 10.12 Largura: nenhum ecrã é mais largo do que a janela
+## 10.15 Largura: nenhum ecrã é mais largo do que a janela
 
 Uma tabela larga num ecrã estreito tem de rolar dentro do seu cartão, nunca levar a página atrás.
 Isso não sai de graça do `overflow-x-auto`: um item de grelha tem `min-width: auto` e recusa-se a
 encolher abaixo do conteúdo, portanto a tabela empurra o cartão, o cartão empurra a página, e o
 `overflow` nunca chega a entrar em ação. Daí `minmax(0, 1fr)` nas colunas que contêm tabelas, e
-`TableScroller` à volta de cada tabela — o contentor rola e alcança-se pelo teclado, que é o que
+`TableScroller` à volta de cada tabela: o contentor rola e alcança-se pelo teclado, que é o que
 falta a um `overflow` simples.
 
 `tests/e2e/specs/horizontal-overflow.spec.ts` mede-o nas dez rotas e nos seis separadores da
 administração, nos dois perfis. A auditoria de acessibilidade não cobre isto: uma página que rola de
 lado passa em todos os critérios do `axe`, e no telemóvel é dos defeitos que mais se sente.
 
-## 10.13 Implantação
+## 10.16 Implantação
 
 Seis peças, num `docker-compose.full.yml`: base de dados, um passo que cria as identidades, um passo
 de migração, a API, o worker e a interface servida por nginx. Os dois passos do meio correm uma vez
 e terminam; os três últimos ficam de pé.
 
-**As migrações saíram do arranque da aplicação.** Com uma instância era cómodo; com várias, duas a
-arrancar ao mesmo tempo correm as migrações em paralelo sobre a mesma base. Agora é um serviço
-próprio (`DOCOPS_MIGRATE_ONLY`), e a API só arranca depois de ele terminar bem
+**As migrações não correm no arranque da aplicação.** Com várias instâncias, duas a arrancar ao
+mesmo tempo correriam as migrações em paralelo sobre a mesma base. Por isso são um serviço próprio
+(`DOCOPS_MIGRATE_ONLY`), e a API só arranca depois de ele terminar bem
 (`service_completed_successfully`).
 
 **Nada aqui fala com a base de dados como administrador.** A API e o worker ligam-se como
 `app_tenant`, e os caminhos que não pertencem a organização nenhuma como `app_system`; quem altera o
-esquema é `docops_migrator`, e só o passo de migração tem essa cadeia. Era isto que o passo de
-migração separado permitia, e deixou de ser trabalho futuro: com a política a negar por omissão, uma
+esquema é `docops_migrator`, e só o passo de migração tem essa cadeia. É o passo de
+migração separado que o permite, e é necessário: com a política a negar por omissão, uma
 pilha ligada como `sa` arrancaria saudável e veria zero linhas.
 
 O passo das identidades corre como administrador, porque criar uma base de dados e dar permissões é
 a única coisa que precisa de o ser. Termina antes de a aplicação existir, e voltar a subir a pilha
 com o volume intacto encontra tudo no sítio e não faz nada.
 
-**A interface tem agora a sua própria política de segurança de conteúdo.** Os cabeçalhos que a API
-emite protegem respostas JSON e nunca chegavam à interface, o que estava registado como limitação. O
+**A interface tem a sua própria política de segurança de conteúdo**, servida pelo nginx, porque os
+cabeçalhos que a API emite protegem respostas JSON e não chegam à interface. O
 `style-src` aceita estilos em linha por um motivo concreto: o desenhador de processos posiciona os
 nós por atributo `style`, calculado a partir das coordenadas guardadas.
 
@@ -738,28 +733,29 @@ nós por atributo `style`, calculado a partir das coordenadas guardadas.
 na verificação de CSRF, e essa verificação deixaria de valer alguma coisa. Confirmado contra a pilha
 a correr: um `POST` sem `Origin` leva `403`, e o cookie de sessão chega ao browser com `HttpOnly`.
 
-### Três defeitos que só a implantação mostrou
+### O que a imagem e o proxy têm de garantir
 
-Nenhum deles aparece em desenvolvimento, e é por isso que este trabalho vale por si.
+Quatro pormenores que não aparecem em desenvolvimento, e por isso estão escritos.
 
-**Os documentos de exemplo não entravam na imagem.** Vivem em `samples/` na raiz, e a Infrastructure
-embebe-os com um caminho relativo que sai de `src/`. Um `EmbeddedResource` cujo padrão não encontra
-nada **não dá erro**: a imagem compila, e só falha ao semear.
+**Os documentos de exemplo têm de entrar na imagem.** Vivem em `samples/` na raiz, e a Infrastructure
+embebe-os com um caminho relativo que sai de `src/`, por isso o Dockerfile copia também essa pasta.
+Um `EmbeddedResource` cujo padrão não encontra nada **não dá erro**: a imagem compilaria, e só
+falharia ao semear.
 
-**O volume de armazenamento nascia de root.** Um volume nomeado herda dono e permissões do que a
-imagem tiver nesse caminho na primeira utilização; sem criar e atribuir a pasta antes de trocar de
-utilizador, o processo sem privilégios não conseguia escrever. E o passo de migração semeia
+**A pasta de armazenamento é criada e atribuída antes de trocar de utilizador.** Um volume nomeado
+herda dono e permissões do que a imagem tiver nesse caminho na primeira utilização, e de outra forma
+nasceria de root e o processo sem privilégios não conseguiria escrever. E o passo de migração semeia
 documentos, portanto precisa do mesmo volume que a API, senão os ficheiros morrem com o contentor e
 ficam linhas a apontar para nada.
 
-**O cabeçalho da resposta de autenticação não cabia no buffer do nginx.** O cookie de sessão leva as
-claims cifradas e passa dos 4 KB por omissão. O nginx responde `502` e regista «upstream sent too big
-header», o que parece uma avaria da API e não é: a API respondeu bem, quem não conseguiu ler foi o
-proxy. O proxy do Vite não tem este limite, portanto isto nunca apareceria em desenvolvimento.
+**Os buffers do proxy no nginx são maiores do que o habitual.** O cookie de sessão leva as claims
+cifradas e passa dos 4 KB por omissão, e com os valores por omissão o nginx responderia `502` e
+registaria «upstream sent too big header», o que parece uma avaria da API e não é: a API responde
+bem, quem não consegue ler é o proxy. O proxy do Vite não tem este limite, portanto isto nunca
+aparece em desenvolvimento.
 
-**E um quarto, do instrumento e não do produto:** a sonda de saúde usava `wget`, que a imagem de
-execução do .NET não traz. A aplicação respondia, e o compose dava-a como doente. Mesma classe dos
-ficheiros de captura que apodreciam: o instrumento a acusar o que não devia.
+**A sonda de saúde usa `curl`, instalado na imagem.** A imagem de execução do .NET não traz `wget`,
+e uma sonda que não consegue correr dá a aplicação como doente quando ela está a responder.
 
 ## 11. Processamento em segundo plano
 
@@ -785,12 +781,12 @@ duas vezes ou o mesmo aviso de retenção enviado em duplicado.
 As integrações não correm a cada ciclo: `IntegrationEveryNCycles` espaça-as, porque sincronizar
 correio e reconciliar catálogos não tem a urgência de um prazo a expirar.
 
-## 11.2 Verificação de retenção
+## 11.1 Verificação de retenção
 
 `RetentionChecker` procura documentos cuja data de conservação passou e **avisa alguém**. Não
 elimina, e a decisão é essa: um prazo cumprido significa que a organização *pode* dispor do
 documento, não que deva. A base legal que obrigou a guardá-lo é a mesma que faz da destruição uma
-decisão que uma pessoa assina — a transição `Arquivado → Eliminado` do diagrama de estados existe,
+decisão que uma pessoa assina: a transição `Arquivado → Eliminado` do diagrama de estados existe,
 mas quem a percorre é sempre alguém, nunca um temporizador.
 
 O que já foi anunciado fica de fora pela existência da própria notificação, e não por uma coluna no
@@ -798,24 +794,24 @@ documento: não há estado novo para manter sincronizado, e um aviso repetido a 
 deixaria de ser lido.
 
 Os destinatários são os administradores da organização, resolvidos por perfil. A retenção é
-obrigação da organização e não do dono do documento — quem carregou a fatura há dez anos pode já não
+obrigação da organização e não do dono do documento: quem carregou a fatura há dez anos pode já não
 trabalhar cá, que é justamente o motivo de o aviso fazer falta.
 
 A regra vive em `src/Infrastructure/Compliance` e não no worker. `RetentionCheckJob` só a invoca.
 Além de seguir o padrão do `AiProcessingJob`, isso permite exercitá-la a partir dos testes de
-integração sem que o projeto de testes referencie o worker — referência que punha duas classes
-`Program` ao alcance de `WebApplicationFactory<Program>` e impedia a compilação.
+integração sem que o projeto de testes referencie o worker, uma referência que poria duas classes
+`Program` ao alcance de `WebApplicationFactory<Program>` e impediria a compilação.
 
-## 11.1 Observabilidade do trabalho em segundo plano
+## 11.2 Observabilidade do trabalho em segundo plano
 
 **Os quatro trabalhos do worker correm isolados uns dos outros.** Cada um tem o seu âmbito, o seu
-`try`/`catch` e a sua medição, e o contador de ciclos avança sempre. Antes, um único `catch` à volta
-do ciclo inteiro fazia com que uma falha nos temporizadores parasse também o escalonamento, a fila de
-IA e as integrações nessa passagem — e, por o contador não avançar, a cadência das integrações ficava
-parada com ela. Nada o anunciava: uma linha de erro no registo, e o resto simplesmente não acontecia.
+`try`/`catch` e a sua medição, e o contador de ciclos avança sempre. Com um único `catch` à volta
+do ciclo inteiro, uma falha nos temporizadores pararia também o escalonamento, a fila de IA e as
+integrações nessa passagem, e, sem o contador a avançar, a cadência das integrações ficaria parada
+com ela, sem nada que o anunciasse além de uma linha de erro no registo.
 
 **Os trabalhos são resolvidos por chave**, não por tipo concreto. Foi o que tornou possível
-substituí-los num teste por um duplo que falha de propósito — e é esse teste que prova que a falha de
+substituí-los num teste por um duplo que falha de propósito, e é esse teste que prova que a falha de
 um não leva os outros atrás. Os nomes vivem em `BackgroundJobNames`, um sítio só, usado pelo registo,
 pelo executor e pela etiqueta da métrica: um trabalho não pode ficar registado com um nome e contado
 com outro.
@@ -823,8 +819,8 @@ com outro.
 **`DocOpsMetrics` publica o que a instrumentação HTTP não sabe.** O OpenTelemetry que vem de origem
 responde «a API está de pé e é rápida». Não responde às perguntas que este produto existe para
 responder: os processos estão a terminar ou a acumular-se, o trabalho periódico correu, a integração
-chegou ao outro lado. São cinco instrumentos — execuções e duração dos trabalhos, instâncias de
-workflow por estado, passos por tipo de nó, documentos criados, corridas de integração — e **cada um
+chegou ao outro lado. São cinco instrumentos (execuções e duração dos trabalhos, instâncias de
+workflow por estado, passos por tipo de nó, documentos criados, corridas de integração), e **cada um
 tem quem o alimente**. Um instrumento declarado que ninguém incrementa lê sempre zero, e um zero é
 uma afirmação: diria que este sistema nunca cria documentos.
 
@@ -833,23 +829,23 @@ saem do processo e aterram em sistemas com outras regras de acesso; um contador 
 uma fuga lenta de quem faz quanto negócio. As etiquetas dizem o **tipo** de trabalho, nunca de quem é.
 
 **O contador de documentos não tem etiqueta de origem**, e a ausência é deliberada. Separar por onde o
-documento entrou — carregamento, correio, portal, integração — seria o contador mais útil, e o modelo
+documento entrou (carregamento, correio, portal, integração) seria o contador mais útil, e o modelo
 não o regista: todos os caminhos terminam no mesmo serviço. Inventar a dimensão produziria um gráfico
 com ar de resposta.
 
-**O worker não tinha telemetria nenhuma.** Tem Serilog desde a Fase 3, mas nenhum exportador — as
-métricas de trabalhos falhados, que o briefing pede por esse nome, não tinham para onde ir.
+**O worker exporta as suas próprias métricas.** Além do Serilog, tem o seu exportador de
+OpenTelemetry, para que as métricas de trabalhos falhados tenham para onde ir.
 
-## 11.2 Saúde do sistema
+## 11.3 Saúde do sistema
 
 **O worker é outro processo, e é isso que molda esta parte.** As métricas que ele publica saem por
-OpenTelemetry, que é onde pertencem — e que não é a aplicação. Um administrador a olhar para o
+OpenTelemetry, que é onde pertencem, e que não é a aplicação. Um administrador a olhar para o
 produto não pode ser servido com contadores que nunca atravessaram a fronteira do processo. Sem uma
 linha escrita em tabela, «o trabalho periódico correu esta noite?» é uma pergunta que o produto não
 sabe responder sobre si próprio.
 
 Daí `BackgroundJobRun`: uma linha por execução, com o trabalho, a hora, a duração, o desfecho, o
-número de itens tratados e — quando falha — **a mensagem, nunca a pilha**. A tabela não é
+número de itens tratados e, quando falha, **a mensagem, nunca a pilha**. A tabela não é
 multi-organização de propósito: o worker corre acima de todas, e um ciclo não é uma coisa que
 aconteça a uma delas.
 
@@ -858,31 +854,30 @@ executor regista um aviso e segue: um trabalho que correu bem não passa a falha
 conseguido escrever que correu.
 
 **As duas metades do painel têm âmbitos diferentes, e a diferença está dita no ecrã.** Os trabalhos
-são da plataforma; as filas são da organização de quem pergunta — e os documentos passam pelo mesmo
+são da plataforma; as filas são da organização de quem pergunta, e os documentos passam pelo mesmo
 predicado de visibilidade da listagem e dos relatórios. O filtro por organização sozinho responderia
 «quantos documentos desta organização aguardam aprovação»; a pergunta que o ecrã diz responder é
 quantos **quem está a ver** vê a aguardar aprovação. Um administrador vê tudo na prática, mas um
-perfil com `admin.settings` e sem administração documental não veria — e a contagem contá-los-ia na
-mesma. É a fuga por contagem do defeito 18, evitada num sítio novo.
+perfil com `admin.settings` e sem administração documental não veria, e a contagem contá-los-ia na
+mesma. Uma contagem revela tanto como a lista que resume.
 
 **Ausência não é zero.** Um trabalho que nunca correu traz `null` na última corrida e na duração
 média, e o ecrã escreve «nunca correu». Zero diria «correu instantaneamente», que é o oposto.
 
-**As sondas anónimas ficam como estavam.** `/health`, `/health/live` e `/health/ready` devolvem nome,
-estado e duração; o `HealthReporter` nunca inclui descrições nem exceções. É o que o briefing quer
-dizer com «do not expose sensitive health information», e foi confirmado por teste em vez de
-assumido.
+**As sondas anónimas não descrevem falhas.** `/health`, `/health/live` e `/health/ready` devolvem
+nome, estado e duração; o `HealthReporter` nunca inclui descrições nem exceções, e um teste
+confirma-o.
 
-## 11.3 O que a leitura custa, medido
+## 11.4 O que a leitura custa, medido
 
 O [ADR-010](adr/ADR-010-analytics-from-queries.md) escolheu calcular cada indicador no pedido, sem
-agregados nem cache, e assumiu a latência como preço. `ReportingLoadTests` mede esse preço com 5.033
-documentos, num contentor próprio: o painel responde em **30 ms** e a listagem em **9 ms**, com a
-página 100 a custar o mesmo que a primeira.
+agregados nem cache, e assumiu a latência como preço. `ReportingLoadTests` mede esse preço com cerca de
+5 000 documentos, num contentor próprio: o painel e a listagem respondem em dezenas de
+milissegundos, e a página 100 custa o mesmo que a primeira.
 
-O valor destes testes não é o portão — os limiares são de absurdo, para apanhar uma consulta que
-deixou de escalar e não uma máquina ocupada. É o número registado, e o que ele fará quando alguém
-acrescentar a décima terceira consulta agregada ao painel.
+O valor destes testes não é o portão, porque os limiares são de absurdo, para apanhar uma consulta
+que deixou de escalar e não uma máquina ocupada. É o número que imprimem, e o que ele fará quando
+alguém acrescentar mais uma consulta agregada ao painel.
 
 ## 12. Preparação para a nuvem
 
