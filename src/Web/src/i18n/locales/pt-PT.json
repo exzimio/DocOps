@@ -700,7 +700,6 @@
       "copyOf": "{{name}} (cópia)",
       "unsaved": "Alterações por guardar",
       "backToDefinition": "Voltar ao processo",
-      "notExecutable": "ainda não executável",
       "supersedeNotice": "Este processo já tem execuções. Guardar cria a versão {{version}}; as execuções em curso continuam na versão atual.",
       "readOnlyPermission": "Não tem permissão para desenhar workflows. Pode consultar o diagrama.",
       "readOnlySuperseded": "Esta é uma versão antiga, mantida para as execuções que a usam. Abra a versão mais recente para editar.",

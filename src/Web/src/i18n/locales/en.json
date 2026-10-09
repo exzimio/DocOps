@@ -700,7 +700,6 @@
       "copyOf": "{{name}} (copy)",
       "unsaved": "Unsaved changes",
       "backToDefinition": "Back to process",
-      "notExecutable": "not executable yet",
       "supersedeNotice": "This process already has instances. Saving creates version {{version}}; running instances stay on the current one.",
       "readOnlyPermission": "You do not have permission to design workflows. You can view the diagram.",
       "readOnlySuperseded": "This is an older version, kept for the instances that use it. Open the latest version to edit.",

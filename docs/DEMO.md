@@ -239,9 +239,8 @@ aprovação realmente usa: título da tarefa, a quem é atribuída, prazo, escal
 estado que o documento passa a ter ao entrar no passo. Arraste das pegas dos nós para desenhar as
 ligações.
 
-Repare no que a paleta **não** esconde: os nós de IA e de integração aparecem marcados como *ainda
-não executáveis*. Podem ser desenhados, mas a validação do servidor impede ativar um processo que os
-use.
+Repare que a paleta oferece também passos de IA e de integração, e que nenhum vem marcado como
+experimental: o desenhador só oferece o que o motor sabe correr.
 
 ### 3. Ramos que o motor sabe seguir (45 s)
 

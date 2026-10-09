@@ -67,7 +67,6 @@ export const DesignerNode = memo(function DesignerNode({ data, selected }: NodeP
 
       <p className="mt-0.5 truncate text-[11px] text-ink-muted">
         {t(`workflows.nodeTypes.${nodeData.nodeType}`)}
-        {!kind.executable && ` · ${t('workflows.designer.notExecutable')}`}
       </p>
 
       {nodeData.summary && (

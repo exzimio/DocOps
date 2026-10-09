@@ -21,25 +21,23 @@ export interface NodeKind {
   icon: LucideIcon
   /** Border and accent colour on the canvas. */
   accent: string
-  /** Node types the engine cannot execute yet: usable on the canvas, but they block activation. */
-  executable: boolean
   /** Only one start node is allowed per definition. */
   unique?: boolean
 }
 
 export const nodeCatalogue: NodeKind[] = [
-  { type: WorkflowNodeType.Start, icon: Play, accent: 'teal', executable: true, unique: true },
-  { type: WorkflowNodeType.HumanTask, icon: UserCheck, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.Approval, icon: CircleCheckBig, accent: 'amber', executable: true },
-  { type: WorkflowNodeType.Condition, icon: GitBranch, accent: 'teal', executable: true },
-  { type: WorkflowNodeType.Notification, icon: Bell, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.ParallelBranch, icon: Split, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.Join, icon: Merge, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.Delay, icon: Timer, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.End, icon: Flag, accent: 'graphite', executable: true },
-  { type: WorkflowNodeType.AiClassification, icon: Bot, accent: 'teal', executable: true },
-  { type: WorkflowNodeType.AiExtraction, icon: ScanText, accent: 'teal', executable: true },
-  { type: WorkflowNodeType.Integration, icon: Plug, accent: 'red', executable: true },
+  { type: WorkflowNodeType.Start, icon: Play, accent: 'teal', unique: true },
+  { type: WorkflowNodeType.HumanTask, icon: UserCheck, accent: 'graphite' },
+  { type: WorkflowNodeType.Approval, icon: CircleCheckBig, accent: 'amber' },
+  { type: WorkflowNodeType.Condition, icon: GitBranch, accent: 'teal' },
+  { type: WorkflowNodeType.Notification, icon: Bell, accent: 'graphite' },
+  { type: WorkflowNodeType.ParallelBranch, icon: Split, accent: 'graphite' },
+  { type: WorkflowNodeType.Join, icon: Merge, accent: 'graphite' },
+  { type: WorkflowNodeType.Delay, icon: Timer, accent: 'graphite' },
+  { type: WorkflowNodeType.End, icon: Flag, accent: 'graphite' },
+  { type: WorkflowNodeType.AiClassification, icon: Bot, accent: 'teal' },
+  { type: WorkflowNodeType.AiExtraction, icon: ScanText, accent: 'teal' },
+  { type: WorkflowNodeType.Integration, icon: Plug, accent: 'red' },
 ]
 
 export function nodeKind(type: WorkflowNodeTypeValue): NodeKind {
