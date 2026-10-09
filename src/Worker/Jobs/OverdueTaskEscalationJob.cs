@@ -33,6 +33,7 @@ public sealed class OverdueTaskEscalationJob(
                 && t.DueAtUtc != null
                 && t.DueAtUtc < now
                 && t.EscalatedAtUtc == null)
+            .OrderBy(t => t.DueAtUtc)
             .Take(100)
             .ToListAsync(cancellationToken);
 
