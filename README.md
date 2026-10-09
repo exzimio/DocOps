@@ -53,6 +53,8 @@ dotnet run --project src/Worker/DocOps.Worker.csproj  # Worker (opcional: prazos
 
 Pré-requisitos, comandos e credenciais: [`docs/SETUP.md`](docs/SETUP.md).
 Guião da demonstração: [`docs/DEMO.md`](docs/DEMO.md).
+Arquitetura e decisões: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) e [`docs/adr/`](docs/adr/).
+Modelo de segurança: [`docs/SECURITY.md`](docs/SECURITY.md).
 
 ## 4. Estado de construção
 
@@ -553,7 +555,8 @@ necessário para correr o projeto localmente.
 
 ## 20. O que faz, em detalhe
 
-As capacidades agrupadas pelo que são, não pela ordem em que foram construídas.
+As capacidades agrupadas pelo que são, e não pela ordem em que foram construídas. As decisões com
+peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos [ADR](docs/adr/).
 
 ### Fundação, segurança e multi-organização
 

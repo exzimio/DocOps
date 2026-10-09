@@ -135,6 +135,9 @@ porque algo **não** foi feito — por exemplo, porque a assinatura eletrónica 
 de chaves criptográficas: seria mais convincente e continuaria sem valor legal, a pior
 combinação possível.
 
+A maior parte dos defeitos corrigidos durante a construção foi encontrada a sondar a API real e a
+ler capturas de ecrã, e não a ler código.
+
 ## 7. Números
 
 - ~28 000 linhas de C# e ~17 700 de TypeScript/React, mais ~11 200 de testes
