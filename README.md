@@ -56,33 +56,15 @@ Guião da demonstração: [`docs/DEMO.md`](docs/DEMO.md).
 Arquitetura e decisões: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) e [`docs/adr/`](docs/adr/).
 Modelo de segurança: [`docs/SECURITY.md`](docs/SECURITY.md).
 
-## 4. Estado de construção
+## 4. Estado
 
-O projeto é construído por fases; cada fase é entregue a funcionar de ponta a ponta (base de dados,
-API, interface e testes). Não existem ecrãs de demonstração estáticos: tudo o que a interface mostra
-vem da base de dados através da API.
+O âmbito planeado está concluído, e cada funcionalidade foi entregue a funcionar de ponta a ponta:
+base de dados, API, interface e testes. Não existem ecrãs de demonstração estáticos: tudo o que a
+interface mostra vem da base de dados através da API.
 
-| Fase | Âmbito | Estado |
-| --- | --- | --- |
-| 1 | Arquitetura, solução, base de dados, autenticação, multi-tenancy, auditoria base | **Concluída** |
-| 2 | Documentos, versões, permissões, auditoria documental | **Concluída** |
-| 3 | Tarefas e motor de workflow | **Concluída** |
-| 4 | Designer visual de workflow | **Concluída** |
-| 5 | Abstração de IA e inteligência documental | **Concluída** |
-| 6 | Pesquisa, caixa de entrada e centro de integrações | **Concluída** |
-| 7 | Portal externo e assinatura eletrónica | **Concluída** |
-| 8 | Relatórios e administração | **Concluída** |
-| 9 | Testes, segurança e observabilidade | **Concluída** |
-| 10 | Refinamento de UX, acessibilidade, desempenho e documentação | **Em curso** — acessibilidade auditada e carregamento dividido |
-
-### Cobertura de testes acumulada
-
-| Nível | Contagem |
-| --- | --- |
-| Unitários (xUnit) | 330 |
-| Integração com SQL Server real (Testcontainers) | 181 |
-| Componente e unidade no frontend (Vitest + Testing Library) | 59 |
-| End-to-end (Playwright, desktop e móvel) | 190 |
+São mais de 800 testes automatizados, em quatro níveis descritos na
+[secção 16](#16-estratégia-de-testes). O que o produto não faz, e porquê, está na
+[secção 19](#19-limitações-conhecidas-e-melhorias-futuras).
 
 ## 5. Arquitetura
 
@@ -504,21 +486,31 @@ não a opinião do adaptador sobre si mesmo. Ver [ADR-007](docs/adr/ADR-007-exte
 
 | Nível | Ferramenta | O que garante |
 | --- | --- | --- |
-| Unitário | xUnit | Avaliação de permissões, catálogo de perfis, leitura de identidade, paginação, validação |
-| Integração | xUnit + Testcontainers (SQL Server real) | Autenticação, auditoria, isolamento de tenant, *soft delete*, imutabilidade da auditoria, cabeçalhos de segurança, pesquisa, caixa de entrada e integrações |
-| Componente | Vitest + Testing Library | Formulários, estados de erro, contrato do cliente HTTP |
-| End-to-end | Playwright (desktop e móvel) | Percursos reais no browser, incluindo cookie `HttpOnly` e troca de idioma |
+| Unitário | xUnit | Avaliação de acesso e de permissões, ciclo de vida do documento, catálogo de perfis, avaliador de condições e validador de definições do motor, cobertura dos filtros por organização, extração de valores e citações da IA, vocabulário de pesquisa, paginação e validação |
+| Integração | xUnit + Testcontainers (SQL Server real) | Autenticação, documentos, isolamento entre organizações, segurança ao nível da linha, imutabilidade da auditoria, motor e desenho de workflow, inteligência documental, pesquisa, caixa de entrada, integrações, exclusão mútua do worker e custo do painel com milhares de documentos |
+| Componente | Vitest + Testing Library | Cliente HTTP e contrato de erros, página de início de sessão, grafo do desenhador, apresentação de sugestões da IA, definições das integrações |
+| End-to-end | Playwright (desktop e móvel) | Percursos reais no browser: sessão em cookie `HttpOnly`, documentos, tarefas, desenhador, IA, pesquisa, caixa de entrada, integrações, portal, troca de idioma, largura de cada ecrã e acessibilidade com axe-core |
 
 Os testes de integração correm contra SQL Server em container, com as mesmas migrações da aplicação:
-não há base de dados em memória a mascarar comportamento relacional.
+não há base de dados em memória a mascarar comportamento relacional. Ligam-se com as mesmas três
+identidades de base de dados que a aplicação usa, porque com uma ligação de administrador os testes
+de isolamento passariam com ou sem a política de segurança ligada.
 
 ## 17. Estratégia de implantação
 
-`docker compose up` levanta a base de dados; a API aplica migrações e semeia dados de demonstração em
-desenvolvimento. Em produção, as migrações são um passo explícito do pipeline e a semeadura está
-desligada. As abstrações de armazenamento, IA e identidade permitem mover para Azure Blob Storage,
-Azure SQL, Azure OpenAI e Microsoft Entra ID sem alterar o código de domínio — e nada disso é
-necessário para correr o projeto localmente.
+Para desenvolvimento, `docker compose up` levanta só a base de dados, e a API aplica as migrações e
+semeia os dados de demonstração no arranque.
+
+`docker compose -f docker-compose.full.yml up --build` levanta a pilha inteira, pela ordem certa: a
+base de dados, um passo que cria as três identidades de base de dados, um passo de migração que corre
+uma vez e termina, e só então a API, o worker e a interface servida por nginx. A migração é um passo
+à parte porque duas instâncias a arrancar ao mesmo tempo correriam as migrações em paralelo, e porque
+assim a aplicação não precisa de poder alterar o esquema. Detalhe em
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+As abstrações de armazenamento, IA e identidade permitem mover para Azure Blob Storage, Azure SQL,
+Azure OpenAI e Microsoft Entra ID sem alterar o código de domínio, e nada disso é necessário para
+correr o projeto localmente.
 
 ## 18. Compromissos assumidos
 
@@ -540,16 +532,52 @@ necessário para correr o projeto localmente.
 | Indicadores calculados no momento | Tabela de agregados mantida por um processo à parte, ou cache | Paga-se latência para nunca haver um painel que discorda da lista ao lado; ver [ADR-010](docs/adr/ADR-010-analytics-from-queries.md) |
 | Medida sem base devolve `null` | Devolver zero, como quase todos os painéis | Zero afirma que se mediu; num período sem nada para medir é uma mentira com aspeto de facto |
 | Negar por omissão no motor, com três identidades | Confiar nos filtros do EF Core e documentar a limitação | Uma ligação que não declara organização vê zero linhas, e a dispensa exige a identidade `app_system`; ver [ADR-011](docs/adr/ADR-011-row-level-security-deny-by-default.md) |
+| Chaves geradas pela aplicação (UUIDv7) | Identidade gerada pela base de dados | A entidade tem identidade antes de ser gravada, o EF não confunde uma versão nova com uma existente, e por serem sequenciais não fragmentam os índices como um GUID aleatório |
+| Auditoria escrita num contexto próprio | Na mesma transação da operação | O registo de uma tentativa recusada ou falhada sobrevive ao *rollback* da operação que descreve |
+| O desenhador só oferece o que o motor executa | Paleta com todos os tipos de passo previstos | Um processo desenhado nunca falha ao executar por usar um passo que o motor ainda não sabe correr |
 
-## 19. Melhorias futuras
+## 19. Limitações conhecidas e melhorias futuras
 
-- Extração de módulo de IA para processo próprio caso o volume o justifique.
+### O que o produto não faz
+
+- **A IA de demonstração não é um modelo de linguagem.** O fornecedor por omissão é determinista,
+  baseado em regras, e diz que é uma demonstração em todos os ecrãs onde aparece. O adaptador
+  compatível com OpenAI existe, mas não foi exercitado contra um serviço real.
+- **As citações da IA não são confirmadas pelo servidor.** O ecrã mostra cada uma ao lado do texto de
+  origem, para quem revê a sugestão a confirmar; a verificação automática ainda não existe.
+- **A assinatura eletrónica não tem validade legal.** Demonstra o fluxo de pedido, assinatura e
+  registo; ver [ADR-009](docs/adr/ADR-009-electronic-signature.md).
+- **Os conetores simulam o lado de lá.** Os adaptadores de correio e de integrações são reais, mas os
+  serviços externos não estão ligados.
+- **Isola várias organizações, mas não as opera.** O início de sessão pede só e-mail e palavra-passe,
+  o e-mail é único em toda a instalação, e as organizações não se criam pela aplicação. Cada pessoa
+  pertence a uma só.
+- **Não há autenticação federada (OIDC) nem multifator.**
+- **Os ficheiros ficam em disco local.** O armazenamento está atrás de `IFileStorage`, mas só existe
+  a implementação em disco.
+- **A auditoria guarda dados pessoais**, como o e-mail e o nome de quem agiu. É imutável para a
+  aplicação, mas não é um registo criptograficamente inviolável: quem administra a base de dados pode
+  alterá-la.
+- **A escala foi medida com cerca de 5 000 documentos.** A paginação é por deslocamento e as
+  contagens não têm teto, o que chega para esta dimensão e deixaria de chegar a uma ordem de grandeza
+  acima.
+- **Quem se liga à base de dados como administrador pode desligar a política de segurança ao nível da
+  linha.** Fecha-se não dando essa credencial a ninguém; ver [`docs/SECURITY.md`](docs/SECURITY.md).
+
+### Melhorias futuras
+
+- Verificação, no servidor, de que cada citação da IA existe no texto de origem.
+- Endereço ou campo de organização no início de sessão, criação de organizações pela aplicação, e
+  adesão de uma pessoa a várias, com seletor de contexto auditado.
+- OIDC com o padrão BFF, mantendo a sessão em cookie `HttpOnly`, e autenticação multifator.
+- Adaptador de armazenamento de objetos, compatível com S3.
+- Paginação por chave e contagens com teto, para catálogos de milhões de documentos.
+- Auditoria sem dados pessoais nos registos, e exportação assinada criptograficamente.
 - Conetores reais por trás dos adaptadores que hoje simulam o lado de lá (Microsoft Graph para o
-  correio, APIs de ERP e CRM) — a interface não muda, só a implementação registada.
-- Adesão de um utilizador a várias organizações, com seletor de contexto auditado.
+  correio, APIs de ERP e CRM). A interface não muda, só a implementação registada.
+- Extração do módulo de IA para processo próprio, caso o volume o justifique.
 - Aplicação instalável (PWA) com trabalho offline para consulta documental.
-- Exportação de auditoria assinada criptograficamente.
-- Idiomas adicionais (es, fr, ro) — a arquitetura de localização já os suporta.
+- Idiomas adicionais (es, fr, ro), que a arquitetura de localização já suporta.
 
 ---
 
