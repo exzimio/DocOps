@@ -1,21 +1,20 @@
-# ADR-007 — Sistemas externos atrás de adaptadores, com implementação de demonstração sem credenciais
+# ADR-007: Sistemas externos atrás de adaptadores, com implementação de demonstração sem credenciais
 
-- **Estado:** aceite (implementação na Fase 6)
+- **Estado:** aceite
 - **Data:** 2026-09-22
 - **Âmbito:** caixa de entrada de correio, centro de integrações
 
 ## Contexto
 
-O briefing pede duas coisas que tocam sistemas de terceiros: uma caixa de entrada documental com
-«camada de abstração para uma futura integração com Outlook / Microsoft Graph», explicitamente **sem
-exigir credenciais da Microsoft**, e um centro de integrações com «adaptadores/interfaces para que
-possam mais tarde ser ligados a APIs reais».
+O produto toca sistemas de terceiros em dois sítios: uma caixa de entrada documental, que tem de
+estar pronta para uma futura integração com o Outlook ou o Microsoft Graph **sem exigir credenciais
+da Microsoft**, e um centro de integrações cujos adaptadores possam mais tarde ser ligados a APIs
+reais.
 
-O problema é o mesmo nos dois casos, e é o mesmo que a Fase 5 resolveu para a IA: a funcionalidade é
-central no produto, mas não pode ser um requisito para executar, demonstrar ou testar o projeto.
-Quem avalia este repositório tem de conseguir ver o percurso completo — uma fatura chega por
-correio, torna-se documento, entra num processo — sem subscrição, sem consentimento de tenant e sem
-rede.
+O problema é o mesmo nos dois casos, e é o mesmo da IA ([ADR-004](ADR-004-ai-provider-abstraction.md)):
+a funcionalidade é central no produto, mas não pode ser um requisito para executar, demonstrar ou
+testar o projeto. Tem de ser possível ver o percurso completo (uma fatura chega por correio,
+torna-se documento, entra num processo) sem subscrição, sem consentimento de tenant e sem rede.
 
 Há um segundo problema, menos óbvio. Uma simulação bem feita é indistinguível da coisa real no ecrã.
 Se a caixa de entrada mostrar mensagens realistas sem dizer de onde vêm, quem vê o ecrã conclui que
@@ -60,11 +59,11 @@ classe nova e uma linha de registo, não um redesenho.
   manual.
 - **Sincronizar é reconciliar, não acumular.** O identificador que o sistema de origem dá à mensagem
   é guardado e tem índice único por `(TenantId, Mailbox, ExternalId)`. Sincronizar duas vezes não
-  acrescenta nada — e o botão vai ser carregado duas vezes.
+  acrescenta nada, e o botão vai ser carregado duas vezes.
 
 ## Alternativas consideradas
 
-**Exigir Microsoft Graph desde o início.** Rejeitado pelo briefing e pelo bom senso: obrigaria a uma
+**Exigir Microsoft Graph desde o início.** Rejeitado: obrigaria a uma
 subscrição do Microsoft 365, ao registo de uma aplicação no Entra ID e ao consentimento de um
 administrador de tenant só para ver um ecrã funcionar. A abstração mantém essa porta aberta sem a
 tornar obrigatória.
@@ -80,7 +79,7 @@ a pena; é também assim que o Graph funciona, por isso a abstração não tem d
 
 **Um serviço separado por sistema externo (Outlook, ERP, CRM…).** Rejeitado nesta escala: seriam
 seis formas diferentes de fazer a mesma coisa. Um adaptador por família de sistema, com contrato
-declarado, chega — e é o que permite ao centro de integrações reportar todos da mesma maneira.
+declarado, chega, e é o que permite ao centro de integrações reportar todos da mesma maneira.
 
 ## Consequências
 
@@ -101,7 +100,7 @@ declarado, chega — e é o que permite ao centro de integrações reportar todo
 **Sinais de revisão:** necessidade de escrever de volta no sistema de origem (marcar lido no
 servidor, mover para uma pasta), ou um segundo conetor real cujo modelo não caiba nesta forma.
 
-## Como ficou, na prática (Fase 6 — caixa de entrada)
+## Na prática: a caixa de entrada
 
 Três pormenores que a decisão não antecipava.
 
@@ -111,7 +110,7 @@ Três pormenores que a decisão não antecipava.
 `contratos`, `geral`), pelo que duas organizações que monitorizem ambas um endereço `faturas@…`
 recebem o mesmo identificador para a mesma correspondência semeada. Não é defeito: o que
 desduplica é `(TenantId, Mailbox, ExternalId)`, e esses diferem sempre entre organizações. É também
-como os sistemas de correio reais se comportam — um *message id* é único dentro de uma caixa, não no
+como os sistemas de correio reais se comportam: um *message id* é único dentro de uma caixa, não no
 universo. Está fixado num teste para que ninguém o «corrija» sem perceber porquê.
 
 ### O endereço das caixas vem do domínio da própria organização
@@ -122,42 +121,39 @@ monitorizada realmente viveria, e mantém o semeador e a sincronização em exec
 mesmas caixas em vez de criarem dois conjuntos lado a lado. Todos terminam em `.example`, que os RFC
 reservam e que não resolve.
 
-### O filtro de organização faltou, e a lição ficou num teste
+### Cada entidade nova com organização tem de declarar o seu filtro
 
-A primeira versão desta funcionalidade não declarou o filtro de consulta por organização em
-`EmailMessage` nem em `EmailAttachment` — e o administrador de uma organização via o correio da
-outra. Os filtros são declarados **um a um, à mão** no `DocOpsDbContext`, porque diferem (um filho de
-documento também desaparece quando o documento é apagado); isso torna cada entidade nova um buraco
-até alguém se lembrar.
+Os filtros de consulta por organização são declarados **um a um, à mão** no `DocOpsDbContext`, porque
+diferem (um filho de documento também desaparece quando o documento é apagado). Isso torna cada
+entidade nova um buraco até alguém se lembrar, e o correio é o caso típico: sem filtro em
+`EmailMessage` e `EmailAttachment`, o administrador de uma organização veria o correio da outra.
 
-A correção pontual não chegava. `TenantFilterCoverageTests` passou a enumerar todas as entidades com
-`TenantId` e a falhar, pelo nome, se alguma ficar sem filtro. As Fases 7 a 10 trazem `Integration`,
-`IntegrationLog`, `SignatureRequest` e `LegalHold`, todas com organização — e agora nenhuma delas
-pode chegar a *commit* sem filtro.
+Por isso `TenantFilterCoverageTests` enumera todas as entidades com `TenantId` e falha, pelo nome, se
+alguma ficar sem filtro. Nenhuma entidade com organização chega a *commit* sem ele.
 
-## Como ficou, na prática (Fase 6 — centro de integrações)
+## Na prática: o centro de integrações
 
-O centro de integrações estendeu esta decisão a mais cinco famílias de sistema — ERP, CRM,
-assinatura eletrónica, webhooks e importação de ficheiros — através de `IIntegrationAdapter`, que é
+O centro de integrações estendeu esta decisão a mais cinco famílias de sistema (ERP, CRM,
+assinatura eletrónica, webhooks e importação de ficheiros) através de `IIntegrationAdapter`, que é
 o `IMailConnector` generalizado: um adaptador recebe um contexto com a organização e devolve um
 resultado com o que fez, quantos registos tocou e as linhas que quer ver no registo. Quatro
 pormenores que a decisão original não antecipava.
 
 ### «Simulada» é uma afirmação mais fina do que esta ADR supunha
 
-A regra escrita acima — «uma simulação diz que é uma simulação» — pressupõe que os adaptadores se
+A regra escrita acima, «uma simulação diz que é uma simulação», pressupõe que os adaptadores se
 dividem em dois campos: reais e fingidos. Com seis adaptadores escritos, não se dividem.
 
 Só três têm um lado de lá inventado: o ERP e o CRM reconciliam contra listas fixas locais, e o
 Outlook corre sobre o `DemoMailConnector`. Os outros três fazem trabalho verdadeiro de ponta a
-ponta — a importação lê e move ficheiros reais do disco, os webhooks entregam HTTP real a um destino
+ponta: a importação lê e move ficheiros reais do disco, os webhooks entregam HTTP real a um destino
 externo, e a assinatura conta os documentos que estão mesmo à espera de assinatura nesta
 organização. `IntegrationAdapterInfo.IsSimulated` é, por isso, declarado por adaptador e não pela
 família, e a `SimulationNotice` diz **o que** é simulado, não que «isto é uma demonstração».
 
 Marcar os seis como simulados teria sido uma mentira ao contrário: faria parecer teatro o que é
 código a funcionar, que é o defeito que este projeto inteiro existe para não ter. A honestidade
-corta nos dois sentidos — não alegar mais do que se faz, e não alegar menos.
+corta nos dois sentidos: não alegar mais do que se faz, e não alegar menos.
 
 ### Os contadores vivem no executor, nunca nos adaptadores
 
@@ -166,7 +162,7 @@ Um adaptador devolve um `IntegrationRunResult`; quem escreve `Status`, `RecordsP
 resultado. A separação é deliberada: se cada adaptador escrevesse o seu próprio estado, um adaptador
 podia declarar-se «Ligada» sem ter feito nada, e o cartão passaria a ser a opinião do adaptador
 sobre si mesmo em vez do registo do que aconteceu. O executor também é quem apanha a exceção de um
-adaptador e a converte em estado «Com falha» com a mensagem — nunca a pilha, que traria internos
+adaptador e a converte em estado «Com falha» com a mensagem, e nunca a pilha, que traria internos
 para o ecrã.
 
 ### O nó de integração não chama nada dentro da transação do motor
@@ -175,21 +171,20 @@ Uma travessia do grafo é uma transação ([ADR-006](ADR-006-workflow-engine.md)
 sistema externo lá dentro manteria essa transação aberta enquanto se espera pela rede, e uma
 integração lenta passaria a ser um problema de base de dados. `IntegrationNodeExecutor` enfileira um
 `IntegrationRunRequest`, devolve `NodeResult.Wait()` e larga a transação; o worker corre o pedido e
-chama `WorkflowEngine.ResumeAsync`. É a mesma forma que a Fase 5 deu aos nós de IA, replicada de
+chama `WorkflowEngine.ResumeAsync`. É a mesma forma dos nós de IA, replicada de
 propósito: dois mecanismos diferentes para o mesmo problema seriam duas coisas para depurar.
 
-Com isto, o nó `Integration` deixou de ser o último tipo que falhava de forma explícita, e o
-dicionário `NotYetExecutable` do validador ficou vazio — todos os tipos de nó que o desenhador
-oferece são agora executáveis.
+Com isto, todos os tipos de nó que o desenhador oferece são executáveis, e o dicionário
+`NotYetExecutable` do validador está vazio.
 
 ### O destino do webhook é validado no servidor porque é uma superfície de SSRF
 
 Um administrador a escrever um endereço que **este** servidor vai depois chamar é exatamente a forma
 de um pedido forjado do lado do servidor. `WebhookEndpoint.IsAcceptable` exige HTTPS e recusa
-*loopback* e as gamas privadas, e corre no `PUT` — antes de o endereço ser guardado, não só na
+*loopback* e as gamas privadas, e corre no `PUT`, antes de o endereço ser guardado, e não só na
 entrega. O diálogo do browser valida também, mas só para a mensagem; a verificação que conta é a que
 o cliente não pode contornar.
 
 Em troca, as definições de uma integração são explicitamente **não secretas**: nenhuma credencial é
 guardada em `SettingsJson`. É essa decisão que permite ao cartão mostrar o endereço já configurado
-sem expor nada — e sem ela, o formulário teria de fingir que não sabe o que guardou.
+sem expor nada, e sem ela, o formulário teria de fingir que não sabe o que guardou.

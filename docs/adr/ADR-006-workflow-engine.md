@@ -1,6 +1,6 @@
-# ADR-006 — Motor de workflow próprio, orientado a dados
+# ADR-006: Motor de workflow próprio, orientado a dados
 
-- **Estado:** aceite — motor implementado na Fase 3; designer visual na Fase 4
+- **Estado:** aceite
 - **Data:** 2026-09-18
 - **Âmbito:** definição, execução, prazos e cronologia de processos
 
@@ -15,17 +15,17 @@ visualmente e têm de ser persistidas, versionadas e ativáveis.
 
 Implementar um motor próprio, pequeno e orientado a dados:
 
-- **Definição** — `WorkflowDefinition` com `WorkflowNode` e `WorkflowEdge`; cada nó tem um tipo
+- **Definição**: `WorkflowDefinition` com `WorkflowNode` e `WorkflowEdge`; cada nó tem um tipo
   (início, tarefa humana, aprovação, condição, notificação, classificação por IA, extração por IA,
   integração, ramo paralelo, temporizador, fim) e propriedades em JSON validadas por tipo de nó.
-- **Execução** — `WorkflowInstance` guarda o estado atual, as variáveis do processo e os nós ativos.
+- **Execução**: `WorkflowInstance` guarda o estado atual, as variáveis do processo e os nós ativos.
   O avanço é sempre uma transição explícita, persistida numa transação com o efeito que a originou
   (concluir tarefa, alterar estado do documento, escrever auditoria).
-- **Tarefas** — `WorkflowTask` representa trabalho humano com responsável, prazo, prioridade,
+- **Tarefas**: `WorkflowTask` representa trabalho humano com responsável, prazo, prioridade,
   estado e histórico de reatribuições.
-- **Tempo** — temporizadores, deteção de atrasos e escalonamento correm no *worker* em segundo plano;
+- **Tempo**: temporizadores, deteção de atrasos e escalonamento correm no *worker* em segundo plano;
   nenhum pedido HTTP espera por trabalho de longa duração.
-- **Cronologia** — cada transição escreve um evento com hora, ator, nó de origem, nó de destino e
+- **Cronologia**: cada transição escreve um evento com hora, ator, nó de origem, nó de destino e
   decisão, o que produz a linha temporal apresentada na interface.
 
 ## Alternativas consideradas
@@ -61,7 +61,7 @@ eventos.
 
 **Limites aceites e explícitos:** o motor executa grafos dirigidos com ramificação condicional e
 paralela e junção; não implementa a especificação BPMN nem transações de compensação. Alterar uma
-definição ativa não afeta instâncias já em execução — cada instância guarda a versão da definição com
+definição ativa não afeta instâncias já em execução, porque cada instância guarda a versão da definição com
 que arrancou.
 
 ## Como ficou, na prática

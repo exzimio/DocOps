@@ -1,6 +1,6 @@
-# ADR-004 — Abstração de fornecedor de IA com modo de demonstração determinístico
+# ADR-004: Abstração de fornecedor de IA com modo de demonstração determinístico
 
-- **Estado:** aceite (implementação na Fase 5)
+- **Estado:** aceite
 - **Data:** 2026-09-18
 - **Âmbito:** classificação documental, extração de metadados, perguntas sobre documentos, pesquisa
   em linguagem natural
@@ -25,9 +25,9 @@ public interface IAiDocumentService
 }
 ```
 
-1. **`DemoAiProvider`** — determinístico, baseado em regras e no conteúdo estruturado semeado.
+1. **`DemoAiProvider`**: determinístico, baseado em regras e no conteúdo estruturado semeado.
    Identificado na interface e na resposta da API como modo de demonstração.
-2. **`OpenAiCompatibleProvider`** — ativado por configuração (`Ai:Provider`, `Ai:Endpoint`,
+2. **`OpenAiCompatibleProvider`**: ativado por configuração (`Ai:Provider`, `Ai:Endpoint`,
    `Ai:ApiKey`, todos por variável de ambiente), compatível com Azure OpenAI.
 
 ## Regras não negociáveis
@@ -70,8 +70,8 @@ implementações honestas.
   classificação recebe os tipos candidatos do catálogo da própria organização, em vez de os ter
   fixados no código: um tipo criado por um administrador é reconhecível pelos seus próprios rótulos.
 - **O fornecedor de demonstração é uma tabela de regras, não um modelo.** Lê o texto real do
-  documento — os exemplos em `samples/` têm a disposição de faturas e contratos verdadeiros, não os
-  metadados escritos ao contrário — e devolve, para cada valor, a linha de onde o leu. O mesmo
+  documento (os exemplos em `samples/` têm a disposição de faturas e contratos verdadeiros, e não os
+  metadados escritos ao contrário) e devolve, para cada valor, a linha de onde o leu. O mesmo
   documento dá sempre o mesmo resultado.
 - **«Nunca inventar citações» virou código.** `DocumentText` numera as linhas e verifica cada
   citação; o `AiDocumentAnalyzer` aplica a guarda a qualquer fornecedor. Uma resposta cujas citações
@@ -86,7 +86,7 @@ implementações honestas.
   omissão.
 - **Dentro de um processo, a IA não é chamada pelo motor.** O passo põe a análise em fila e o worker
   processa-a fora da transação. O passo escreve variáveis `ai.*` para uma condição poder decidir,
-  mas nunca aplica nada — as sugestões esperam por uma pessoa, como em qualquer outra análise.
+  mas nunca aplica nada: as sugestões esperam por uma pessoa, como em qualquer outra análise.
 - **Perguntas sobre aprovações não são respondidas pelo texto.** «Quem aprovou este documento?» é
   respondida a partir das tarefas de aprovação concluídas, citando esse registo. É a resposta
   correta e é verificável; procurá-la no texto do documento seria inventá-la.

@@ -1,4 +1,4 @@
-# ADR-002 — Autenticação por cookie e autorização por permissões
+# ADR-002: Autenticação por cookie e autorização por permissões
 
 - **Estado:** aceite
 - **Data:** 2026-09-18
@@ -22,7 +22,7 @@ ser um roubo de sessão completo. Guardar o JWT em memória evita isso mas perde
 recarregamento e complica a renovação. O cookie resolve ambos os problemas e o browser trata da sua
 gestão.
 
-*Custo:* exige proteção contra CSRF — resolvida com `SameSite=Lax` e validação de `Origin`
+*Custo:* exige proteção contra CSRF, resolvida com `SameSite=Lax` e validação de `Origin`
 (ver `SECURITY.md`).
 
 ### 2. Autorizar por permissão, não por perfil
@@ -44,7 +44,7 @@ auditados.
 
 *Alternativa rejeitada:* adesão N:N (utilizador em várias organizações). Obrigaria a um seletor de
 contexto no início de sessão, a resolução de organização em cada pedido e a mais um ponto de falha no
-isolamento — para um caso de uso que a demonstração não precisa.
+isolamento, para um caso de uso de que a demonstração não precisa.
 
 *Sinal de revisão:* se surgir o requisito de consultores externos com acesso a várias organizações,
 introduzir `TenantMembership` e um contexto de organização explícito e auditado.

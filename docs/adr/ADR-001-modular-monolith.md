@@ -1,4 +1,4 @@
-# ADR-001 — Monólito modular em vez de microserviços
+# ADR-001: Monólito modular em vez de microserviços
 
 - **Estado:** aceite
 - **Data:** 2026-09-18
@@ -27,7 +27,7 @@ nenhum requisito real de escala ou de autonomia de equipa.
 **Camadas sem módulos.** Rejeitado. Sem fronteiras explícitas, o acoplamento cresce silenciosamente e
 qualquer extração futura torna-se inviável.
 
-**CQRS com modelos de leitura e escrita separados.** Rejeitado nesta fase. Os padrões de leitura ainda
+**CQRS com modelos de leitura e escrita separados.** Rejeitado. Os padrões de leitura ainda
 não justificam a duplicação de modelos. Projeções direcionadas (`Select` para DTO) resolvem hoje o
 problema de desempenho que o CQRS resolveria.
 
@@ -40,7 +40,7 @@ problema de desempenho que o CQRS resolveria.
 
 **Negativas**
 - Escala em conjunto: não é possível dimensionar só o módulo de IA.
-- A disciplina das fronteiras depende de revisão — o compilador impede dependências entre projetos,
+- A disciplina das fronteiras depende de revisão: o compilador impede dependências entre projetos,
   mas não impede uma dependência indevida dentro do mesmo projeto.
 
 **Mitigação:** cada módulo comunica por interfaces definidas em `Application`. Se, no futuro, um

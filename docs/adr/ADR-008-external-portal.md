@@ -1,21 +1,19 @@
-# ADR-008 — Portal externo como experiência separada, sem autorização própria
+# ADR-008: Portal externo como experiência separada, sem autorização própria
 
-- **Estado:** aceite (implementação na Fase 7)
+- **Estado:** aceite
 - **Data:** 2026-09-24
 - **Âmbito:** portal de fornecedores em `/portal`
 
 ## Contexto
 
-O briefing pede uma «experiência de portal externo separada» em `/portal`, para um fornecedor de
-demonstração, com início de sessão, submissão de faturas, consulta do que submeteu, acompanhamento
-do estado do processo e resposta a pedidos de informação. E fixa a restrição que importa:
+O produto precisa de um portal externo separado em `/portal`, para um fornecedor, com início de
+sessão, submissão de faturas, consulta do que submeteu, acompanhamento do estado do processo e
+resposta a pedidos de informação. A restrição que importa é que um utilizador externo **nunca** vê
+notas internas nem documentos que não lhe dizem respeito.
 
-> External users must NOT see internal notes or unrelated documents.
-
-O problema não é construir os ecrãs. É que esta é a **primeira vez que o produto deixa entrar alguém
-de fora**. Até aqui, todos os utilizadores eram colaboradores da organização, e a pergunta «e se esta
-pessoa vir isto?» tinha sempre a mesma resposta tranquila. Um fornecedor muda a pergunta: o que ele
-vê sai da organização.
+O problema não é construir os ecrãs. É que esta é a **única parte do produto que deixa entrar alguém
+de fora**. Para um colaborador, a pergunta «e se esta pessoa vir isto?» tem uma resposta tranquila;
+para um fornecedor não tem, porque o que ele vê sai da organização.
 
 Há duas formas de falhar aqui, e são simétricas.
 
@@ -32,14 +30,14 @@ divergem é sempre o mais permissivo que ganha, porque o mais restritivo é o qu
 ## Decisão
 
 O portal é uma **experiência separada dentro da mesma aplicação**, com o seu próprio shell, as suas
-próprias rotas e os seus próprios contratos — mas **sem autorização própria**.
+próprias rotas e os seus próprios contratos, mas **sem autorização própria**.
 
 Concretamente:
 
 - **Quem vê o quê é decidido pelo mesmo código de sempre.** `PortalService` filtra com
   `DocumentAccessResolver.BuildVisibilityPredicate`, o predicado que a listagem interna usa, e que já
   diz que um utilizador externo alcança um documento apenas por propriedade ou por concessão
-  explícita — nunca por um rótulo de sensibilidade.
+  explícita, e nunca por um rótulo de sensibilidade.
 
 - **Os contratos do portal são escritos à mão e estreitos.** `PortalSubmissionDto` não é o
   `DocumentListItemDto` com menos campos: é um tipo diferente, com os campos que um fornecedor tem
@@ -52,7 +50,7 @@ Concretamente:
 
 - **O que o portal produz passa pelos serviços de domínio.** Uma submissão é criada pelo
   `IDocumentService`, com a mesma validação, referência, permissões e auditoria de um carregamento
-  manual — a mesma regra que o [ADR-007](ADR-007-external-connectors.md) impõe aos conetores.
+  manual. É a mesma regra que o [ADR-007](ADR-007-external-connectors.md) impõe aos conetores.
 
 ## Regras não negociáveis
 
@@ -64,7 +62,7 @@ Concretamente:
   escrita de propósito em vez de acontecer por distração.
 
 - **A cronologia do processo não sai.** O fornecedor vê as perguntas que lhe foram dirigidas e as
-  respostas que deu — dois tipos de evento, selecionados pelo nome. Nunca se constrói esta lista por
+  respostas que deu: dois tipos de evento, selecionados pelo nome. Nunca se constrói esta lista por
   exclusão («tudo menos o que é interno»), porque uma lista construída por exclusão falha aberta: o
   tipo de evento que alguém acrescentar amanhã entra por omissão.
 
@@ -77,21 +75,20 @@ Concretamente:
 
 ## Alternativas consideradas
 
-**Uma segunda aplicação, com o seu próprio deployment.** É a leitura literal de «separate
-experience», e foi rejeitada: duplicaria o cliente de API, a autenticação, o sistema de design, a
-internacionalização e a configuração, para servir três ecrãs. A separação que o briefing quer é de
-**experiência** — o que o utilizador vê e alcança — e essa consegue-se com um shell próprio e rotas
+**Uma segunda aplicação, com o seu próprio deployment.** Rejeitada: duplicaria o cliente de API, a autenticação, o sistema de design, a
+internacionalização e a configuração, para servir três ecrãs. A separação que importa é de
+**experiência**, isto é, o que o utilizador vê e alcança, e essa consegue-se com um shell próprio e rotas
 guardadas. Se um dia houver razão para separar o deployment (por exemplo, expor o portal numa rede
 diferente), o corte já está feito nos sítios certos.
 
 **Reutilizar os ecrãs e os DTO internos, escondendo campos.** Rejeitado, e é a alternativa mais
 tentadora porque é a mais barata hoje. Esconder é uma propriedade da interface; isolar é uma
-propriedade do servidor. A regra do briefing é sobre o que o utilizador externo **vê**, e a única
+propriedade do servidor. A regra é sobre o que o utilizador externo **vê**, e a única
 forma de a garantir é não enviar.
 
 **Dar ao portal o seu próprio filtro de visibilidade.** Rejeitado: seriam dois conjuntos de regras
-sobre os mesmos documentos. A tentação é real porque o filtro do portal pareceria mais simples — «só
-o que é dele» — mas «o que é dele» já é exatamente o que o avaliador responde para um utilizador
+sobre os mesmos documentos. A tentação é real porque o filtro do portal pareceria mais simples («só
+o que é dele»), mas «o que é dele» já é exatamente o que o avaliador responde para um utilizador
 externo.
 
 **Mostrar ao fornecedor a cronologia do processo, filtrada.** Rejeitado pela razão acima: filtrar
@@ -106,9 +103,9 @@ correio eletrónico paralelo, sem nada que ligasse a mensagem a uma decisão à 
 **Positivas**
 
 - Uma fuga do lado interno para o portal teria de ser escrita deliberadamente.
-- As regras de acesso continuam num sítio só, exercitadas pelos dois lados — o que significa que os
+- As regras de acesso continuam num sítio só, exercitadas pelos dois lados, o que significa que os
   testes do portal também são testes do avaliador.
-- O percurso completo do briefing («fornecedor submete → aparece do lado interno → IA classifica →
+- O percurso completo («fornecedor submete → aparece do lado interno → IA classifica →
   processo arranca») funciona sem nenhum caminho especial para submissões externas.
 
 **Negativas**
@@ -116,43 +113,43 @@ correio eletrónico paralelo, sem nada que ligasse a mensagem a uma decisão à 
 - Há repetição deliberada entre os contratos do portal e os internos, e essa repetição tem de ser
   mantida à mão quando o significado de um campo muda nos dois lados.
 - O portal fica limitado ao que o avaliador de acesso sabe exprimir. Uma regra que ele não consiga
-  exprimir obriga a estendê-lo, o que é mais trabalho do que escrever a regra no portal — e é
+  exprimir obriga a estendê-lo, o que é mais trabalho do que escrever a regra no portal, e é
   exatamente esse atrito que se quis.
 
 **Sinais de revisão:** necessidade de expor o portal numa rede separada da aplicação interna, ou um
 segundo tipo de utilizador externo (um cliente, por exemplo) cujas regras de visibilidade não sejam
 exprimíveis como propriedade ou concessão explícita.
 
-## Como ficou, na prática (Fase 7 — portal externo)
+## Na prática: o que acontece a uma submissão
 
-Quatro descobertas que a decisão não antecipava. As três primeiras são a mesma pergunta feita três
-vezes: **uma submissão que chega serve para quê?**
+Cinco pormenores que a decisão não antecipava. Os três primeiros respondem à mesma pergunta: **uma
+submissão que chega serve para quê?**
 
 ### Entra como «por classificar», não como fatura
 
 O tipo «fatura de fornecedor» exige fornecedor, número, data e total. Um portal que os exigisse antes
-de aceitar o ficheiro seria uma porta de entrada pior do que o e-mail que veio substituir — e o
+de aceitar o ficheiro seria uma porta de entrada pior do que o e-mail que veio substituir, e o
 fornecedor não tem como saber que número interno a organização lhe vai dar. A submissão entra como
-«por classificar», que é o tipo que a Fase 6 já usava para o correio, e cai onde a inteligência
-documental da Fase 5 a apanha. É também, literalmente, o cenário que o briefing descreve.
+«por classificar», o mesmo tipo do correio que chega, e cai onde a inteligência documental a
+apanha.
 
 ### Entra no departamento que a recebe
 
-O tipo de receção é confidencial por omissão — ninguém leu o ficheiro ainda, ninguém sabe o que ele
+O tipo de receção é confidencial por omissão: ninguém leu o ficheiro ainda, ninguém sabe o que ele
 contém. E um documento confidencial sem departamento é visível apenas ao seu dono. Sem nomear o
 departamento recetor, o fornecedor estaria a submeter para dentro de uma caixa fechada: nenhum
 interno o veria.
 
 Dizer que a submissão pertence ao departamento financeiro abre-a a quem trata de papelada de
 fornecedores, pela regra de classificação que já existia, em vez de por uma permissão inventada para
-o efeito. Fica por configurar na fase de administração; por agora é o financeiro, porque é quem
+o efeito. O departamento recetor é o financeiro (`FIN`), fixo no serviço do portal, porque é quem
 recebe faturas.
 
 ### E entra com concessão explícita de contribuidor
 
 Ver não chega. Iniciar um processo sobre um documento exige `Edit`, e a regra de classificação nunca
-concede mais do que leitura ao departamento dono. Sem a concessão, a submissão chegava, via-se, e não
-se lhe podia fazer nada — o fornecedor teria posto o documento numa vitrina.
+concede mais do que leitura ao departamento dono. Sem a concessão, a submissão chegaria, ver-se-ia, e não
+se lhe poderia fazer nada: o fornecedor teria posto o documento numa vitrina.
 
 A concessão é escrita pelo serviço do portal, não pela API de partilha, e a distinção é
 deliberada: isto é a política permanente da organização sobre a sua própria porta de entrada, não um
@@ -160,21 +157,19 @@ fornecedor a decidir quem pode mexer no que enviou.
 
 ### Quem envia um ficheiro tem direito a relê-lo
 
-Encontrado pelos testes, não a olho. O teto de permissões do perfil corta o `Download` mesmo a quem é
-**dono** do documento, e o perfil externo tinha `documents.view` e `documents.create` mas não
-`documents.download`. O resultado era um fornecedor que submetia um ficheiro e recebia um
-comprovativo que não abria.
+O teto de permissões do perfil corta o `Download` mesmo a quem é **dono** do documento, por isso o
+perfil externo tem `documents.download` além de `documents.view` e `documents.create`. Sem isso, um
+fornecedor submeteria um ficheiro e receberia um comprovativo que não abre.
 
-A correção foi conceder `documents.download` ao perfil externo. Não alarga o que ele alcança — o
-avaliador continua a limitá-lo ao que é seu — apenas deixa de lhe negar uma coisa sobre os seus
-próprios documentos.
+A permissão não alarga o que ele alcança, porque o avaliador continua a limitá-lo ao que é seu:
+apenas deixa de lhe negar uma coisa sobre os seus próprios documentos.
 
 ### «Aguarda a sua resposta» tem de significar o mesmo nos dois sítios
 
-A lista lia-o da tarefa com pedido de informação em aberto; o detalhe lia-o da última mensagem. As
-duas leituras divergem, porque a tarefa continua aberta depois de o fornecedor responder — só fecha
-quando um interno decide. O fornecedor via «aguarda a sua resposta» numa lista que o levava a um ecrã
-sem onde responder.
+Há duas leituras possíveis: a tarefa com pedido de informação em aberto, ou a última mensagem.
+Divergem, porque a tarefa continua aberta depois de o fornecedor responder, e só fecha quando um
+interno decide. A primeira mostraria «aguarda a sua resposta» numa lista que leva a um ecrã sem onde
+responder.
 
-A definição que ficou é a do fornecedor: **a última coisa dita foi uma pergunta**. A outra deixava a
-marca acesa para sempre.
+A definição é a do fornecedor: **a última coisa dita foi uma pergunta**. A outra deixaria a marca
+acesa para sempre.

@@ -1,6 +1,6 @@
-# ADR-003 — Armazenamento de documentos fora da base de dados relacional
+# ADR-003: Armazenamento de documentos fora da base de dados relacional
 
-- **Estado:** aceite (implementação na Fase 2)
+- **Estado:** aceite
 - **Data:** 2026-09-18
 - **Âmbito:** armazenamento de ficheiros, versões, preparação para a nuvem
 
@@ -61,8 +61,8 @@ recuperável por uma tarefa de limpeza do *worker*, ao passo que uma linha sem f
 visível ao utilizador. A eliminação é *soft delete* na base de dados, e a remoção física só ocorre
 quando a política de retenção o determina.
 
-## Regras de segurança do carregamento (Fase 2)
+## Regras de segurança do carregamento
 
 Tipo MIME permitido por tipo de documento, tamanho máximo configurável, verificação da assinatura do
 ficheiro (e não apenas da extensão), nome de ficheiro higienizado e chave de armazenamento gerada
-pelo servidor — nunca derivada de entrada do utilizador.
+pelo servidor, e nunca derivada de entrada do utilizador.
