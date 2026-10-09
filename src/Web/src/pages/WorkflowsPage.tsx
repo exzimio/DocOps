@@ -102,7 +102,7 @@ export function WorkflowsPage() {
             aria-label={t('workflows.definition')}
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
           >
-            <option value="">{t('workflows.definition')}: —</option>
+            <option value="">{t('workflows.definition')}: -</option>
             {definitionsQuery.data?.map((definition) => (
               <option key={definition.id} value={definition.id}>
                 {definition.name}
@@ -169,11 +169,11 @@ export function WorkflowsPage() {
                               {instance.documentTitle}
                             </Link>
                           ) : (
-                            <span className="text-ink-muted">—</span>
+                            <span className="text-ink-muted">-</span>
                           )}
                         </td>
                         <td className="px-3 py-2 text-xs text-ink-secondary">
-                          {instance.currentStepName ?? '—'}
+                          {instance.currentStepName ?? '-'}
                           {instance.overdueTaskCount > 0 && (
                             <Badge tone="amber" className="ml-1.5">
                               {instance.overdueTaskCount} {t('tasks.overdue').toLowerCase()}

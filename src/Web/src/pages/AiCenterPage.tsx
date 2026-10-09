@@ -89,7 +89,7 @@ export function AiCenterPage() {
         />
         <Tile
           label={t('ai.center.acceptanceRate')}
-          value={stats?.acceptanceRate === null || stats === undefined ? '—' : percent(stats.acceptanceRate)}
+          value={stats?.acceptanceRate === null || stats === undefined ? '-' : percent(stats.acceptanceRate)}
           detail={t('ai.center.acceptanceRateDetail')}
         />
       </section>
@@ -215,7 +215,7 @@ export function AiCenterPage() {
                       <td className="px-3 py-2 text-xs text-ink-secondary">
                         {run.origin === AiRunOrigin.Workflow
                           ? t('ai.review.byWorkflow')
-                          : (run.requestedByName ?? '—')}
+                          : (run.requestedByName ?? '-')}
                       </td>
                       <td className="px-3 py-2">
                         <Badge tone={runStatusTone(run.status)}>{t(`ai.status.${run.status}`)}</Badge>
@@ -331,7 +331,7 @@ function Tile({
   return (
     <div className="rounded-lg border border-subtle bg-raised p-4 shadow-card">
       <p className="text-xs text-ink-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">{value ?? '—'}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">{value ?? '-'}</p>
       {detail && <p className="mt-1 text-[11px] text-ink-muted">{detail}</p>}
     </div>
   )

@@ -168,7 +168,7 @@ export function SaveAsDocumentDialog({
                 }}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {typesQuery.data?.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
@@ -192,7 +192,7 @@ export function SaveAsDocumentDialog({
                 onChange={(event) => setDepartmentId(event.target.value)}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {departments.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name}

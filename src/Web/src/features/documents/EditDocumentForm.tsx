@@ -101,7 +101,7 @@ export function EditDocumentForm({ document, departments, onDone }: EditDocument
                 onChange={(event) => setDepartmentId(event.target.value)}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {departments.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name}

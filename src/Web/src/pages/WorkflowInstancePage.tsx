@@ -208,7 +208,7 @@ export function WorkflowInstancePage() {
                         </Badge>
                       </td>
                       <td className="whitespace-nowrap px-4 py-2 text-xs text-ink-secondary">
-                        {task.dueAtUtc ? formatDateTime(task.dueAtUtc, i18n.language) : '—'}
+                        {task.dueAtUtc ? formatDateTime(task.dueAtUtc, i18n.language) : '-'}
                       </td>
                     </tr>
                   ))}
@@ -223,12 +223,12 @@ export function WorkflowInstancePage() {
             <CardHeader title={t('workflows.definition')} />
             <CardBody>
               <dl className="divide-y divide-subtle">
-                <DataRow label={t('workflows.startedBy')}>{summary.startedByName ?? '—'}</DataRow>
+                <DataRow label={t('workflows.startedBy')}>{summary.startedByName ?? '-'}</DataRow>
                 <DataRow label={t('workflows.startedAt')}>
                   {formatDateTime(summary.startedAtUtc, i18n.language)}
                 </DataRow>
                 <DataRow label={t('workflows.completedAt')}>
-                  {summary.completedAtUtc ? formatDateTime(summary.completedAtUtc, i18n.language) : '—'}
+                  {summary.completedAtUtc ? formatDateTime(summary.completedAtUtc, i18n.language) : '-'}
                 </DataRow>
                 <DataRow label={t('workflows.elapsed')}>
                   {t('workflows.hours', { value: Math.round(summary.elapsedHours) })}
@@ -269,7 +269,7 @@ export function WorkflowInstancePage() {
               <dl className="divide-y divide-subtle">
                 {Object.entries(instance.variables).map(([key, value]) => (
                   <DataRow key={key} label={key}>
-                    <span className="font-mono text-xs">{value ?? '—'}</span>
+                    <span className="font-mono text-xs">{value ?? '-'}</span>
                   </DataRow>
                 ))}
               </dl>

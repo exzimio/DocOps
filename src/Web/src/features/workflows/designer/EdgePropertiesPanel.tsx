@@ -54,7 +54,7 @@ export function EdgePropertiesPanel({ edge, nodes, readOnly, onChange, onDelete 
             onChange={(event) => onChange({ ...edge, branch: event.target.value || null })}
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
           >
-            <option value="">—</option>
+            <option value="">-</option>
             {branches.map((branch) => (
               <option key={branch} value={branch}>
                 {t(`workflows.designer.branches.${branch}`)}

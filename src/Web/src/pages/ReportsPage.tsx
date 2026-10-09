@@ -14,7 +14,7 @@ const RANGES = [7, 30, 90] as const
 
 function formatMetric(metric: Metric, locale: string): string {
   if (metric.value === null) {
-    return '—'
+    return '-'
   }
 
   switch (metric.unit) {

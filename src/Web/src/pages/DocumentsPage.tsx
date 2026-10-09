@@ -158,7 +158,7 @@ export function DocumentsPage() {
               aria-label={t('documents.type')}
               className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
             >
-              <option value="">{t('documents.type')}: —</option>
+              <option value="">{t('documents.type')}: -</option>
               {typesQuery.data?.map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.name}
@@ -178,7 +178,7 @@ export function DocumentsPage() {
               aria-label={t('documents.department')}
               className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
             >
-              <option value="">{t('documents.department')}: —</option>
+              <option value="">{t('documents.department')}: -</option>
               {departmentsQuery.data?.map((department) => (
                 <option key={department.id} value={department.id}>
                   {department.name}

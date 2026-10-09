@@ -54,7 +54,7 @@ export function DashboardPage() {
               <DataRow label={t('common.email')}>
                 <span className="font-mono text-xs">{user.email}</span>
               </DataRow>
-              <DataRow label={t('dashboard.jobTitle')}>{user.jobTitle ?? '—'}</DataRow>
+              <DataRow label={t('dashboard.jobTitle')}>{user.jobTitle ?? '-'}</DataRow>
               <DataRow label={t('dashboard.roles')}>
                 <span className="flex flex-wrap justify-end gap-1">
                   {user.roles.map((role) => (
@@ -70,7 +70,7 @@ export function DashboardPage() {
                   : t('dashboard.userTypeInternal')}
               </DataRow>
               <DataRow label={t('dashboard.primaryDepartment')}>
-                {user.departments.find((department) => department.isPrimary)?.name ?? '—'}
+                {user.departments.find((department) => department.isPrimary)?.name ?? '-'}
               </DataRow>
               <DataRow label={t('dashboard.lastLogin')}>{lastLogin ?? t('dashboard.never')}</DataRow>
               {user.isPlatformAdministrator && (
@@ -96,7 +96,7 @@ export function DashboardPage() {
             {tenantQuery.data && (
               <dl className="divide-y divide-subtle">
                 <DataRow label={t('dashboard.organisationTitle')}>{tenantQuery.data.name}</DataRow>
-                <DataRow label={t('dashboard.legalName')}>{tenantQuery.data.legalName ?? '—'}</DataRow>
+                <DataRow label={t('dashboard.legalName')}>{tenantQuery.data.legalName ?? '-'}</DataRow>
                 <DataRow label={t('dashboard.timeZone')}>{tenantQuery.data.timeZoneId}</DataRow>
                 <DataRow label={t('common.language')}>{tenantQuery.data.defaultCulture}</DataRow>
               </dl>
@@ -174,13 +174,6 @@ export function DashboardPage() {
               </li>
             ))}
           </ul>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader title={t('dashboard.phaseNoticeTitle')} />
-        <CardBody>
-          <p className="text-xs leading-relaxed text-ink-muted">{t('dashboard.phaseNoticeBody')}</p>
         </CardBody>
       </Card>
     </div>

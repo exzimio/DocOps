@@ -45,7 +45,7 @@ export function DocumentFieldsFieldset({
                 onChange={(event) => onChange(field.code, event.target.value)}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {field.options.map((option) => (
                   <option key={option} value={option}>
                     {option}

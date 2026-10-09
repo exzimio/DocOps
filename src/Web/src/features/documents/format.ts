@@ -1,6 +1,6 @@
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) {
-    return '—'
+    return '-'
   }
 
   if (bytes < 1024) {
@@ -21,7 +21,7 @@ export function formatBytes(bytes: number | null | undefined): string {
 
 export function formatDate(value: string | null | undefined, locale: string): string {
   if (!value) {
-    return '—'
+    return '-'
   }
 
   return new Intl.DateTimeFormat(locale, { dateStyle: 'short' }).format(new Date(value))
@@ -29,7 +29,7 @@ export function formatDate(value: string | null | undefined, locale: string): st
 
 export function formatDateTime(value: string | null | undefined, locale: string): string {
   if (!value) {
-    return '—'
+    return '-'
   }
 
   return new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value))
@@ -46,7 +46,7 @@ export function formatMetadataValue(
   currency?: string | null,
 ): string {
   if (!value) {
-    return '—'
+    return '-'
   }
 
   switch (fieldType) {

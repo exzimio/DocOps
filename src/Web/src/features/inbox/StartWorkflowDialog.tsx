@@ -100,7 +100,7 @@ export function StartWorkflowDialog({ email, documentId, onClose, onStarted }: S
                 onChange={(event) => setSelected(event.target.value)}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {available.map((definition) => (
                   <option key={definition.id} value={definition.id}>
                     {definition.name}

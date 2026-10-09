@@ -346,7 +346,7 @@ export function DocumentCataloguePanel() {
                   }
                   className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {policies.data?.map((policy) => (
                     <option key={policy.id} value={policy.id}>
                       {policy.name}

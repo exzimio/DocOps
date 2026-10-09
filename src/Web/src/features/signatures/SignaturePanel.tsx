@@ -169,7 +169,7 @@ export function SignaturePanel({ documentId }: { documentId: string }) {
             <li
               key={entry.id}
               role="region"
-              aria-label={`${t('signatures.listLabel')} — ${entry.signerDisplayName}`}
+              aria-label={`${t('signatures.listLabel')}: ${entry.signerDisplayName}`}
               className="rounded-lg border border-subtle bg-raised p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -198,7 +198,7 @@ export function SignaturePanel({ documentId }: { documentId: string }) {
                 <div>
                   <dt className="text-ink-muted">{t('signatures.completedAt')}</dt>
                   <dd className="text-ink">
-                    {entry.completedAtUtc ? formatDateTime(entry.completedAtUtc, i18n.language) : '—'}
+                    {entry.completedAtUtc ? formatDateTime(entry.completedAtUtc, i18n.language) : '-'}
                   </dd>
                 </div>
                 <div className="col-span-2">

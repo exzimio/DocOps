@@ -69,7 +69,7 @@ export function IntegrationCardView({ integration, canManage }: IntegrationCardV
           <div>
             <dt className="text-ink-muted">{t('integrations.lastRun')}</dt>
             <dd className="text-ink">
-              {integration.lastRunAtUtc ? formatDateTime(integration.lastRunAtUtc, i18n.language) : '—'}
+              {integration.lastRunAtUtc ? formatDateTime(integration.lastRunAtUtc, i18n.language) : '-'}
             </dd>
           </div>
           <div>
@@ -77,7 +77,7 @@ export function IntegrationCardView({ integration, canManage }: IntegrationCardV
             <dd className="text-ink">
               {integration.lastActivityAtUtc
                 ? formatDateTime(integration.lastActivityAtUtc, i18n.language)
-                : '—'}
+                : '-'}
             </dd>
           </div>
           <div>

@@ -132,7 +132,7 @@ test.describe('Caixa de entrada', () => {
     await expect(detail.getByText('Processada').first()).toBeVisible()
 
     // O documento é real: segue-se a ligação e existe do outro lado.
-    await detail.getByRole('link', { name: /—/ }).click()
+    await detail.locator('a[href^="/app/documents/"]').first().click()
     await page.waitForURL(/\/app\/documents\/[0-9a-f-]+$/)
     await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('')
 

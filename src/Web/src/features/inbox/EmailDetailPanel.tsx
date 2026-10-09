@@ -109,7 +109,7 @@ export function EmailDetailPanel({ emailId, departments }: EmailDetailPanelProps
                 to={`/app/documents/${email.summary.linkedDocumentId}`}
                 className="font-medium underline hover:no-underline"
               >
-                {email.summary.linkedDocumentReference} — {email.summary.linkedDocumentTitle}
+                {email.summary.linkedDocumentReference} · {email.summary.linkedDocumentTitle}
               </Link>
             </span>
           </p>
@@ -162,7 +162,7 @@ export function EmailDetailPanel({ emailId, departments }: EmailDetailPanelProps
         {email.processedAtUtc && (
           <p className="text-xs text-ink-muted">
             {t('inbox.processedBy', {
-              name: email.processedByName ?? '—',
+              name: email.processedByName ?? '-',
               date: formatDateTime(email.processedAtUtc, i18n.language),
             })}
           </p>

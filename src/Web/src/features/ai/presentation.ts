@@ -33,7 +33,7 @@ export function runStatusTone(status: AiRunStatusValue): Tone {
 }
 
 export function percent(value: number | null | undefined): string {
-  return value === null || value === undefined ? '—' : `${Math.round(value * 100)}%`
+  return value === null || value === undefined ? '-' : `${Math.round(value * 100)}%`
 }
 
 /** A suggested or final value, shown the way the metadata panel shows it once it is written. */
@@ -44,7 +44,7 @@ export function formatSuggestion(
   currency: string | null,
 ): string {
   if (value === null || value === '') {
-    return '—'
+    return '-'
   }
 
   return formatMetadataValue(value, fieldType, locale, currency)

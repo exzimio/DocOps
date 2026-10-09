@@ -173,7 +173,7 @@ export function WorkflowDesigner({
                     title={
                       kind.executable
                         ? t(`workflows.nodeTypes.${kind.type}`)
-                        : `${t(`workflows.nodeTypes.${kind.type}`)} — ${t('workflows.designer.notExecutable')}`
+                        : `${t(`workflows.nodeTypes.${kind.type}`)} (${t('workflows.designer.notExecutable')})`
                     }
                     className="inline-flex items-center gap-1 rounded-sm border border-subtle bg-sunken px-1.5 py-1 text-[11px] text-ink-secondary hover:border-teal-500 hover:text-ink"
                   >

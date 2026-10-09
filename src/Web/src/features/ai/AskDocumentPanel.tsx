@@ -95,7 +95,7 @@ export function AskDocumentPanel({ documentId, onShowLine }: AskDocumentPanelPro
                           : ''}
                       </span>
                       <span className="truncate">
-                        {citation.section ? `${citation.section} — ` : ''}«{citation.excerpt}»
+                        {citation.section ? `${citation.section}: ` : ''}«{citation.excerpt}»
                       </span>
                     </button>
                   </li>
@@ -103,7 +103,7 @@ export function AskDocumentPanel({ documentId, onShowLine }: AskDocumentPanelPro
                   <li key={index} className="flex items-start gap-1.5 text-[11px] text-ink-muted">
                     <ShieldCheck aria-hidden className="mt-0.5 size-3.5 shrink-0" />
                     <span>
-                      {t('ai.ask.auditRecord')} · {formatDateTime(citation.occurredAtUtc, i18n.language)} —{' '}
+                      {t('ai.ask.auditRecord')} · {formatDateTime(citation.occurredAtUtc, i18n.language)}:{' '}
                       {citation.excerpt}
                     </span>
                   </li>

@@ -18,7 +18,7 @@
     "openMenu": "Open navigation menu",
     "closeMenu": "Close navigation menu",
     "skipToContent": "Skip to main content",
-    "independentProject": "Independent portfolio project — not affiliated with any third party",
+    "independentProject": "Independent portfolio project, not affiliated with any third party",
     "edit": "Edit",
     "save": "Save",
     "delete": "Delete"
@@ -124,9 +124,7 @@
     "legalName": "Legal name",
     "manager": "Head of department",
     "noManager": "No head assigned",
-    "memberCountLabel": "Members",
-    "phaseNoticeTitle": "Phased build",
-    "phaseNoticeBody": "This area grows with each project phase. Everything visible is wired to the real API and database — there are no static demo screens."
+    "memberCountLabel": "Members"
   },
   "errors": {
     "genericTitle": "Something went wrong",
@@ -226,11 +224,11 @@
       "whySubtitle": "The same evaluation the server makes when deciding, explained rule by rule.",
       "whoseAccess": "Access of",
       "noAccessTitle": "Does not reach this document",
-      "noAccessBody": "Nothing — ownership, department, role or grant — gives them access."
+      "noAccessBody": "Neither ownership, department, role nor a grant gives them access."
     },
     "accessPanel": {
       "title": "Effective access",
-      "subtitle": "Why you do — or do not — have access to this document.",
+      "subtitle": "Why you do, or do not, have access to this document.",
       "granted": "Grants",
       "removed": "Removes",
       "noReasons": "No rule grants access to this document."
@@ -292,7 +290,7 @@
   "search": {
     "title": "Search",
     "subtitle": "Full text, filters and questions in plain language, over what you may see.",
-    "placeholder": "Type what you are looking for — words, a reference, an amount…",
+    "placeholder": "Type what you are looking for: words, a reference, an amount…",
     "showFilters": "Show filters",
     "hideFilters": "Hide filters",
     "createdFrom": "From",
@@ -369,7 +367,7 @@
       "example1": "invoices awaiting approval",
       "example2": "approved contracts from the Legal department",
       "example3": "confidential documents from the last 30 days",
-      "understood": "The question was read as the filters below. Those filters are what ran — the same ones the form produces, with the same authorization.",
+      "understood": "The question was read as the filters below. Those filters are what ran, the same ones the form produces and with the same authorization.",
       "notUnderstood": "No filter was recognised in this question. The words were searched as free text.",
       "readingLabel": "Filters read from the question"
     },
@@ -379,7 +377,7 @@
     "title": "Inbox",
     "subtitle": "What arrived by mail, waiting to become a document.",
     "sync": "Synchronise",
-    "syncResult": "{{added}} new of {{fetched}} message(s) — {{date}}",
+    "syncResult": "{{added}} new of {{fetched}} message(s), at {{date}}",
     "searchPlaceholder": "Search by subject, sender or text…",
     "onlyWithAttachments": "Only with attachments",
     "empty": "No messages",
@@ -439,7 +437,7 @@
   },
   "integrations": {
     "title": "Integrations",
-    "subtitle": "Systems connected to this organisation — every card is backed by real code, not a promise.",
+    "subtitle": "Systems connected to this organisation, with the status and the log of each one.",
     "kindValues": {
       "0": "Microsoft Outlook",
       "1": "ERP",
@@ -473,7 +471,7 @@
     "manual": "manual",
     "recordsShort_one": "{{count}} record",
     "recordsShort_other": "{{count}} records",
-    "logTitle": "Log — {{name}}",
+    "logTitle": "{{name}} log",
     "logEmpty": "No log entries",
     "logEmptyBody": "This integration has not written any entry matching the chosen filters yet.",
     "webhookSettingsTitle": "Webhook settings",
@@ -510,7 +508,7 @@
     "emptyBody": "When a process assigns you work, it shows up here.",
     "emptyNone": "No process has created any tasks yet.",
     "emptyDelegated": "You have not delegated any task to anyone yet.",
-    "emptyFiltered": "You are seeing {{filtros}}. There may be no work at all — or the filters may be hiding it.",
+    "emptyFiltered": "You are seeing {{filtros}}. There may be no work at all, or the filters may be hiding it.",
     "widenFilters": "Widen the filters",
     "narrowed": {
       "Mine": "only your own tasks",
@@ -783,7 +781,7 @@
     "source": {
       "demoShort": "Demonstration",
       "demoTitle": "Demonstration mode.",
-      "demoDetail": "Results produced by deterministic rules over the document's text — not by a language model. The same document always gives the same result, and every value shows the line it was read from.",
+      "demoDetail": "Results produced by deterministic rules over the document's text, and not by a language model. The same document always gives the same result, and every value shows the line it was read from.",
       "modelShort": "Language model",
       "modelDetail": "Suggestions from a configured language model. Only values and quotations found in the document's text are shown."
     },
@@ -927,7 +925,7 @@
       "documentTitle": "Subject",
       "titlePlaceholder": "Invoice FT 2026/0815",
       "note": "Note (optional)",
-      "noteHint": "Any context that helps whoever receives it — an order number, the period it covers.",
+      "noteHint": "Any context that helps whoever receives it, such as an order number or the period it covers.",
       "file": "File",
       "action": "Submit"
     },
@@ -1119,7 +1117,7 @@
     },
     "tags": {
       "title": "Tags",
-      "subtitle": "A tag is an annotation placed on a document, not something the document asserts — so removing one is allowed, and reversible: the links survive.",
+      "subtitle": "A tag is an annotation placed on a document, not something the document asserts. That is why it can be removed, and the removal is reversible: the links survive.",
       "tag": "Tag",
       "name": "Name",
       "colour": "Colour",
@@ -1139,7 +1137,7 @@
     },
     "retention": {
       "title": "Retention policies",
-      "subtitle": "How long each class of document is kept, and from which event. Changing the duration is allowed — obligations do change — and is audited with the old and the new value.",
+      "subtitle": "How long each class of document is kept, and from which event. The duration can change, because obligations change too, and every change is audited with the old and the new value.",
       "policy": "Policy",
       "name": "Name",
       "code": "Code",

@@ -142,7 +142,7 @@ function RunReview({
       {run.status === AiRunStatus.Applied && (
         <p className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-xs text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
           {t('ai.review.appliedBy', {
-            name: run.appliedByName ?? '—',
+            name: run.appliedByName ?? '-',
             when: formatDateTime(run.appliedAtUtc, i18n.language),
           })}
         </p>
@@ -421,7 +421,7 @@ function EditInput({
         className={className}
         aria-label={field.label}
       >
-        <option value="">—</option>
+        <option value="">-</option>
         {field.options.map((option) => (
           <option key={option} value={option}>
             {option}

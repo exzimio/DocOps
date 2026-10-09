@@ -153,7 +153,7 @@ export function UploadDialog({ departments, onClose, onCreated }: UploadDialogPr
                 }}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {typesQuery.data?.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
@@ -177,7 +177,7 @@ export function UploadDialog({ departments, onClose, onCreated }: UploadDialogPr
                 onChange={(event) => setDepartmentId(event.target.value)}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {departments.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name}
@@ -229,7 +229,7 @@ export function UploadDialog({ departments, onClose, onCreated }: UploadDialogPr
                         }
                         className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
                       >
-                        <option value="">—</option>
+                        <option value="">-</option>
                         {field.options.map((option) => (
                           <option key={option} value={option}>
                             {option}

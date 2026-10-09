@@ -14,7 +14,7 @@ describe('confidence', () => {
   it('shows a confidence as a percentage, and an absent one as a dash', () => {
     expect(percent(0.935)).toBe('94%')
     expect(percent(0)).toBe('0%')
-    expect(percent(null)).toBe('—')
+    expect(percent(null)).toBe('-')
   })
 
   it('colours a run by its state', () => {
@@ -38,7 +38,7 @@ describe('formatSuggestion', () => {
   })
 
   it('shows a value that was not found as a dash rather than as empty', () => {
-    expect(formatSuggestion(null, MetadataFieldType.Text, 'pt-PT', null)).toBe('—')
+    expect(formatSuggestion(null, MetadataFieldType.Text, 'pt-PT', null)).toBe('-')
   })
 })
 

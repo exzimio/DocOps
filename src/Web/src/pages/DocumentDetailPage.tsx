@@ -319,7 +319,7 @@ export function DocumentDetailPage() {
                     aria-label={t('documents.changeStatus')}
                     className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
                   >
-                    <option value="">—</option>
+                    <option value="">-</option>
                     {document.allowedNextStatuses.map((status) => (
                       <option key={status} value={status}>
                         {t(`documents.statusValues.${status}`)}

@@ -216,10 +216,10 @@ export function AdminPage() {
                           </td>
                           <td className="px-4 py-2 text-xs text-ink-secondary">{user.roles.join(', ')}</td>
                           <td className="px-4 py-2 text-xs text-ink-secondary">
-                            {user.departments.map((department) => department.code).join(', ') || '—'}
+                            {user.departments.map((department) => department.code).join(', ') || '-'}
                           </td>
                           <td className="px-4 py-2 text-xs text-ink-secondary">
-                            {user.lastLoginAtUtc ? formatDateTime(user.lastLoginAtUtc, i18n.language) : '—'}
+                            {user.lastLoginAtUtc ? formatDateTime(user.lastLoginAtUtc, i18n.language) : '-'}
                           </td>
                           <td className="px-4 py-2">
                             {user.canEdit ? (

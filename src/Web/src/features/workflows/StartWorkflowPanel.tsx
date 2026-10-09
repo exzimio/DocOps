@@ -84,7 +84,7 @@ export function StartWorkflowPanel({ documentId, documentTypeId, canStart }: Sta
                   aria-label={t('workflows.startTitle')}
                   className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {available.map((definition) => (
                     <option key={definition.id} value={definition.id}>
                       {definition.name}

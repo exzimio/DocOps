@@ -18,7 +18,7 @@
     "openMenu": "Abrir menu de navegação",
     "closeMenu": "Fechar menu de navegação",
     "skipToContent": "Saltar para o conteúdo principal",
-    "independentProject": "Projeto de portefólio independente — sem afiliação a terceiros",
+    "independentProject": "Projeto de portefólio independente, sem afiliação a terceiros",
     "edit": "Editar",
     "save": "Guardar",
     "delete": "Eliminar"
@@ -124,9 +124,7 @@
     "legalName": "Denominação social",
     "manager": "Responsável",
     "noManager": "Sem responsável atribuído",
-    "memberCountLabel": "Membros",
-    "phaseNoticeTitle": "Construção por fases",
-    "phaseNoticeBody": "Esta área cresce a cada fase do projeto. As funcionalidades visíveis estão ligadas à API e à base de dados reais — não há ecrãs de demonstração estáticos."
+    "memberCountLabel": "Membros"
   },
   "errors": {
     "genericTitle": "Ocorreu um erro",
@@ -226,11 +224,11 @@
       "whySubtitle": "A mesma avaliação que o servidor faz ao decidir, explicada regra a regra.",
       "whoseAccess": "Acesso de",
       "noAccessTitle": "Não alcança este documento",
-      "noAccessBody": "Nada — posse, departamento, perfil ou concessão — lhe dá acesso."
+      "noAccessBody": "Nem a posse, nem o departamento, nem o perfil, nem uma concessão lhe dão acesso."
     },
     "accessPanel": {
       "title": "Acesso efetivo",
-      "subtitle": "Porque é que tem — ou não tem — acesso a este documento.",
+      "subtitle": "Porque é que tem, ou não tem, acesso a este documento.",
       "granted": "Concede",
       "removed": "Remove",
       "noReasons": "Nenhuma regra concede acesso a este documento."
@@ -292,7 +290,7 @@
   "search": {
     "title": "Pesquisa",
     "subtitle": "Texto integral, filtros e perguntas em linguagem natural, sobre o que pode ver.",
-    "placeholder": "Escreva o que procura — palavras, uma referência, um valor…",
+    "placeholder": "Escreva o que procura: palavras, uma referência, um valor…",
     "showFilters": "Mostrar filtros",
     "hideFilters": "Ocultar filtros",
     "createdFrom": "De",
@@ -369,7 +367,7 @@
       "example1": "faturas que aguardam aprovação",
       "example2": "contratos do departamento Legal aprovados",
       "example3": "documentos confidenciais dos últimos 30 dias",
-      "understood": "A pergunta foi lida como os filtros abaixo. São esses filtros que correram — os mesmos que o formulário produz, com a mesma autorização.",
+      "understood": "A pergunta foi lida como os filtros abaixo. Foram esses filtros que correram, os mesmos que o formulário produz e com a mesma autorização.",
       "notUnderstood": "Nenhum filtro foi reconhecido nesta pergunta. As palavras foram procuradas como texto livre.",
       "readingLabel": "Filtros lidos na pergunta"
     },
@@ -379,7 +377,7 @@
     "title": "Caixa de entrada",
     "subtitle": "O que chegou por correio, à espera de se tornar documento.",
     "sync": "Sincronizar",
-    "syncResult": "{{added}} nova(s) de {{fetched}} mensagem(ns) — {{date}}",
+    "syncResult": "{{added}} nova(s) de {{fetched}} mensagem(ns), às {{date}}",
     "searchPlaceholder": "Procurar por assunto, remetente ou texto…",
     "onlyWithAttachments": "Só com anexos",
     "empty": "Sem mensagens",
@@ -439,7 +437,7 @@
   },
   "integrations": {
     "title": "Integrações",
-    "subtitle": "Sistemas ligados a esta organização — cada cartão corresponde a código real, não a uma promessa.",
+    "subtitle": "Sistemas ligados a esta organização, com o estado e o registo de cada um.",
     "kindValues": {
       "0": "Microsoft Outlook",
       "1": "ERP",
@@ -473,7 +471,7 @@
     "manual": "manual",
     "recordsShort_one": "{{count}} registo",
     "recordsShort_other": "{{count}} registos",
-    "logTitle": "Registo — {{name}}",
+    "logTitle": "Registo de {{name}}",
     "logEmpty": "Sem registos",
     "logEmptyBody": "Esta integração ainda não escreveu nenhuma entrada com os filtros escolhidos.",
     "webhookSettingsTitle": "Definições do webhook",
@@ -510,7 +508,7 @@
     "emptyBody": "Quando um processo lhe atribuir trabalho, aparece aqui.",
     "emptyNone": "Nenhum processo criou tarefas até agora.",
     "emptyDelegated": "Ainda não delegou nenhuma tarefa a outra pessoa.",
-    "emptyFiltered": "Está a ver {{filtros}}. Pode não haver trabalho nenhum — ou podem ser os filtros a escondê-lo.",
+    "emptyFiltered": "Está a ver {{filtros}}. Pode não haver trabalho nenhum, ou podem ser os filtros a escondê-lo.",
     "widenFilters": "Alargar os filtros",
     "narrowed": {
       "Mine": "só as suas tarefas",
@@ -783,7 +781,7 @@
     "source": {
       "demoShort": "Demonstração",
       "demoTitle": "Modo de demonstração.",
-      "demoDetail": "Resultados produzidos por regras determinísticas sobre o texto do documento — não por um modelo de linguagem. O mesmo documento dá sempre o mesmo resultado, e cada valor indica a linha de onde foi lido.",
+      "demoDetail": "Resultados produzidos por regras determinísticas sobre o texto do documento, e não por um modelo de linguagem. O mesmo documento dá sempre o mesmo resultado, e cada valor indica a linha de onde foi lido.",
       "modelShort": "Modelo de linguagem",
       "modelDetail": "Sugestões de um modelo de linguagem configurado. Só são mostrados valores e citações que foram encontrados no texto do documento."
     },
@@ -927,7 +925,7 @@
       "documentTitle": "Assunto",
       "titlePlaceholder": "Fatura FT 2026/0815",
       "note": "Nota (opcional)",
-      "noteHint": "Qualquer contexto que ajude quem vai receber — número de encomenda, período a que respeita.",
+      "noteHint": "Qualquer contexto que ajude quem vai receber, como o número de encomenda ou o período a que respeita.",
       "file": "Ficheiro",
       "action": "Submeter"
     },
@@ -1119,7 +1117,7 @@
     },
     "tags": {
       "title": "Etiquetas",
-      "subtitle": "Uma etiqueta é uma anotação colocada sobre o documento, não algo que ele afirme — por isso remover é permitido, e reversível: as ligações sobrevivem.",
+      "subtitle": "Uma etiqueta é uma anotação colocada sobre o documento, e não algo que ele afirme. Por isso pode ser removida, e a remoção é reversível: as ligações sobrevivem.",
       "tag": "Etiqueta",
       "name": "Nome",
       "colour": "Cor",
@@ -1139,7 +1137,7 @@
     },
     "retention": {
       "title": "Políticas de retenção",
-      "subtitle": "Quanto tempo se guarda cada classe de documento, e a partir de que acontecimento. Mudar a duração é permitido — as obrigações mudam — e fica na auditoria com o valor antigo e o novo.",
+      "subtitle": "Quanto tempo se guarda cada classe de documento, e a partir de que acontecimento. A duração pode mudar, porque as obrigações também mudam, e cada alteração fica na auditoria com o valor antigo e o novo.",
       "policy": "Política",
       "name": "Nome",
       "code": "Código",

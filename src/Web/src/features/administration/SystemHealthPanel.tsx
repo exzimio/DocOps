@@ -143,7 +143,7 @@ export function SystemHealthPanel() {
                     </td>
                     <td className="px-4 py-2 text-xs tabular-nums text-ink-secondary">
                       {job.averageDurationMs === null
-                        ? '—'
+                        ? '-'
                         : t('admin.health.milliseconds', { value: job.averageDurationMs })}
                     </td>
                   </tr>

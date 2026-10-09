@@ -143,7 +143,7 @@ export function NodePropertiesPanel({
                 onChange={(event) => updateAssignment({ role: event.target.value })}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {roleOptions.map((role) => (
                   <option key={role} value={role}>
                     {role}
@@ -161,7 +161,7 @@ export function NodePropertiesPanel({
                 onChange={(event) => updateAssignment({ departmentCode: event.target.value })}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {departments.map((department) => (
                   <option key={department.id} value={department.code}>
                     {department.name} ({department.code})
@@ -336,7 +336,7 @@ export function NodePropertiesPanel({
                 }
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {departments.map((department) => (
                   <option key={department.id} value={department.code}>
                     {department.name} ({department.code})
@@ -380,7 +380,7 @@ export function NodePropertiesPanel({
             }
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
           >
-            <option value="">—</option>
+            <option value="">-</option>
             {integrationKindOptions.map((kind) => (
               <option key={kind} value={kind}>
                 {t(`integrations.kindValues.${kind}`)}
@@ -434,7 +434,7 @@ export function NodePropertiesPanel({
             }
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink disabled:opacity-60"
           >
-            <option value="">—</option>
+            <option value="">-</option>
             {documentStatusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}

@@ -57,7 +57,7 @@ test.describe('Centro de integrações', () => {
     // Corridas anteriores desta suite podem ter deixado várias entradas iguais no registo (a mesma
     // divergência repete-se sempre que a integração corre); só interessa que pelo menos uma exista.
     await clickReliably(erpCard.getByRole('button', { name: 'Ver registo' }))
-    const logDialog = page.getByRole('dialog', { name: /Registo — ERP/ })
+    const logDialog = page.getByRole('dialog', { name: /Registo de ERP/ })
     await logDialog.waitFor()
     await expect(
       logDialog.getByText('«Nordvik Systems» não existe no sistema externo.').first(),

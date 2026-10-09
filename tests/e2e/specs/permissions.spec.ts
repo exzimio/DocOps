@@ -25,12 +25,12 @@ test.describe('Editor de permissões', () => {
     await signIn(page, admin)
     await openPermissions(page)
 
-    // O briefing pede os três sujeitos. A pessoa individual faltava.
+    // Os três tipos de destinatário têm de oferecer por onde escolher, além da opção vazia.
     for (const subject of ['Utilizador', 'Departamento', 'Perfil']) {
       await page.getByLabel('Tipo').selectOption({ label: subject })
 
-      const options = page.getByLabel('Destinatário').locator('option')
-      await expect(options.filter({ hasNotText: '—' }).first()).toBeAttached()
+      const options = page.getByLabel('Destinatário').locator('option:not([value=""])')
+      await expect(options.first()).toBeAttached()
     }
   })
 

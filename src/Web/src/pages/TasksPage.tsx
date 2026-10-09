@@ -282,7 +282,7 @@ export function TasksPage() {
                             <span className="ml-1 text-ink-muted">{task.documentTitle}</span>
                           </Link>
                         ) : (
-                          <span className="text-ink-muted">—</span>
+                          <span className="text-ink-muted">-</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-secondary">
@@ -441,7 +441,7 @@ export function TasksPage() {
         >
           <div className="w-full max-w-md rounded-lg border border-subtle bg-raised p-4 shadow-overlay">
             <h2 className="text-sm font-semibold text-ink">
-              {t(`tasks.actionLabels.${pending.action}`)} — {pending.task.title}
+              {t(`tasks.actionLabels.${pending.action}`)}: {pending.task.title}
             </h2>
             <p className="mt-1 text-xs text-ink-muted">
               {pending.task.instanceReference} · {pending.task.definitionName}

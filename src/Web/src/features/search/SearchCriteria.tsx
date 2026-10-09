@@ -115,7 +115,7 @@ export function SearchCriteria({ filters, onChange, onReset, showReset }: Search
             aria-label={t('documents.type')}
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
           >
-            <option value="">{t('documents.type')}: —</option>
+            <option value="">{t('documents.type')}: -</option>
             {typesQuery.data?.map((type) => (
               <option key={type.id} value={type.id}>
                 {type.name}
@@ -129,7 +129,7 @@ export function SearchCriteria({ filters, onChange, onReset, showReset }: Search
             aria-label={t('documents.department')}
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
           >
-            <option value="">{t('documents.department')}: —</option>
+            <option value="">{t('documents.department')}: -</option>
             {departmentsQuery.data?.map((department) => (
               <option key={department.id} value={department.id}>
                 {department.name}
@@ -143,7 +143,7 @@ export function SearchCriteria({ filters, onChange, onReset, showReset }: Search
             aria-label={t('documents.owner')}
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
           >
-            <option value="">{t('documents.owner')}: —</option>
+            <option value="">{t('documents.owner')}: -</option>
             {membersQuery.data?.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.displayName}
@@ -158,7 +158,7 @@ export function SearchCriteria({ filters, onChange, onReset, showReset }: Search
             aria-label={t('documents.tags')}
             className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
           >
-            <option value="">{t('documents.tags')}: —</option>
+            <option value="">{t('documents.tags')}: -</option>
             {tagsQuery.data?.map((tag) => (
               <option key={tag.id} value={tag.id}>
                 {tag.name}

@@ -39,8 +39,8 @@ export function OverviewPanel({ document }: { document: DocumentDetail }) {
             </DataRow>
             <DataRow label={t('documents.type')}>{document.summary.typeName}</DataRow>
             <DataRow label={t('documents.owner')}>{document.summary.ownerName}</DataRow>
-            <DataRow label={t('documents.department')}>{document.summary.departmentName ?? '—'}</DataRow>
-            <DataRow label={t('documents.overview.businessEntity')}>{document.businessEntity ?? '—'}</DataRow>
+            <DataRow label={t('documents.department')}>{document.summary.departmentName ?? '-'}</DataRow>
+            <DataRow label={t('documents.overview.businessEntity')}>{document.businessEntity ?? '-'}</DataRow>
             <DataRow label={t('documents.created')}>
               {formatDateTime(document.summary.createdAtUtc, i18n.language)}
             </DataRow>
@@ -48,7 +48,7 @@ export function OverviewPanel({ document }: { document: DocumentDetail }) {
               {formatDateTime(document.summary.modifiedAtUtc, i18n.language)}
             </DataRow>
             <DataRow label={t('documents.overview.retentionPolicy')}>
-              {document.retentionPolicyName ?? '—'}
+              {document.retentionPolicyName ?? '-'}
             </DataRow>
             {document.summary.retentionDueAtUtc && (
               <DataRow label={t('documents.retentionDue')}>
@@ -177,7 +177,7 @@ export function VersionsPanel({ document }: { document: DocumentDetail }) {
                   <td className="px-3 py-2 text-xs text-ink-secondary">
                     {formatDateTime(version.createdAtUtc, i18n.language)}
                   </td>
-                  <td className="px-3 py-2 text-xs text-ink-secondary">{version.comment ?? '—'}</td>
+                  <td className="px-3 py-2 text-xs text-ink-secondary">{version.comment ?? '-'}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-xs text-ink-secondary">
                     {formatBytes(version.fileSizeBytes)}
                   </td>
@@ -305,7 +305,7 @@ export function PermissionsPanel({
                       </span>
                     </td>
                     <td className="px-3 py-2 text-xs text-ink-secondary">
-                      {permission.grantedByName ?? '—'}
+                      {permission.grantedByName ?? '-'}
                       <span className="ml-1 text-ink-muted">
                         · {formatDateTime(permission.grantedAtUtc, i18n.language)}
                       </span>
@@ -316,7 +316,7 @@ export function PermissionsPanel({
                         size="sm"
                         loading={revoke.isPending}
                         onClick={() => revoke.mutate(permission.id)}
-                        aria-label={`${t('documents.permissionsPanel.revoke')} — ${permission.subjectDisplayName}`}
+                        aria-label={`${t('documents.permissionsPanel.revoke')}: ${permission.subjectDisplayName}`}
                       >
                         <Trash2 aria-hidden className="size-4" />
                       </Button>
@@ -368,7 +368,7 @@ export function PermissionsPanel({
                 onChange={(event) => setSubjectId(event.target.value)}
                 className="h-9 min-w-[12rem] rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 {subjectType === PermissionSubjectType.Department &&
                   departments.map((department) => (
                     <option key={department.id} value={department.id}>
@@ -458,7 +458,7 @@ export function PermissionsPanel({
               onChange={(event) => setExplainFor(event.target.value || null)}
               className="h-9 max-w-sm rounded-md border border-strong bg-raised px-2 text-sm text-ink"
             >
-              <option value="">—</option>
+              <option value="">-</option>
               {members.data?.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.displayName}
