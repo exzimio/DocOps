@@ -2,7 +2,7 @@ root = true
 
 [*]
 charset = utf-8
-end_of_line = crlf
+end_of_line = lf
 insert_final_newline = true
 indent_style = space
 trim_trailing_whitespace = true
@@ -28,6 +28,10 @@ indent_size = 2
 
 [*.{csproj,props,targets}]
 indent_size = 2
+
+# The same exceptions as .gitattributes, so that an editor saves what the checkout produces.
+[*.{sln,slnx,csproj,props}]
+end_of_line = crlf
 
 # Windows PowerShell 5.1 reads a script without a byte order mark in the system code page, and the
 # accented messages come out garbled.
