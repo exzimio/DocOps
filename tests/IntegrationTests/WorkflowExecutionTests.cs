@@ -12,6 +12,7 @@ using DocOps.Domain.Documents;
 using DocOps.Domain.Notifications;
 using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Persistence;
+using DocOps.Infrastructure.Workflows;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -44,9 +45,47 @@ file sealed class FailingNotificationSave : SaveChangesInterceptor
 [Collection(ApiCollection.Name)]
 public class WorkflowExecutionTests(DocOpsApiFactory factory)
 {
+    private const string Administrator = "admin@asteria.example";
     private const string Procurement = "ana.ferreira@asteria.example";
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    // -----------------------------------------------------------------------------------------
+    // Timer
+    // -----------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_timer_holds_the_process_until_its_moment_and_the_resume_then_moves_it_on()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        Guid definitionId = await DesignAsync(admin, "Espera de uma hora",
+            [Node("inicio", WorkflowNodeType.Start), Node("espera", WorkflowNodeType.Delay, """{"delayHours":1}"""), End("fim")],
+            [Edge("inicio", "espera"), Edge("espera", "fim")]);
+
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+        WorkflowInstanceDetailDto started = await StartAsync(admin, definitionId);
+
+        Assert.Equal(WorkflowInstanceStatus.Waiting, started.Summary.Status);
+        Assert.Equal(["espera"], started.ActiveNodeKeys);
+        Assert.NotNull(started.ResumeAtUtc);
+        Assert.InRange(started.ResumeAtUtc.Value, before.AddMinutes(59), DateTimeOffset.UtcNow.AddMinutes(61));
+
+        // Resuming before the moment changes nothing, and does not restart the timer from zero.
+        await ResumeTimerAsync(started.Summary.Id);
+
+        WorkflowInstanceDetailDto early = await GetInstanceAsync(admin, started.Summary.Id);
+        Assert.Equal(WorkflowInstanceStatus.Waiting, early.Summary.Status);
+        Assert.Equal(started.ResumeAtUtc, early.ResumeAtUtc);
+
+        await MoveTimerToThePastAsync(started.Summary.Id);
+        await ResumeTimerAsync(started.Summary.Id);
+
+        WorkflowInstanceDetailDto finished = await GetInstanceAsync(admin, started.Summary.Id);
+        Assert.Equal(WorkflowInstanceStatus.Completed, finished.Summary.Status);
+        Assert.Null(finished.ResumeAtUtc);
+        Assert.Contains(finished.Timeline, e => e.EventType == WorkflowEventTypes.TimerElapsed && e.NodeKey == "espera");
+    }
 
     // -----------------------------------------------------------------------------------------
     // One walk, one transaction
@@ -107,12 +146,87 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
     // Helpers
     // -----------------------------------------------------------------------------------------
 
+    private static SaveWorkflowNodeRequest Node(string key, WorkflowNodeType type, string? configJson = null) => new()
+    {
+        Key = key,
+        Name = key,
+        Type = type,
+        ConfigJson = configJson,
+        PositionX = 0,
+        PositionY = 0
+    };
+
+    private static SaveWorkflowNodeRequest End(string key) =>
+        Node(key, WorkflowNodeType.End, """{"outcome":"Concluído"}""");
+
+    private static SaveWorkflowEdgeRequest Edge(string from, string to, string? branch = null) =>
+        new() { FromNodeKey = from, ToNodeKey = to, Branch = branch };
+
+    private static async Task<Guid> DesignAsync(
+        HttpClient admin, string name, List<SaveWorkflowNodeRequest> nodes, List<SaveWorkflowEdgeRequest> edges)
+    {
+        HttpResponseMessage created = await admin.PostAsJsonAsync(
+            "/api/workflows", new CreateWorkflowRequest { Name = $"{name} {Guid.NewGuid():N}"[..40] });
+        created.EnsureSuccessStatusCode();
+
+        WorkflowDefinitionDetailDto draft = (await created.Content.ReadFromJsonAsync<WorkflowDefinitionDetailDto>(Json))!;
+
+        HttpResponseMessage saved = await admin.PutAsJsonAsync($"/api/workflows/{draft.Summary.Id}", new SaveWorkflowRequest
+        {
+            Name = draft.Summary.Name,
+            Nodes = nodes,
+            Edges = edges,
+            ConcurrencyToken = draft.ConcurrencyToken
+        });
+
+        Assert.True(saved.IsSuccessStatusCode, await saved.Content.ReadAsStringAsync());
+
+        HttpResponseMessage activated = await admin.PostAsync($"/api/workflows/{draft.Summary.Id}/activate", null);
+        Assert.True(activated.IsSuccessStatusCode, await activated.Content.ReadAsStringAsync());
+
+        return draft.Summary.Id;
+    }
+
+    private static async Task<WorkflowInstanceDetailDto> StartAsync(
+        HttpClient client, Guid definitionId, Dictionary<string, string?>? variables = null)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/api/workflows/instances",
+            new StartWorkflowRequest { DefinitionId = definitionId, Variables = variables ?? [] });
+
+        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
+
+        return (await response.Content.ReadFromJsonAsync<WorkflowInstanceDetailDto>(Json))!;
+    }
+
+    private static async Task<WorkflowInstanceDetailDto> GetInstanceAsync(HttpClient client, Guid instanceId) =>
+        (await client.GetFromJsonAsync<WorkflowInstanceDetailDto>($"/api/workflows/instances/{instanceId}", Json))!;
+
     private static async Task<TaskListItemDto> OpenTaskAsync(HttpClient client, Guid instanceId, string nodeKey)
     {
         PagedResult<TaskListItemDto> tasks = (await client.GetFromJsonAsync<PagedResult<TaskListItemDto>>(
             $"/api/tasks?scope=Mine&instanceId={instanceId}&statuses=0&statuses=1", Json))!;
 
         return tasks.Items.Single(task => task.NodeKey == nodeKey);
+    }
+
+    /// <summary>The worker's path: a system scope and the engine, with no request behind it.</summary>
+    private async Task ResumeTimerAsync(Guid instanceId)
+    {
+        using ISystemScope scope = factory.CreateServiceScope();
+        await scope.Services.GetRequiredService<WorkflowEngine>().ResumeTimerAsync(instanceId);
+    }
+
+    private async Task MoveTimerToThePastAsync(Guid instanceId)
+    {
+        using ISystemScope scope = factory.CreateServiceScope();
+        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
+
+        WorkflowInstance instance = await context.WorkflowInstances.IgnoreQueryFilters().SingleAsync(i => i.Id == instanceId);
+        Assert.NotNull(instance.ResumeAtUtc);
+
+        instance.ResumeAtUtc = DateTimeOffset.UtcNow.AddMinutes(-1);
+        await context.SaveChangesAsync();
     }
 
     private static async Task<HttpClient> SignInAsync(WebApplicationFactory<Program> api, string email)
