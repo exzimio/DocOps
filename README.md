@@ -597,6 +597,9 @@ correr o projeto localmente.
   acima.
 - **Quem se liga à base de dados como administrador pode desligar a política de segurança ao nível da
   linha.** Fecha-se não dando essa credencial a ninguém; ver [`docs/SECURITY.md`](docs/SECURITY.md).
+- **O centro de tarefas ainda não filtra pelo documento.** Com `tasks.viewall`, a lista de tarefas da
+  organização mostra o título do documento de cada tarefa, também a quem não pode abrir esse
+  documento. As execuções já aplicam o predicado de visibilidade; as tarefas ainda não.
 
 ### Melhorias futuras
 
@@ -688,6 +691,9 @@ peso arquitetural, cada uma com as alternativas que ficaram de fora, estão nos 
   informação, assumir, reatribuir).
 - Tarefas de grupo: uma tarefa oferecida a um departamento ou perfil é visível a quem pertence a esse
   grupo e fica atribuída a quem age sobre ela.
+- **Uma execução só é visível a quem vê o documento**, pelo predicado da listagem de documentos, ou a
+  quem participa no processo: quem o iniciou e quem tem ou teve uma tarefa nele. Para os restantes, a
+  execução responde 404, e `workflows.view` sozinho não chega.
 - **Cronologia por instância**, com transições de estado do documento, decisões, notificações e
   escalonamentos.
 - **Validação de definições** (nós sem saída, ramos em falta, nós inalcançáveis, atribuição em falta),
@@ -854,8 +860,8 @@ Desenho e alternativas rejeitadas: [ADR-009](docs/adr/ADR-009-electronic-signatu
   e concluídos, tarefas em atraso, tempo médio de processamento, taxa de automação, tempo até
   aprovação.
 - **Cada painel é a fatia de quem o abre.** As consultas passam pelo mesmo predicado de visibilidade
-  da pesquisa e do portal, porque um total que incluísse documentos invisíveis revelaria por agregação
-  aquilo que a lista esconde.
+  da listagem, da pesquisa, do portal e das execuções de processos, porque um total que incluísse
+  documentos invisíveis revelaria por agregação aquilo que a lista esconde.
 - **Uma medida sem base diz que não tem base**, em vez de dizer zero. Zero afirma que se mediu; num
   período em que nada aconteceu é uma mentira com aspeto de facto.
 - Tendências por dia, distribuições por estado, tipo e departamento, e **onde os processos param**:

@@ -487,8 +487,8 @@ agregados mantidos por um processo à parte, traz a única avaria que este proje
 painel que discorda da lista que está ao lado dele. Ver [ADR-010](adr/ADR-010-analytics-from-queries.md).
 
 **As consultas passam pelo predicado de visibilidade.** `ReportingService` reutiliza
-`DocumentAccessResolver.BuildVisibilityPredicate`, o mesmo que a listagem, a pesquisa e o portal
-usam. Uma contagem é uma fuga de informação como qualquer outra: saber que existem catorze documentos
+`DocumentAccessResolver.BuildVisibilityPredicate`, o mesmo que a listagem, a pesquisa, o portal e
+as execuções de processos usam. Uma contagem é uma fuga de informação como qualquer outra: saber que existem catorze documentos
 confidenciais no departamento jurídico é saber alguma coisa sobre eles.
 
 **Tudo tem de ser traduzível para SQL.** O agrupamento por dia usa
