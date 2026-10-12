@@ -904,3 +904,282 @@ alguém acrescentar mais uma consulta agregada ao painel.
 | Telemetria | Consola + OTLP | Application Insights |
 
 Nenhuma conta de nuvem é necessária para desenvolver, testar ou demonstrar o projeto.
+
+## 13. Referência
+
+A stack, o modelo de dados, o fluxo de autenticação, a superfície da API e a tabela completa dos
+compromissos assumidos, para consulta.
+
+### 13.1 Stack tecnológica
+
+| Camada | Tecnologia |
+| --- | --- |
+| Backend | .NET 10, C# 14, ASP.NET Core Web API, EF Core 10 |
+| Base de dados | SQL Server 2022 (container) |
+| Identidade | ASP.NET Core Identity, cookies `HttpOnly`, autorização por permissões |
+| Validação | FluentValidation |
+| Observabilidade | Serilog, OpenTelemetry, health checks |
+| Frontend | React 19, TypeScript, Vite, TanStack Query, React Hook Form, Zod, Tailwind CSS 4, i18next |
+| Testes | xUnit, Testcontainers, Vitest, Testing Library, Playwright |
+| Infraestrutura | Docker Compose, GitHub Actions |
+
+### 13.2 Desenho da base de dados
+
+```mermaid
+erDiagram
+    TENANTS ||--o{ DEPARTMENTS : "contém"
+    TENANTS ||--o{ USERS : "emprega"
+    TENANTS ||--o{ DOCUMENTS : "possui"
+    USERS ||--o{ USER_DEPARTMENTS : "pertence a"
+    DEPARTMENTS ||--o{ USER_DEPARTMENTS : "tem membros"
+    USERS ||--o{ USER_ROLES : "assume"
+    ROLES ||--o{ USER_ROLES : "atribuído a"
+    ROLES ||--o{ ROLE_CLAIMS : "concede permissões"
+
+    DOCUMENT_TYPES ||--o{ DOCUMENTS : "classifica"
+    DOCUMENT_TYPES ||--o{ METADATA_FIELDS : "define"
+    DOCUMENTS ||--o{ DOCUMENT_VERSIONS : "versiona"
+    DOCUMENTS ||--o{ METADATA_VALUES : "descreve"
+    METADATA_FIELDS ||--o{ METADATA_VALUES : "tipifica"
+    DOCUMENTS ||--o{ DOCUMENT_TAGS : "etiquetado"
+    TAGS ||--o{ DOCUMENT_TAGS : "aplica-se a"
+    DOCUMENTS ||--o{ DOCUMENT_PERMISSIONS : "restringe"
+    RETENTION_POLICIES ||--o{ DOCUMENTS : "rege"
+    DOCUMENTS ||--o{ AUDIT_EVENTS : "origina"
+
+    DOCUMENTS {
+        uniqueidentifier Id PK
+        uniqueidentifier TenantId FK
+        nvarchar Reference UK "único por tenant"
+        int Status "máquina de estados"
+        int Classification "sensibilidade"
+        uniqueidentifier OwnerUserId
+        uniqueidentifier DepartmentId FK
+        int CurrentVersionNumber
+        datetimeoffset RetentionDueAtUtc
+        bit IsDeleted "soft delete"
+        rowversion RowVersion "concorrência otimista"
+    }
+    DOCUMENT_VERSIONS {
+        uniqueidentifier Id PK
+        uniqueidentifier DocumentId FK
+        int VersionNumber "único por documento"
+        nvarchar StorageKey "chave no file store"
+        nvarchar ContentHash "SHA-256"
+        bigint FileSizeBytes
+        bit IsCurrent
+    }
+    DOCUMENT_PERMISSIONS {
+        uniqueidentifier Id PK
+        uniqueidentifier DocumentId FK
+        int SubjectType "utilizador/departamento/perfil"
+        uniqueidentifier SubjectId
+        int AccessLevel "flags"
+        datetimeoffset ExpiresAtUtc
+    }
+    METADATA_VALUES {
+        uniqueidentifier Id PK
+        uniqueidentifier FieldId FK
+        nvarchar TextValue
+        decimal NumberValue
+        datetimeoffset DateValue
+        decimal AiConfidence "quando veio de sugestão de IA"
+    }
+    AUDIT_EVENTS {
+        uniqueidentifier Id PK
+        nvarchar Action
+        nvarchar EntityType
+        uniqueidentifier EntityId
+        nvarchar CorrelationId
+        nvarchar BeforeJson
+        nvarchar AfterJson
+    }
+```
+
+Decisões de modelação relevantes:
+
+- **Identificadores UUIDv7** (`Guid.CreateVersion7()`): únicos e sequenciais, evitando a fragmentação
+  de índice típica de GUIDs aleatórios. As chaves são geradas pela aplicação e o modelo declara-o
+  (`ValueGeneratedNever`). Sem isso, o EF Core interpreta "a chave já tem valor" como "esta linha já
+  existe" e emite `UPDATE` onde era preciso `INSERT`.
+- **`rowversion` como token de concorrência** nas entidades mutáveis, devolvido ao cliente e exigido
+  na gravação.
+- **Índices únicos filtrados** (referência do documento, código de departamento, etiqueta) que
+  ignoram registos eliminados, permitindo reutilizar um código após eliminação.
+- **Metadados tipados**: o valor é guardado como texto canónico *e* na coluna do seu tipo, para que
+  filtros e ordenações corram em SQL em vez de em memória.
+- **Conteúdo fora da base de dados**: a linha da versão guarda a chave de armazenamento, a dimensão e
+  o `SHA-256`; os bytes vivem no *file store* (ver [ADR-003](adr/ADR-003-document-storage.md)).
+- **Ator desnormalizado na auditoria**, para o trilho continuar legível depois de um utilizador mudar
+  de nome ou ser desativado.
+
+#### Autorização documental
+
+```mermaid
+flowchart TB
+    subgraph Concede["Concede (união)"]
+        A["Administração documental<br/>do tenant"]
+        B["Propriedade do documento"]
+        C["Permissão explícita<br/>utilizador · departamento · perfil"]
+        D["Classificação<br/>público/interno · confidencial no departamento"]
+    end
+
+    subgraph Limita["Limita (interseção)"]
+        E["Permissões do perfil<br/>na organização"]
+    end
+
+    A --> U["Níveis concedidos"]
+    B --> U
+    C --> U
+    D --> U
+    U --> I["Acesso efetivo"]
+    E --> I
+    I --> P["Painel de acesso efetivo<br/>com a razão de cada regra"]
+
+    L["Estado do documento<br/>(DocumentLifecycle)"] --> O["O que pode ser feito agora"]
+```
+
+O acesso responde a *quem pode agir*; o ciclo de vida responde a *o que pode ser feito agora*. São
+deliberadamente independentes: misturá-los tornava impossível arquivar um documento aprovado.
+
+### 13.3 Fluxo de autenticação
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant A as API
+    participant I as Identity
+    participant D as SQL Server
+    participant L as Auditoria
+
+    B->>A: POST /api/auth/login (Origin verificada)
+    A->>A: Validação (FluentValidation) e rate limit por IP
+    A->>I: Procura utilizador e valida palavra-passe
+    I->>D: Lê utilizador, perfis e permissões
+    alt Credenciais inválidas
+        A->>L: user.login.failed (severidade: segurança)
+        A-->>B: 401 ProblemDetails (code: invalid_credentials)
+    else Conta bloqueada
+        A->>L: user.login.locked_out
+        A-->>B: 423 ProblemDetails (code: account_locked)
+    else Sucesso
+        I->>I: Constrói principal: tenant, tipo, perfis, permissões
+        A->>D: Atualiza LastLoginAtUtc
+        A->>L: user.login.succeeded
+        A-->>B: 200 + Set-Cookie docops.session (HttpOnly, SameSite=Lax)
+    end
+    B->>A: GET /api/auth/me (cookie)
+    A-->>B: Perfil, perfis e permissões efetivas
+```
+
+### 13.4 Superfície da API
+
+Documentada em OpenAPI (`/openapi/v1.json`), navegável em `/scalar/v1` durante o desenvolvimento.
+
+| Método e rota | Descrição |
+| --- | --- |
+| `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | Sessão e perfil do chamador |
+| `GET /api/tenants/current` · `/departments` · `/users` | Organização do chamador, os seus departamentos e as suas pessoas |
+| `GET /api/documents` | Lista paginada e filtrada, limitada ao que o chamador pode ver |
+| `POST /api/documents` | Cria um documento a partir de um ficheiro (multipart) |
+| `GET /api/documents/{id}` | Detalhe, versões, metadados e acesso efetivo |
+| `PUT /api/documents/{id}` | Edita metadados (exige o token de concorrência) |
+| `POST /api/documents/{id}/versions` | Acrescenta uma versão |
+| `GET /api/documents/{id}/content` | Descarrega a versão atual ou uma específica |
+| `POST /api/documents/{id}/status` | Transição de estado validada pela máquina de estados |
+| `POST /api/documents/{id}/archive` · `/restore` · `DELETE /api/documents/{id}` | Arquivo, restauro e eliminação reversível |
+| `GET /api/documents/{id}/audit` | Trilho de auditoria do documento |
+| `GET /api/workflows` · `/{id}` | Definições de workflow e o seu grafo |
+| `POST /api/workflows` | Cria um processo em rascunho, já com início e fim ligados |
+| `PUT /api/workflows/{id}` | Guarda o grafo desenhado (edita no sítio ou cria nova versão) |
+| `POST /api/workflows/{id}/duplicate` · `DELETE /api/workflows/{id}` | Duplicação e eliminação reversível |
+| `POST /api/workflows/{id}/test` | Valida uma definição sem a executar |
+| `POST /api/workflows/{id}/activate` · `/deactivate` | Ativação (recusada se houver erros de validação) |
+| `GET /api/workflows/instances` · `/{id}` | Execuções, com cronologia, tarefas e variáveis |
+| `POST /api/workflows/instances` | Inicia um processo sobre um documento |
+| `POST /api/workflows/instances/{id}/cancel` | Cancela um processo e fecha as tarefas em aberto |
+| `GET /api/tasks` · `/{id}` · `/statistics` | Centro de tarefas, detalhe de uma tarefa e indicadores |
+| `POST /api/tasks/{id}/approve` · `/reject` · `/complete` · `/request-information` | Decisões sobre uma tarefa |
+| `POST /api/tasks/{id}/claim` · `/reassign` | Assumir e reatribuir |
+| `GET /api/notifications` · `/unread-count` | Notificações do utilizador |
+| `POST /api/notifications/{id}/read` · `/read-all` | Marcar uma ou todas como lidas |
+| `GET/POST /api/documents/{id}/permissions` · `DELETE /{permissionId}` | Permissões do documento |
+| `GET /api/document-catalogue/types` · `/tags` · `/retention-policies` | Dados de referência dos formulários |
+| `GET /api/documents/{id}/text` | Texto da versão atual, numerado como as citações o numeram |
+| `POST /api/documents/{id}/process-ai` | Analisa o documento e produz sugestões para revisão |
+| `GET /api/documents/{id}/ai-runs/latest` | A análise mais recente de um documento |
+| `GET /api/ai/provider` · `/statistics` · `/runs` · `/runs/{id}` | Fornecedor ativo, indicadores, fila de revisão e uma análise |
+| `POST /api/ai/runs/{id}/classification` · `/fields/{id}/decision` · `/accept-all` | Decisões sobre as sugestões |
+| `POST /api/ai/runs/{id}/apply` · `/discard` | Aplicar ao documento ou rejeitar a análise |
+| `POST /api/ai/document-question` | Pergunta sobre um documento, com citações verificadas |
+| `GET /api/search` | Pesquisa facetada, com excerto e relevância; diz se usou o índice de texto integral |
+| `POST /api/search/natural-language` | Lê uma pergunta para os mesmos filtros do formulário |
+| `GET /api/inbox` · `/summary` · `/connector` · `/{id}` | Caixa de entrada, contagens, origem do correio e leitura de uma mensagem |
+| `POST /api/inbox/sync` | Sincroniza pelo conetor de correio (idempotente) |
+| `POST /api/inbox/{id}/read` · `/archive` · `/reopen` · `/processed` | Estado de uma mensagem |
+| `POST /api/inbox/{id}/attachments/save` | Guarda um anexo como documento |
+| `POST /api/inbox/{id}/document` · `/link` · `/workflow` | Documento a partir da mensagem, associação a um documento e início de processo |
+| `GET /api/integrations` · `/{id}` · `/{id}/log` | Cartões das integrações e o registo de cada uma |
+| `POST /api/integrations/{id}/run` | Executa uma integração agora (exige `integrations.manage`) |
+| `PUT /api/integrations/{id}` | Ativa, desativa e configura (destino do webhook validado no servidor) |
+| `GET /api/portal/submissions` · `/{id}` | O que este parceiro submeteu, e o estado de cada submissão |
+| `POST /api/portal/submissions` | Submete um documento (multipart); exige `portal.submit` |
+| `POST /api/portal/submissions/{id}/information` | Responde a um pedido de informação em aberto |
+| `GET /api/portal/submissions/{id}/content` | Descarrega o ficheiro que o próprio parceiro enviou |
+| `GET /api/documents/{id}/signatures` · `POST` | Pedidos de assinatura de um documento, e criar um |
+| `GET /api/signatures/mine` | O que aguarda a assinatura de quem pergunta |
+| `POST /api/signatures/{id}/sign` · `/decline` · `/cancel` | Assinar, recusar com motivo, retirar o pedido |
+| `GET /api/reports/dashboard` | Indicadores, tendências, distribuições e estrangulamentos do período pedido, limitados ao que o chamador pode ver |
+| `GET /api/reports/dashboard.csv` | O mesmo conjunto em CSV; exige `reports.export` |
+| `GET /api/admin/users` | Contas da organização do chamador (`includeInactive` traz as desativadas) |
+| `POST /api/admin/users` | Cria uma conta e devolve a palavra-passe inicial, uma única vez |
+| `PUT /api/admin/users/{id}` | Nome, função, perfis e departamentos; recusa a própria conta e `SystemAdmin` |
+| `POST /api/admin/users/{id}/active` | Desativa ou reativa; nunca elimina |
+| `GET /api/admin/roles` | Perfis atribuíveis e o que cada um concede |
+| `GET /api/admin/departments` · `POST` · `PUT /{id}` | Departamentos da organização, com código único |
+| `GET /api/admin/document-types` · `POST` · `PUT /{id}` | Tipos de documento da organização (`includeInactive` traz os desativados) |
+| `POST /api/admin/document-types/{id}/active` | Desativa ou reativa; o tipo de entrada é recusado |
+| `GET /api/admin/document-types/{id}/fields` · `POST` · `PUT /{fieldId}` · `DELETE /{fieldId}` | Esquema de metadados do tipo; eliminar é recusado se algum documento preencher o campo |
+| `GET /api/admin/retention-policies` | As políticas que um tipo pode adotar por omissão |
+| `GET /api/admin/tags` · `POST` · `PUT /{id}` | Etiquetas da organização (`includeDeleted` traz as removidas) |
+| `DELETE /api/admin/tags/{id}` · `POST /{id}/restore` | Remove de circulação e repõe: as ligações aos documentos sobrevivem |
+| `POST /api/admin/retention-policies` · `PUT /{id}` | Políticas de retenção; exige `admin.settings` |
+| `POST /api/admin/retention-policies/{id}/active` | Retirar é recusado enquanto um tipo a adotar |
+| `GET /api/tenants/current/roles` | Os perfis a quem um documento pode ser concedido |
+| `GET /api/documents/{id}/effective-access` | Porque é que o chamador alcança o documento, ou, para quem pode partilhar, porque é que outra pessoa o alcança |
+| `GET /api/system/health` | Estado do trabalho em segundo plano e do trabalho à espera; exige `admin.settings` |
+| `GET /health` · `/health/live` · `/health/ready` | Sondas anónimas: nome, estado e duração, e nada mais |
+
+### 13.5 Observabilidade
+
+- **Logs estruturados** (Serilog) com `CorrelationId`, `UserId` e propriedades de pedido.
+- **Correlação ponta a ponta**: o mesmo identificador aparece no cabeçalho `X-Correlation-Id` da
+  resposta, nos logs, no *trace* e em cada registo de auditoria do pedido.
+- **OpenTelemetry** para *traces* e métricas de ASP.NET Core e HttpClient; exportação OTLP ativada
+  apenas quando existe *endpoint* configurado.
+- **Health checks**: `/health/live` (processo vivo), `/health/ready` (dependências prontas),
+  `/health` (visão completa), sem revelar detalhe de infraestrutura.
+
+### 13.6 Compromissos assumidos
+
+| Decisão | Alternativa ponderada | Porque assim |
+| --- | --- | --- |
+| Monólito modular | Microserviços | Domínio transacional e coeso; evita consistência eventual desnecessária |
+| Um tenant por utilizador | Adesão N:N a organizações | Simplifica cada consulta e o início de sessão; administradores de plataforma cobrem o caso excecional |
+| Permissões em *claims* de perfil | Tabela de permissões própria | Reutiliza a infraestrutura do Identity; permissões editáveis sem novo *deploy* |
+| `IdentityUser` no domínio | Entidade de domínio separada do utilizador de autenticação | Evita duplicação de modelos e sincronização entre eles; ver [ADR-002](adr/ADR-002-authentication.md) |
+| Cookies em vez de JWT | *Bearer tokens* no cliente | Sem token acessível a JavaScript; XSS não permite roubo de sessão |
+| Validação de `Origin` | *Tokens* antifalsificação | Protege toda a API sem estado adicional no cliente; `SameSite=Lax` cobre o resto |
+| Sem MediatR/CQRS | Pipeline de comandos e consultas | Custo de indireção não justificado nesta dimensão |
+| Conteúdo fora da base de dados | `varbinary(max)` ou `FILESTREAM` | Base pequena e rápida; mesmo código em disco local e em armazenamento de objetos |
+| Acesso separado do ciclo de vida | Um único cálculo de "pode editar" | Misturá-los tornava impossível arquivar um documento aprovado |
+| Metadados em EAV com colunas tipadas | Coluna por campo, ou só JSON | Esquema configurável pelo cliente sem perder filtros e ordenações em SQL |
+| Motor de workflow próprio | Elsa, BPMN, WF | Persistência e identidade próprias colidiriam com o isolamento e a auditoria; ver [ADR-006](adr/ADR-006-workflow-engine.md) |
+| Condições como operador sobre variável | Linguagem de expressões | Suficiente para regras de negócio, e sem superfície para executar código a partir de dados |
+| Worker em processo separado | Trabalho em segundo plano dentro da API | Trabalho periódico e lento não partilha recursos com pedidos de utilizadores |
+| Indicadores calculados no momento | Tabela de agregados mantida por um processo à parte, ou cache | Paga-se latência para nunca haver um painel que discorda da lista ao lado; ver [ADR-010](adr/ADR-010-analytics-from-queries.md) |
+| Medida sem base devolve `null` | Devolver zero, como quase todos os painéis | Zero afirma que se mediu; num período sem nada para medir é uma mentira com aspeto de facto |
+| Negar por omissão no motor, com três identidades | Confiar nos filtros do EF Core e documentar a limitação | Uma ligação que não declara organização vê zero linhas, e a dispensa exige a identidade `app_system`; ver [ADR-011](adr/ADR-011-row-level-security-deny-by-default.md) |
+| Chaves geradas pela aplicação (UUIDv7) | Identidade gerada pela base de dados | A entidade tem identidade antes de ser gravada, o EF não confunde uma versão nova com uma existente, e por serem sequenciais não fragmentam os índices como um GUID aleatório |
+| Auditoria escrita num contexto próprio | Na mesma transação da operação | O registo de uma tentativa recusada ou falhada sobrevive ao *rollback* da operação que descreve |
+| O desenhador só oferece o que o motor executa | Paleta com todos os tipos de passo previstos | Um processo desenhado nunca falha ao executar por usar um passo que o motor ainda não sabe correr |
