@@ -215,7 +215,9 @@ export function PermissionsPanel({
   const canShare = document.effectiveAccess.levels.includes('share')
   const [subjectType, setSubjectType] = useState<number>(PermissionSubjectType.Department)
   const [subjectId, setSubjectId] = useState('')
-  const [levels, setLevels] = useState<string[]>(['view', 'download'])
+  const [levels, setLevels] = useState<string[]>(() =>
+    (['view', 'download'] as const).filter((level) => document.effectiveAccess.levels.includes(level)),
+  )
   const [expiresAt, setExpiresAt] = useState('')
 
   // As permissões concedem-se por pessoa, departamento e perfil. Os perfis vêm do
@@ -396,17 +398,19 @@ export function PermissionsPanel({
                 {t('documents.permissionsPanel.levels')}
               </span>
               <div className="flex flex-wrap gap-2">
-                {(['download', 'edit', 'delete', 'approve', 'share'] as const).map((level) => (
-                  <label key={level} className="flex items-center gap-1 text-xs text-ink-secondary">
-                    <input
-                      type="checkbox"
-                      checked={levels.includes(level)}
-                      onChange={() => toggleLevel(level)}
-                      className="size-4 accent-teal-700"
-                    />
-                    {t(`documents.access.${level}`)}
-                  </label>
-                ))}
+                {(['download', 'edit', 'delete', 'approve', 'share'] as const)
+                  .filter((level) => document.effectiveAccess.levels.includes(level))
+                  .map((level) => (
+                    <label key={level} className="flex items-center gap-1 text-xs text-ink-secondary">
+                      <input
+                        type="checkbox"
+                        checked={levels.includes(level)}
+                        onChange={() => toggleLevel(level)}
+                        className="size-4 accent-teal-700"
+                      />
+                      {t(`documents.access.${level}`)}
+                    </label>
+                  ))}
               </div>
             </div>
 

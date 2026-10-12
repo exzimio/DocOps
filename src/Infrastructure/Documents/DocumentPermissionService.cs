@@ -29,11 +29,23 @@ public sealed class DocumentPermissionService(
         Guid documentId, GrantDocumentPermissionRequest request, CancellationToken cancellationToken = default)
     {
         Document document = await LoadAsync(documentId, cancellationToken);
-        await accessResolver.EnsureAsync(document, DocumentAccessLevel.Share, clock.UtcNow, cancellationToken);
+        EffectiveAccess granterAccess =
+            await accessResolver.EnsureAsync(document, DocumentAccessLevel.Share, clock.UtcNow, cancellationToken);
 
         // Every grant carries at least View: a right to edit or approve something you cannot open is
         // meaningless, and the invariant lets the document list filter access in SQL.
         DocumentAccessLevel level = AccessLevelNames.FromNames(request.AccessLevels) | DocumentAccessLevel.View;
+
+        // Share is the right to pass on access, not to create it. Without this cap, someone holding
+        // only View and Share could grant themselves Administer.
+        DocumentAccessLevel beyondGranter = level & ~granterAccess.Level;
+
+        if (beyondGranter != DocumentAccessLevel.None)
+        {
+            throw new ForbiddenOperationException(
+                $"Não pode conceder sobre o documento '{document.Reference}' um acesso que não tem: " +
+                $"{string.Join(", ", AccessLevelNames.ToNames(beyondGranter))}.");
+        }
 
         (Guid? subjectId, string? roleName, string displayName) =
             await ResolveSubjectAsync(request, cancellationToken);

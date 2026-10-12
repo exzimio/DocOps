@@ -22,6 +22,7 @@ public class DocumentsTests(DocOpsApiFactory factory)
     private const string Employee = "ana.ferreira@asteria.example";
     private const string ExternalPartner = "contacto@northstar.example";
     private const string VerticeAdmin = "admin@vertice.example";
+    private const string OtherEmployee = "joao.pereira@asteria.example";
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -286,8 +287,11 @@ public class DocumentsTests(DocOpsApiFactory factory)
             HttpStatusCode.Forbidden,
             (await approver.DeleteAsync($"/api/documents/{document.Summary.Id}")).StatusCode);
 
-        // Sharing the document with the manager so the delete is possible for the right reason.
-        await approver.PostAsJsonAsync(
+        // The approver cannot pass on a delete right it does not hold, so the administrator shares
+        // the document with the manager, and the delete is possible for the right reason.
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        HttpResponseMessage shared = await admin.PostAsJsonAsync(
             $"/api/documents/{document.Summary.Id}/permissions",
             new GrantDocumentPermissionRequest
             {
@@ -295,6 +299,8 @@ public class DocumentsTests(DocOpsApiFactory factory)
                 RoleName = "Manager",
                 AccessLevels = ["view", "download", "edit", "delete"]
             });
+
+        Assert.Equal(HttpStatusCode.OK, shared.StatusCode);
 
         Assert.Equal(
             HttpStatusCode.NoContent,
@@ -365,6 +371,70 @@ public class DocumentsTests(DocOpsApiFactory factory)
         Assert.Equal(
             HttpStatusCode.Forbidden,
             (await employee.GetAsync($"/api/documents/{document.Summary.Id}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Sharing_cannot_grant_more_than_the_granter_holds()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient approver = await factory.SignInAsync(FinanceApprover);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(
+            admin, "Fatura partilhada com quem só pode ver e partilhar", SecurityClassification.Restricted);
+
+        Guid approverId = (await approver.GetFromJsonAsync<CurrentUserProfile>("/api/auth/me", Json))!.Id;
+        Guid employeeId = (await (await factory.SignInAsync(OtherEmployee))
+            .GetFromJsonAsync<CurrentUserProfile>("/api/auth/me", Json))!.Id;
+
+        HttpResponseMessage shareRight = await admin.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/permissions",
+            new GrantDocumentPermissionRequest
+            {
+                SubjectType = PermissionSubjectType.User,
+                SubjectId = approverId,
+                AccessLevels = ["view", "share"]
+            });
+
+        Assert.Equal(HttpStatusCode.OK, shareRight.StatusCode);
+
+        // The approver's role allows edit, approve and download, but on this document it holds only
+        // view and share. Neither another person nor the approver itself can be given more.
+        foreach ((Guid subjectId, string level) in new[]
+                 {
+                     (employeeId, "edit"),
+                     (employeeId, "download"),
+                     (approverId, "approve"),
+                     (approverId, "administer")
+                 })
+        {
+            HttpResponseMessage refused = await approver.PostAsJsonAsync(
+                $"/api/documents/{document.Summary.Id}/permissions",
+                new GrantDocumentPermissionRequest
+                {
+                    SubjectType = PermissionSubjectType.User,
+                    SubjectId = subjectId,
+                    AccessLevels = ["view", level]
+                });
+
+            Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
+        }
+
+        HttpResponseMessage passedOn = await approver.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/permissions",
+            new GrantDocumentPermissionRequest
+            {
+                SubjectType = PermissionSubjectType.User,
+                SubjectId = employeeId,
+                AccessLevels = ["view"]
+            });
+
+        Assert.Equal(HttpStatusCode.OK, passedOn.StatusCode);
+
+        DocumentDetailDto asApprover =
+            (await approver.GetFromJsonAsync<DocumentDetailDto>($"/api/documents/{document.Summary.Id}", Json))!;
+
+        Assert.DoesNotContain("approve", asApprover.EffectiveAccess.Levels);
+        Assert.DoesNotContain("administer", asApprover.EffectiveAccess.Levels);
     }
 
     [Fact]
