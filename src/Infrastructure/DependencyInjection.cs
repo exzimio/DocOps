@@ -380,6 +380,27 @@ public static class DependencyInjection
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = true;
 
+            // The re-check reads the account under row-level security, which needs the organisation,
+            // and at this point the request has no user yet. The cookie's own principal supplies it
+            // for the duration of the check: it was just decrypted with the server's keys, the same
+            // trust the rest of the request gives it. Without this every session was refused at its
+            // first re-check, five minutes in. The previous user is put back afterwards whatever the
+            // outcome, so a rejected principal cannot stay on the request.
+            options.Events.OnValidatePrincipal = async context =>
+            {
+                System.Security.Claims.ClaimsPrincipal previous = context.HttpContext.User;
+                context.HttpContext.User = context.Principal ?? previous;
+
+                try
+                {
+                    await SecurityStampValidator.ValidatePrincipalAsync(context);
+                }
+                finally
+                {
+                    context.HttpContext.User = previous;
+                }
+            };
+
             // This is an API: answer with status codes instead of redirecting to an HTML login page.
             options.Events.OnRedirectToLogin = context =>
             {
