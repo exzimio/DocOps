@@ -385,9 +385,9 @@ public static class DependencyInjection
             // The re-check reads the account under row-level security, which needs the organisation,
             // and at this point the request has no user yet. The cookie's own principal supplies it
             // for the duration of the check: it was just decrypted with the server's keys, the same
-            // trust the rest of the request gives it. Without this every session was refused at its
-            // first re-check, five minutes in. The previous user is put back afterwards whatever the
-            // outcome, so a rejected principal cannot stay on the request.
+            // trust the rest of the request gives it. Without it the account is not found and every
+            // session is refused at its first re-check. The previous user is put back afterwards
+            // whatever the outcome, so a rejected principal cannot stay on the request.
             options.Events.OnValidatePrincipal = async context =>
             {
                 System.Security.Claims.ClaimsPrincipal previous = context.HttpContext.User;

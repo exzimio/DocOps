@@ -139,8 +139,8 @@ public static class WorkflowVariables
         JsonSerializer.Serialize(keys.Distinct(StringComparer.Ordinal).ToArray(), SerializerOptions);
 
     /// <summary>
-    /// Each timer node keeps its own moment, under <c>timer:</c> and its key. One moment per instance
-    /// was not enough: two timers on parallel branches would share it, and the first to elapse would
+    /// Each timer node keeps its own moment, under <c>timer:</c> and its key. A single moment per
+    /// instance would be shared by two timers on parallel branches, and the first to elapse would
     /// clear it for both.
     /// </summary>
     private const string TimerPrefix = "timer:";
