@@ -361,6 +361,7 @@ public static class DependencyInjection
                 options.ClaimsIdentity.RoleClaimType = System.Security.Claims.ClaimTypes.Role;
             })
             .AddEntityFrameworkStores<DocOpsDbContext>()
+            .AddSignInManager<DocOpsSignInManager>()
             .AddClaimsPrincipalFactory<DocOpsUserClaimsPrincipalFactory>()
             .AddDefaultTokenProviders();
 

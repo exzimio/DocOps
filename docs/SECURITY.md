@@ -22,7 +22,7 @@ se destina a tratar dados reais.
 | Palavra-passe | Mínimo 12 caracteres, maiúscula, minúscula, dígito e símbolo; hash PBKDF2 do Identity |
 | Bloqueio | 5 tentativas falhadas → 15 minutos de bloqueio, aplicável também a contas novas |
 | Enumeração de contas | Palavra-passe errada e conta inexistente devolvem exatamente a mesma resposta |
-| Revalidação | *Security stamp* revalidado a cada 5 minutos: permissões revogadas deixam de funcionar sem esperar pelo fim da sessão. A conta é lida com a organização do próprio cookie, porque a política ao nível da linha nega a leitura a um pedido sem organização |
+| Revalidação | *Security stamp* revalidado a cada 5 minutos: permissões revogadas deixam de funcionar sem esperar pelo fim da sessão, e uma sessão de uma conta ou organização desativada é recusada. A conta é lida com a organização do próprio cookie, porque a política ao nível da linha nega a leitura a um pedido sem organização |
 | Sessão | 8 horas com renovação deslizante |
 
 Fora de desenvolvimento o cookie leva `Secure` qualquer que seja o esquema com que o pedido chega à
