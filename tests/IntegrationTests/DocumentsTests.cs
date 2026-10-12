@@ -35,17 +35,18 @@ public class DocumentsTests(DocOpsApiFactory factory)
     {
         HttpClient partner = await factory.SignInAsync(ExternalPartner);
 
-        PagedResult<DocumentListItemDto>? result =
-            await partner.GetFromJsonAsync<PagedResult<DocumentListItemDto>>("/api/documents?pageSize=100", Json);
-
-        Assert.NotNull(result);
+        // The partner sees documents only through the portal, whose list applies the same
+        // visibility rule as the internal one.
+        IReadOnlyList<DocOps.Application.Portal.PortalSubmissionDto> result =
+            (await partner.GetFromJsonAsync<IReadOnlyList<DocOps.Application.Portal.PortalSubmissionDto>>(
+                "/api/portal/submissions", Json))!;
 
         // Not a count: the portal suite legitimately submits documents as this same partner, and a
         // fixed total would make this test depend on which class ran first. What has to hold is
-        // that every row it gets back is its own — the invoice shared with it, plus anything it
-        // submitted itself — and that none of the organisation's other documents leaked in.
-        Assert.NotEmpty(result.Items);
-        Assert.Contains(result.Items, item => item.Title.Contains("Northstar", StringComparison.Ordinal));
+        // that every row it gets back is its own: the invoice shared with it, plus anything it
+        // submitted itself, and that none of the organisation's other documents leaked in.
+        Assert.NotEmpty(result);
+        Assert.Contains(result, item => item.Title.Contains("Northstar", StringComparison.Ordinal));
 
         HttpClient admin = await factory.SignInAsync(Administrator);
         PagedResult<DocumentListItemDto>? everything =
@@ -53,7 +54,7 @@ public class DocumentsTests(DocOpsApiFactory factory)
 
         Assert.NotNull(everything);
         Assert.True(
-            result.TotalCount < everything.TotalCount,
+            result.Count < everything.TotalCount,
             "o parceiro externo não pode ver o catálogo inteiro da organização");
     }
 

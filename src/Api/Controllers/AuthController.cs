@@ -8,6 +8,7 @@ using DocOps.Application.Abstractions;
 namespace DocOps.Api.Controllers;
 
 [ApiController]
+[AllowExternalUsers]
 [Route("api/auth")]
 [Produces("application/json")]
 public sealed class AuthController(

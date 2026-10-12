@@ -1,3 +1,4 @@
+using DocOps.Api.Infrastructure;
 using DocOps.Application.Documents;
 using DocOps.Application.Portal;
 using DocOps.Domain.Identity;
@@ -16,6 +17,7 @@ namespace DocOps.Api.Controllers;
 /// the cookie claims, as it does everywhere else in this application.
 /// </summary>
 [ApiController]
+[AllowExternalUsers]
 [Route("api/portal")]
 [Authorize]
 [Produces("application/json")]

@@ -40,7 +40,11 @@ bool isDevelopment = builder.Environment.IsDevelopment();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration, isDevelopment);
 
-builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ExternalUserBoundaryFilter>();
+    options.Filters.Add<ValidationFilter>();
+});
 builder.Services.AddScoped<ValidationFilter>();
 
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
