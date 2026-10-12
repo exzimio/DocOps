@@ -1,6 +1,7 @@
 import { expect, request, type APIRequestContext } from '@playwright/test'
 
-const ORIGEM = 'http://localhost:5173'
+// O mesmo endereço que a configuração da suíte usa, para correr noutro porto sem editar nada aqui.
+const ORIGEM = process.env.E2E_BASE_URL ?? 'http://localhost:5173'
 
 /**
  * Põe uma submissão do portal à espera de resposta do fornecedor.
