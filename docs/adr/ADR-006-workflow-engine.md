@@ -19,14 +19,16 @@ Implementar um motor próprio, pequeno e orientado a dados:
   (início, tarefa humana, aprovação, condição, notificação, classificação por IA, extração por IA,
   integração, ramo paralelo, temporizador, fim) e propriedades em JSON validadas por tipo de nó.
 - **Execução**: `WorkflowInstance` guarda o estado atual, as variáveis do processo e os nós ativos.
-  O avanço é sempre uma transição explícita, persistida numa transação com o efeito que a originou
-  (concluir tarefa, alterar estado do documento, escrever auditoria).
+  O avanço é sempre uma transição explícita, gravada numa só transação com o que a originou e o que
+  provocou: a tarefa concluída, as tarefas novas, a cronologia, o estado do documento e as
+  notificações. A auditoria é escrita depois de essa gravação ter sucesso, no seu próprio contexto,
+  para registar só o que de facto aconteceu.
 - **Tarefas**: `WorkflowTask` representa trabalho humano com responsável, prazo, prioridade,
   estado e histórico de reatribuições.
 - **Tempo**: temporizadores, deteção de atrasos e escalonamento correm no *worker* em segundo plano;
   nenhum pedido HTTP espera por trabalho de longa duração.
-- **Cronologia**: cada transição escreve um evento com hora, ator, nó de origem, nó de destino e
-  decisão, o que produz a linha temporal apresentada na interface.
+- **Cronologia**: cada transição escreve um evento com hora, ator, o nó em que aconteceu e, quando
+  há, a decisão e o comentário, o que produz a linha temporal apresentada na interface.
 
 ## Alternativas consideradas
 

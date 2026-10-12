@@ -21,7 +21,7 @@ se destina a tratar dados reais.
 | Armazenamento no cliente | Nenhum. Não há *token* acessível a JavaScript (sem `localStorage`, sem `sessionStorage`) |
 | Palavra-passe | Mínimo 12 caracteres, maiúscula, minúscula, dígito e símbolo; hash PBKDF2 do Identity |
 | Bloqueio | 5 tentativas falhadas → 15 minutos de bloqueio, aplicável também a contas novas |
-| Enumeração de contas | Palavra-passe errada e conta inexistente devolvem exatamente a mesma resposta |
+| Enumeração de contas | Palavra-passe errada e conta inexistente devolvem exatamente a mesma resposta. Uma conta desativada, ou de uma organização inativa, recebe uma resposta própria antes de a palavra-passe ser verificada, o que confirma que a conta existe |
 | Revalidação | *Security stamp* revalidado a cada 5 minutos: permissões revogadas deixam de funcionar sem esperar pelo fim da sessão, e uma sessão de uma conta ou organização desativada é recusada. A conta é lida com a organização do próprio cookie, porque a política ao nível da linha nega a leitura a um pedido sem organização |
 | Sessão | 8 horas com renovação deslizante |
 
@@ -228,7 +228,7 @@ no alojamento estático do frontend.
 
 | Âmbito | Limite |
 | --- | --- |
-| Global | 300 pedidos por minuto por utilizador autenticado ou endereço IP |
+| Global | 300 pedidos por minuto por endereço IP. O limitador corre antes da autenticação, por isso não distingue utilizadores atrás do mesmo endereço |
 | Autenticação | 10 tentativas por 5 minutos por endereço IP |
 
 Excedido o limite, a resposta é `429`. A limitação por IP complementa o bloqueio de
@@ -279,7 +279,8 @@ escreveu antes dela é ignorado. É este endereço que o limitador de autentica�
   antes de serem serializados.
 
 **E não só na aplicação.** As duas identidades com que a aplicação fala com a base têm `UPDATE` e
-`DELETE` recusados nesta tabela, em `scripts/create-database-identities.sql`:
+`DELETE` recusados nesta tabela, numa migração (`DenyAuditMutationToApplicationIdentities`) e não no
+guião das identidades, porque o guião corre antes de a tabela existir:
 
 ```sql
 DENY UPDATE, DELETE ON dbo.[AuditEvents] TO [app_tenant];
@@ -322,7 +323,7 @@ a `docops_migrator` como qualquer outra tabela, e esse é o limite assumido de t
 | Roubo de sessão por XSS | Cookie `HttpOnly`; nenhum *token* acessível a JavaScript |
 | CSRF | `SameSite=Lax` + validação de origem em métodos que alteram estado |
 | Força bruta e *credential stuffing* | Bloqueio de conta + limitação por IP + respostas indistinguíveis |
-| Enumeração de contas | Resposta idêntica para conta inexistente e palavra-passe errada |
+| Enumeração de contas | Resposta idêntica para conta inexistente e palavra-passe errada. Contas desativadas e organizações inativas têm resposta própria, e por isso confirmam que a conta existe |
 | Fuga entre organizações | Filtros de consulta + intercetor de escrita + testes dedicados |
 | Acesso indevido a documento | Avaliação por recurso no servidor, com teto pelas permissões do perfil |
 | Travessia de caminho no armazenamento | Chave gerada pelo servidor e caminho validado contra a raiz |

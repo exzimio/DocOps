@@ -45,9 +45,10 @@ It needs the .NET 10 SDK, Node 24 and Docker.
 - **Around the repository.** A mail inbox, six integration adapters (three with a simulated far end,
   labelled as such), a supplier portal, an electronic signature flow without legal validity, reports
   computed by query, and administration of users, types, tags and retention.
-- **Security.** Cookie sessions, permission-based authorisation on the server, tenant isolation in
-  EF Core and in SQL Server, an immutable audit trail, client addresses read safely behind nginx,
-  and webhook destinations checked when the server connects.
+- **Security.** Cookie sessions that end when the account is deactivated, permission-based
+  authorisation on the server, tenant isolation in EF Core and in SQL Server, external accounts
+  limited to the supplier portal, an immutable audit trail, client addresses read safely behind
+  nginx, and webhook destinations checked when the server connects.
 - **Interface.** Portuguese and English, light and dark themes, keyboard navigation, checked with
   axe-core at desktop and mobile widths.
 
@@ -78,9 +79,9 @@ All the trade-offs are listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#136
 
 | Level | Tools | Count | What it covers |
 | --- | --- | --- | --- |
-| Unit | xUnit | 380 | Access evaluation, document lifecycle, workflow validation, tenant filter coverage, AI citations, webhook address rules |
-| Integration | xUnit, Testcontainers | 227 | The HTTP API against a real SQL Server, connected with the same three identities as the application |
-| Component | Vitest, Testing Library | 67 | HTTP client and error contract, sign-in, designer graph, AI suggestions |
+| Unit | xUnit | 382 | Access evaluation, document lifecycle, workflow validation, tenant filter coverage, AI citations, webhook address rules |
+| Integration | xUnit, Testcontainers | 241 | The HTTP API against a real SQL Server, connected with the same three identities as the application |
+| Component | Vitest, Testing Library | 68 | HTTP client and error contract, sign-in, designer graph, AI suggestions, render error boundary |
 | End-to-end | Playwright, axe-core | 104 × 2 | Real browser journeys, each run at desktop and at mobile size, including accessibility checks |
 
 Every level runs in CI on each push. Two convention tests check things a reviewer would miss: one
