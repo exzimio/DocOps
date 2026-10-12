@@ -184,7 +184,7 @@ public sealed class WorkflowEngine(
         if (decision == WorkflowTaskDecision.Rejected && !hasBranchEdges)
         {
             // A rejection with nowhere to go ends the process — that is the outcome, not a failure.
-            await CancelRemainingTasksAsync(instance, "Processo rejeitado", now);
+            CancelOpenTasks(instance, "Processo rejeitado", now);
             instance.Status = WorkflowInstanceStatus.Rejected;
             instance.CompletedAtUtc = now;
             instance.Outcome = "Rejeitado";
@@ -267,7 +267,7 @@ public sealed class WorkflowEngine(
         Dictionary<string, string?> variables = WorkflowVariables.Parse(instance.VariablesJson);
         WorkflowExecutionContext context = CreateContext(instance, definition, variables);
 
-        await CancelRemainingTasksAsync(instance, reason, now);
+        CancelOpenTasks(instance, reason, now);
 
         instance.Status = WorkflowInstanceStatus.Cancelled;
         instance.CompletedAtUtc = now;
@@ -452,6 +452,10 @@ public sealed class WorkflowEngine(
         instance.CompletedAtUtc = context.Now;
         instance.Outcome = result.Outcome;
         instance.ActiveNodeKeysJson = WorkflowVariables.ToNodeKeysJson([]);
+
+        // An end node ends the whole process, other branches included. Their open tasks could no
+        // longer be decided, so they are closed here instead of waiting in someone's list for good.
+        CancelOpenTasks(instance, "O processo terminou noutro ramo.", context.Now);
         instance.VariablesJson = WorkflowVariables.ToJson(context.Variables);
 
         context.AddEvent(
@@ -469,7 +473,9 @@ public sealed class WorkflowEngine(
 
         metrics.WorkflowInstance("failed");
         instance.CompletedAtUtc = context.Now;
+        instance.ActiveNodeKeysJson = WorkflowVariables.ToNodeKeysJson([]);
         instance.VariablesJson = WorkflowVariables.ToJson(context.Variables);
+        CancelOpenTasks(instance, "O processo foi interrompido.", context.Now);
 
         context.AddEvent(WorkflowEventTypes.InstanceFailed, "Execução interrompida", detail: reason);
 
@@ -507,7 +513,8 @@ public sealed class WorkflowEngine(
             return;
         }
 
-        foreach (WorkflowTask task in context.CreatedTasks)
+        // A task created and then closed in the same walk, because the process ended, notifies nobody.
+        foreach (WorkflowTask task in context.CreatedTasks.Where(t => t.IsOpen))
         {
             Guid[] recipients = await ResolveTaskRecipientsAsync(task, cancellationToken);
 
@@ -563,7 +570,7 @@ public sealed class WorkflowEngine(
         return [];
     }
 
-    private static async Task CancelRemainingTasksAsync(WorkflowInstance instance, string reason, DateTimeOffset now)
+    private static void CancelOpenTasks(WorkflowInstance instance, string reason, DateTimeOffset now)
     {
         foreach (WorkflowTask task in instance.Tasks.Where(t => t.IsOpen))
         {
@@ -571,8 +578,6 @@ public sealed class WorkflowEngine(
             task.CompletedAtUtc = now;
             task.DecisionComment = reason;
         }
-
-        await Task.CompletedTask;
     }
 
     private WorkflowExecutionContext CreateContext(

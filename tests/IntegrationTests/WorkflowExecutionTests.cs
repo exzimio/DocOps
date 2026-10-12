@@ -140,6 +140,86 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
     }
 
     // -----------------------------------------------------------------------------------------
+    // Ending with work still open
+    // -----------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Reaching_the_end_on_one_branch_closes_the_tasks_left_open_on_the_others()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient manager = await factory.SignInAsync(Manager);
+
+        Guid definitionId = await DesignAsync(admin, "Fim num ramo com tarefa noutro",
+            [
+                Node("inicio", WorkflowNodeType.Start),
+                Node("divisao", WorkflowNodeType.ParallelBranch),
+                Approval("gestor", "Manager"),
+                Node("passo", WorkflowNodeType.ParallelBranch),
+                End("fim-gestor"),
+                End("fim")
+            ],
+            [
+                Edge("inicio", "divisao"),
+                Edge("divisao", "gestor"),
+                Edge("divisao", "passo"),
+                Edge("passo", "fim"),
+                Edge("gestor", "fim-gestor", "approved")
+            ]);
+
+        WorkflowInstanceDetailDto instance = await StartAsync(admin, definitionId);
+
+        // The end is one step further than the task, so the task exists when the end is reached.
+        Assert.NotEmpty(instance.Tasks);
+
+        // An end node ends the whole process. A task left open on the other branch could no longer
+        // be decided, because the process has finished, and would sit in someone's list for good.
+        Assert.Equal(WorkflowInstanceStatus.Completed, instance.Summary.Status);
+        Assert.Empty(instance.ActiveNodeKeys);
+        Assert.All(instance.Tasks, task => Assert.Equal(WorkflowTaskStatus.Cancelled, task.Status));
+        Assert.Empty(await OpenTasksAsync(manager, instance.Summary.Id));
+    }
+
+    [Fact]
+    public async Task A_process_that_fails_closes_the_tasks_left_open_on_other_branches()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient manager = await factory.SignInAsync(Manager);
+
+        // The second branch asks for a document status the state machine refuses from a draft, so
+        // the engine stops the instance there, after the first branch has already created a task.
+        Guid definitionId = await DesignAsync(admin, "Falha num ramo com tarefa noutro",
+            [
+                Node("inicio", WorkflowNodeType.Start),
+                Node("divisao", WorkflowNodeType.ParallelBranch),
+                Approval("gestor", "Manager"),
+                Node("passo", WorkflowNodeType.ParallelBranch),
+                Node("ilegal", WorkflowNodeType.ParallelBranch, """{"documentStatus":"Signed"}"""),
+                End("fim")
+            ],
+            [
+                Edge("inicio", "divisao"),
+                Edge("divisao", "gestor"),
+                Edge("divisao", "passo"),
+                Edge("passo", "ilegal"),
+                Edge("gestor", "fim", "approved"),
+                Edge("ilegal", "fim")
+            ]);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(admin, "Fatura de um processo que falha");
+
+        HttpResponseMessage started = await admin.PostAsJsonAsync(
+            "/api/workflows/instances", new StartWorkflowRequest { DefinitionId = definitionId, DocumentId = document.Summary.Id });
+        Assert.True(started.IsSuccessStatusCode, await started.Content.ReadAsStringAsync());
+        WorkflowInstanceDetailDto instance = (await started.Content.ReadFromJsonAsync<WorkflowInstanceDetailDto>(Json))!;
+
+        Assert.Equal(WorkflowInstanceStatus.Failed, instance.Summary.Status);
+        Assert.NotEmpty(instance.Tasks);
+        Assert.Empty(instance.ActiveNodeKeys);
+        Assert.All(instance.Tasks, task => Assert.Equal(WorkflowTaskStatus.Cancelled, task.Status));
+        Assert.Empty(await OpenTasksAsync(manager, instance.Summary.Id));
+    }
+
+    // -----------------------------------------------------------------------------------------
     // Join
     // -----------------------------------------------------------------------------------------
 
@@ -385,6 +465,10 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
 
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
     }
+
+    private static async Task<IReadOnlyList<TaskListItemDto>> OpenTasksAsync(HttpClient client, Guid instanceId) =>
+        (await client.GetFromJsonAsync<PagedResult<TaskListItemDto>>(
+            $"/api/tasks?scope=Mine&instanceId={instanceId}&statuses=0&statuses=1", Json))!.Items;
 
     private WebApplicationFactory<Program> WithClock(AdjustableClock clock) =>
         factory.WithWebHostBuilder(builder =>
