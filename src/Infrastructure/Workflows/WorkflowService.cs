@@ -388,36 +388,10 @@ public sealed class WorkflowService(
             .FirstOrDefaultAsync(i => i.Id == instanceId, cancellationToken)
         ?? throw new EntityNotFoundException(nameof(WorkflowInstance), instanceId);
 
-    /// <summary>
-    /// An instance carries its document's reference, title, tasks and timeline, so
-    /// <c>workflows.view</c> alone would reveal restricted documents. An instance about a document
-    /// is visible to whoever may see that document, through the same predicate as the document
-    /// list, and to the people taking part in it: whoever started it and whoever holds or held one
-    /// of its tasks, directly or through a department or role. They already see the title in their
-    /// own task list. Anyone else gets 404, as the document list would.
-    /// </summary>
-    private async Task<IQueryable<WorkflowInstance>> VisibleInstancesAsync(CancellationToken cancellationToken)
-    {
-        AccessSubject subject = await accessResolver.GetSubjectAsync(cancellationToken);
-
-        IQueryable<Guid> visibleDocumentIds = dbContext.Documents
-            .Where(DocumentAccessResolver.BuildVisibilityPredicate(subject, clock.UtcNow))
-            .Select(d => d.Id);
-
-        Guid userId = subject.UserId;
-        Guid[] departmentIds = [.. subject.DepartmentIds];
-        string[] roles = [.. subject.Roles];
-
-        return dbContext.WorkflowInstances.Where(i =>
-            i.DocumentId == null
-            || visibleDocumentIds.Contains(i.DocumentId.Value)
-            || i.StartedByUserId == userId
-            || i.Tasks.Any(t =>
-                t.AssignedToUserId == userId
-                || t.CompletedByUserId == userId
-                || (t.AssignedToDepartmentId != null && departmentIds.Contains(t.AssignedToDepartmentId.Value))
-                || (t.AssignedToRole != null && roles.Contains(t.AssignedToRole))));
-    }
+    /// <summary>Hidden instances answer 404, as the document list would. See <see cref="WorkflowVisibility"/>.</summary>
+    private async Task<IQueryable<WorkflowInstance>> VisibleInstancesAsync(CancellationToken cancellationToken) =>
+        WorkflowVisibility.VisibleInstances(
+            dbContext, await accessResolver.GetSubjectAsync(cancellationToken), clock.UtcNow);
 
     private sealed record WorkflowInstanceListResult(
         IReadOnlyList<WorkflowInstanceListItemDto> Items, PageRequest Paging, long Total)

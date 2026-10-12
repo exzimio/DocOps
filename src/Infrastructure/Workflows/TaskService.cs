@@ -6,6 +6,7 @@ using DocOps.Domain.Common;
 using DocOps.Domain.Identity;
 using DocOps.Domain.Notifications;
 using DocOps.Domain.Workflows;
+using DocOps.Infrastructure.Documents;
 using DocOps.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,7 @@ public sealed class TaskService(
     DocOpsDbContext dbContext,
     WorkflowEngine engine,
     TaskAssignmentResolver assignmentResolver,
+    DocumentAccessResolver accessResolver,
     IAuditService auditService,
     ICurrentUser currentUser,
     IDateTimeProvider clock) : ITaskService
@@ -32,7 +34,7 @@ public sealed class TaskService(
         TaskSubject subject = await GetSubjectAsync(cancellationToken);
         DateTimeOffset now = clock.UtcNow;
 
-        IQueryable<WorkflowTask> query = ApplyScope(dbContext.WorkflowTasks, request.Scope, subject);
+        IQueryable<WorkflowTask> query = await ApplyScopeAsync(dbContext.WorkflowTasks, request.Scope, subject, cancellationToken);
 
         if (request.Statuses.Count > 0)
         {
@@ -92,7 +94,7 @@ public sealed class TaskService(
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new EntityNotFoundException(nameof(WorkflowTask), taskId);
 
-        EnsureVisible(task, subject);
+        await EnsureVisibleAsync(task, subject, cancellationToken);
 
         return TaskProjections.Decorate(task, subject, now);
     }
@@ -245,7 +247,7 @@ public sealed class TaskService(
         DateTimeOffset now = clock.UtcNow;
         DateTimeOffset thirtyDaysAgo = now.AddDays(-30);
 
-        IQueryable<WorkflowTask> query = ApplyScope(dbContext.WorkflowTasks, scope, subject);
+        IQueryable<WorkflowTask> query = await ApplyScopeAsync(dbContext.WorkflowTasks, scope, subject, cancellationToken);
 
         var counts = await query
             .GroupBy(_ => 1)
@@ -314,16 +316,23 @@ public sealed class TaskService(
     // Scope and authorisation
     // -----------------------------------------------------------------------------------------
 
-    private static IQueryable<WorkflowTask> ApplyScope(
-        IQueryable<WorkflowTask> query, TaskScope scope, TaskSubject subject)
+    private async Task<IQueryable<WorkflowTask>> ApplyScopeAsync(
+        IQueryable<WorkflowTask> query, TaskScope scope, TaskSubject subject, CancellationToken cancellationToken)
     {
+        // Seeing the whole organisation's work is not seeing its documents: a task carries its
+        // document's reference and title, so only tasks of processes the caller may see are listed,
+        // by the same rule as the instance list.
+        if (scope == TaskScope.All && subject.CanViewAll)
+        {
+            IQueryable<Guid> visibleInstanceIds = await VisibleInstanceIdsAsync(cancellationToken);
+            return query.Where(t => visibleInstanceIds.Contains(t.WorkflowInstanceId));
+        }
+
         Guid[] departmentIds = [.. subject.DepartmentIds];
         string[] roles = [.. subject.Roles];
 
         return scope switch
         {
-            TaskScope.All when subject.CanViewAll => query,
-
             TaskScope.All => throw new ForbiddenOperationException(
                 "Não tem permissão para ver as tarefas de toda a organização."),
 
@@ -339,17 +348,32 @@ public sealed class TaskService(
         };
     }
 
-    private static void EnsureVisible(TaskListItemDto task, TaskSubject subject)
+    private async Task EnsureVisibleAsync(TaskListItemDto task, TaskSubject subject, CancellationToken cancellationToken)
     {
-        bool visible = subject.CanViewAll
-            || task.AssignedToUserId == subject.UserId
+        bool mine = task.AssignedToUserId == subject.UserId
             || (task.AssignedToUserId is null && TaskProjections.IsOfferedTo(task, subject));
 
-        if (!visible)
+        if (mine)
+        {
+            return;
+        }
+
+        if (!subject.CanViewAll)
         {
             throw new ForbiddenOperationException("Esta tarefa não lhe está atribuída.");
         }
+
+        // As in the list: a task of a process the caller may not see does not exist for them.
+        if (!await (await VisibleInstanceIdsAsync(cancellationToken)).ContainsAsync(task.InstanceId, cancellationToken))
+        {
+            throw new EntityNotFoundException(nameof(WorkflowTask), task.Id);
+        }
     }
+
+    private async Task<IQueryable<Guid>> VisibleInstanceIdsAsync(CancellationToken cancellationToken) =>
+        WorkflowVisibility
+            .VisibleInstances(dbContext, await accessResolver.GetSubjectAsync(cancellationToken), clock.UtcNow)
+            .Select(i => i.Id);
 
     private static void EnsureCanAct(WorkflowTask task, TaskSubject subject)
     {

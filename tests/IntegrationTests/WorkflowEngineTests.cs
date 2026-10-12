@@ -397,6 +397,45 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         Assert.Equal(document.Summary.Reference, seen.Summary.DocumentReference);
     }
 
+    [Fact]
+    public async Task The_whole_organisation_task_list_hides_tasks_whose_document_the_caller_cannot_see()
+    {
+        HttpClient owner = await factory.SignInAsync(FinanceApprover);
+        HttpClient manager = await factory.SignInAsync(Manager);
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(
+            owner, "Fatura restrita com tarefa em curso", total: "650.00", SecurityClassification.Restricted);
+        WorkflowInstanceDetailDto instance = await StartAsync(owner, document.Summary.Id);
+        Guid taskId = Assert.Single(instance.Tasks).Id;
+
+        // The manager may see every task in the organisation, but not this document, and takes no
+        // part in the process: the task, which carries the document's title, is not theirs to see.
+        Assert.DoesNotContain(
+            (await OrganisationTasksAsync(manager, instance.Summary.Id)).Items,
+            task => task.Id == taskId);
+        Assert.Equal(HttpStatusCode.NotFound, (await manager.GetAsync($"/api/tasks/{taskId}")).StatusCode);
+
+        Assert.Contains(
+            (await OrganisationTasksAsync(admin, instance.Summary.Id)).Items,
+            task => task.Id == taskId && task.DocumentTitle == document.Summary.Title);
+
+        Guid managerId = (await manager.GetFromJsonAsync<CurrentUserProfile>("/api/auth/me", Json))!.Id;
+
+        HttpResponseMessage granted = await admin.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/permissions",
+            new GrantDocumentPermissionRequest
+            {
+                SubjectType = PermissionSubjectType.User,
+                SubjectId = managerId,
+                AccessLevels = ["view"]
+            });
+
+        Assert.Equal(HttpStatusCode.OK, granted.StatusCode);
+        Assert.Contains((await OrganisationTasksAsync(manager, instance.Summary.Id)).Items, task => task.Id == taskId);
+        Assert.Equal(HttpStatusCode.OK, (await manager.GetAsync($"/api/tasks/{taskId}")).StatusCode);
+    }
+
     /// <summary>
     /// The designer offers every node type, and the validator lets any of them be activated. A type
     /// without an executor would pass both and only fail when an instance reached it, so the
@@ -448,6 +487,10 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
 
         return (await response.Content.ReadFromJsonAsync<WorkflowInstanceDetailDto>(Json))!;
     }
+
+    private static async Task<PagedResult<TaskListItemDto>> OrganisationTasksAsync(HttpClient client, Guid instanceId) =>
+        (await client.GetFromJsonAsync<PagedResult<TaskListItemDto>>(
+            $"/api/tasks?scope=All&instanceId={instanceId}", Json))!;
 
     private static async Task<PagedResult<WorkflowInstanceListItemDto>> InstancesForDocumentAsync(
         HttpClient client, Guid documentId) =>
