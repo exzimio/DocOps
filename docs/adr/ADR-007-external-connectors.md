@@ -181,10 +181,23 @@ pelo validador e só falharia quando uma instância lá chegasse.
 ### O destino do webhook é validado no servidor porque é uma superfície de SSRF
 
 Um administrador a escrever um endereço que **este** servidor vai depois chamar é exatamente a forma
-de um pedido forjado do lado do servidor. `WebhookEndpoint.IsAcceptable` exige HTTPS e recusa
-*loopback* e as gamas privadas, e corre no `PUT`, antes de o endereço ser guardado, e não só na
-entrega. O diálogo do browser valida também, mas só para a mensagem; a verificação que conta é a que
-o cliente não pode contornar.
+de um pedido forjado do lado do servidor. A verificação é feita em dois momentos.
+
+- **Ao gravar**, no `PUT`: `WebhookEndpoint.IsAcceptable` exige HTTPS e recusa um endereço literal
+  interno, em IPv4 ou IPv6. O diálogo do browser valida também, mas só para a mensagem.
+- **Em cada entrega**: um nome que era público quando foi gravado pode passar a apontar para dentro
+  da rede (*DNS rebinding*). O `WebhookConnector` abre ele próprio a ligação TCP: resolve o nome,
+  recusa-o se **algum** dos endereços for interno, e liga-se só aos endereços que verificou. O
+  cliente HTTP não segue redirecionamentos, porque um servidor público podia responder 302 para um
+  interno, e ignora o proxy do sistema, que seria o endereço verificado no lugar do destino.
+
+São internos *loopback*, as gamas privadas, `0.0.0.0/8`, `100.64.0.0/10`, *link-local*, *multicast*,
+os endereços ULA e *link-local* de IPv6, e as gamas de transição de IPv6 (NAT64, 6to4, Teredo), que
+podem levar um IPv4 interno dentro. Um IPv4 mapeado em IPv6 é avaliado como o IPv4 que contém.
+
+O registo da integração diz que a entrega falhou e porquê em termos fixos, mas nunca traz a
+mensagem da exceção: ela nomeia o endereço e distingue uma porta fechada de uma que não responde, e
+isso, num ecrã que um administrador lê, fazia do webhook uma sonda da rede do servidor.
 
 Em troca, as definições de uma integração são explicitamente **não secretas**: nenhuma credencial é
 guardada em `SettingsJson`. É essa decisão que permite ao cartão mostrar o endereço já configurado

@@ -25,11 +25,38 @@ public sealed record WebhookSettings
 /// An administrator typing an address that the server then fetches is server-side request forgery
 /// waiting to happen: <c>http://169.254.169.254/</c> is a cloud metadata service, and
 /// <c>http://localhost:5180/</c> is this application talking to itself with its own network
-/// position. Neither is a webhook. The rule is therefore a small allow-list of shapes — HTTPS, a
-/// real host name, a public address — rather than a list of things to block.
+/// position. Neither is a webhook. The rule is therefore a small allow-list of shapes (HTTPS, a real
+/// host name, a public address) rather than a list of things to block.
+///
+/// Saving checks the address as written. A host name is checked again on every delivery, by
+/// <see cref="WebhookConnector"/>, against the addresses it resolves to at that moment.
 /// </summary>
 public static class WebhookEndpoint
 {
+    private static readonly System.Net.IPNetwork[] InternalNetworks =
+    [
+        System.Net.IPNetwork.Parse("0.0.0.0/8"),
+        System.Net.IPNetwork.Parse("10.0.0.0/8"),
+        System.Net.IPNetwork.Parse("100.64.0.0/10"),
+        System.Net.IPNetwork.Parse("127.0.0.0/8"),
+        System.Net.IPNetwork.Parse("169.254.0.0/16"),
+        System.Net.IPNetwork.Parse("172.16.0.0/12"),
+        System.Net.IPNetwork.Parse("192.0.0.0/24"),
+        System.Net.IPNetwork.Parse("192.168.0.0/16"),
+        System.Net.IPNetwork.Parse("198.18.0.0/15"),
+        System.Net.IPNetwork.Parse("224.0.0.0/3"),
+
+        System.Net.IPNetwork.Parse("::/96"),
+        System.Net.IPNetwork.Parse("64:ff9b::/96"),
+        System.Net.IPNetwork.Parse("64:ff9b:1::/48"),
+        System.Net.IPNetwork.Parse("2001::/32"),
+        System.Net.IPNetwork.Parse("2002::/16"),
+        System.Net.IPNetwork.Parse("fc00::/7"),
+        System.Net.IPNetwork.Parse("fe80::/10"),
+        System.Net.IPNetwork.Parse("fec0::/10"),
+        System.Net.IPNetwork.Parse("ff00::/8")
+    ];
+
     public static bool IsAcceptable(string? candidate, out string reason)
     {
         if (string.IsNullOrWhiteSpace(candidate))
@@ -56,9 +83,7 @@ public static class WebhookEndpoint
             return false;
         }
 
-        // A literal address is checked directly; a host name is only accepted as a name, because
-        // resolving it here and trusting the answer later is its own race.
-        if (IPAddress.TryParse(uri.Host, out IPAddress? address) && IsInternal(address))
+        if (IPAddress.TryParse(uri.IdnHost, out IPAddress? address) && IsInternal(address))
         {
             reason = "O destino aponta para um endereço interno.";
             return false;
@@ -68,20 +93,27 @@ public static class WebhookEndpoint
         return true;
     }
 
-    private static bool IsInternal(IPAddress address)
+    /// <summary>
+    /// True for every address that is not plainly on the public internet. IPv4-mapped IPv6 is
+    /// unwrapped first, and the IPv6 transition ranges (NAT64, 6to4, Teredo, IPv4-compatible) are
+    /// refused whole, because each of them can carry an internal IPv4 address inside.
+    /// </summary>
+    public static bool IsInternal(IPAddress address)
     {
-        if (IPAddress.IsLoopback(address))
+        if (address.IsIPv4MappedToIPv6)
         {
-            return true;
+            address = address.MapToIPv4();
         }
 
-        byte[] bytes = address.GetAddressBytes();
+        foreach (System.Net.IPNetwork network in InternalNetworks)
+        {
+            if (network.Contains(address))
+            {
+                return true;
+            }
+        }
 
-        return bytes.Length == 4
-            && (bytes[0] == 10
-                || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
-                || (bytes[0] == 192 && bytes[1] == 168)
-                || (bytes[0] == 169 && bytes[1] == 254));
+        return false;
     }
 }
 
@@ -108,9 +140,11 @@ public sealed class WebhookIntegrationAdapter(
     /// <summary>
     /// The actions another system plausibly cares about. A webhook that fired on every audit line —
     /// including every document anyone merely opened — would be noise, and would leak who reads what.
+    /// An array because EF Core translates <c>Contains</c> on an array into SQL, and on a set it
+    /// throws when the query runs.
     /// </summary>
-    private static readonly IReadOnlySet<string> Delivered = new HashSet<string>(StringComparer.Ordinal)
-    {
+    private static readonly string[] Delivered =
+    [
         AuditActions.DocumentCreated,
         AuditActions.DocumentStatusChanged,
         AuditActions.DocumentArchived,
@@ -118,7 +152,7 @@ public sealed class WebhookIntegrationAdapter(
         AuditActions.WorkflowInstanceCompleted,
         AuditActions.WorkflowInstanceCancelled,
         AuditActions.WorkflowTaskCompleted
-    };
+    ];
 
     public IntegrationAdapterInfo Info { get; } = new(
         IntegrationKind.Webhooks,
@@ -201,13 +235,32 @@ public sealed class WebhookIntegrationAdapter(
                 delivered++;
                 cursor = evt.OccurredAtUtc;
             }
-            catch (HttpRequestException exception)
+            catch (HttpRequestException exception) when (WebhookConnector.Refusal(exception) is { } refusal)
             {
                 entries.Add(new IntegrationLogEntry(
                     IntegrationLogLevel.Error,
                     "deliver",
-                    $"Não foi possível contactar o destino para «{evt.Action}».",
-                    exception.Message));
+                    refusal.Message,
+                    "Nada foi enviado. O destino só é contactado se todos os endereços do nome forem públicos."));
+                break;
+            }
+            catch (HttpRequestException)
+            {
+                // The exception's own message is left out of this log on purpose. It names the
+                // address and says whether the port refused or timed out, and the administrators
+                // who read this screen could use that to map what the server can reach.
+                entries.Add(new IntegrationLogEntry(
+                    IntegrationLogLevel.Error,
+                    "deliver",
+                    $"Não foi possível contactar o destino para «{evt.Action}»."));
+                break;
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                entries.Add(new IntegrationLogEntry(
+                    IntegrationLogLevel.Error,
+                    "deliver",
+                    $"O destino não respondeu a tempo a «{evt.Action}»."));
                 break;
             }
         }

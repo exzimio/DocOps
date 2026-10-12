@@ -213,8 +213,19 @@ public static class DependencyInjection
         services.AddScoped<IIntegrationAdapter, FileImportIntegrationAdapter>();
 
         // The webhook adapter really makes outbound calls, so it gets a client with a short timeout:
-        // an unresponsive far end must not hold a run open while the other integrations wait.
-        services.AddHttpClient<WebhookIntegrationAdapter>(client => client.Timeout = TimeSpan.FromSeconds(10));
+        // an unresponsive far end must not hold a run open while the other integrations wait. It
+        // connects through WebhookConnector, which only reaches public addresses, never follows a
+        // redirect (a public host could answer 302 to an internal one) and ignores any system proxy,
+        // which would otherwise be the address the connector checks.
+        services.AddSingleton<IWebhookHostResolver, DnsWebhookHostResolver>();
+        services.AddSingleton<WebhookConnector>();
+        services.AddHttpClient<WebhookIntegrationAdapter>(client => client.Timeout = TimeSpan.FromSeconds(10))
+            .ConfigurePrimaryHttpMessageHandler(provider => new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                UseProxy = false,
+                ConnectCallback = provider.GetRequiredService<WebhookConnector>().ConnectAsync
+            });
         services.AddScoped<IIntegrationAdapter>(provider => provider.GetRequiredService<WebhookIntegrationAdapter>());
 
         services.AddScoped<IntegrationExecutor>();

@@ -91,9 +91,16 @@ public sealed class IntegrationExecutor(
                 Status = IntegrationStatus.Failing,
                 Entries =
                 [
-                    // The message, not the stack: an operator reads this screen, and a stack trace
-                    // here would be noise that also risks carrying internals into the interface.
-                    new IntegrationLogEntry(IntegrationLogLevel.Error, "run", "A execução falhou.", exception.Message)
+                    // Neither the stack nor the message. Exception messages carry internals (a
+                    // query, an address, a path) to a screen administrators read; the server log
+                    // above has the full exception, found by the correlation id.
+                    new IntegrationLogEntry(
+                        IntegrationLogLevel.Error,
+                        "run",
+                        "A execução falhou.",
+                        correlationId is null
+                            ? "O detalhe está no registo do servidor."
+                            : $"O detalhe está no registo do servidor, com o identificador de correlação {correlationId}.")
                 ]
             };
         }

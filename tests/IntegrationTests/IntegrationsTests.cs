@@ -257,6 +257,11 @@ public class IntegrationsTests(DocOpsApiFactory factory)
     [InlineData("https://169.254.169.254/latest/meta-data")]
     [InlineData("https://10.0.0.5/hook")]
     [InlineData("https://192.168.1.10/hook")]
+    [InlineData("https://100.64.0.1/hook")]
+    [InlineData("https://0.0.0.0/hook")]
+    [InlineData("https://[fd00::1]/hook")]
+    [InlineData("https://[fe80::1]/hook")]
+    [InlineData("https://[::ffff:169.254.169.254]/hook")]
     [InlineData("not-a-url")]
     public async Task Refuses_a_webhook_destination_that_should_not_be_called(string endpoint)
     {
