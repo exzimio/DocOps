@@ -78,7 +78,7 @@ All the trade-offs are listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#136
 
 | Level | Tools | Count | What it covers |
 | --- | --- | --- | --- |
-| Unit | xUnit | 377 | Access evaluation, document lifecycle, workflow validation, tenant filter coverage, AI citations, webhook address rules |
+| Unit | xUnit | 380 | Access evaluation, document lifecycle, workflow validation, tenant filter coverage, AI citations, webhook address rules |
 | Integration | xUnit, Testcontainers | 227 | The HTTP API against a real SQL Server, connected with the same three identities as the application |
 | Component | Vitest, Testing Library | 67 | HTTP client and error contract, sign-in, designer graph, AI suggestions |
 | End-to-end | Playwright, axe-core | 104 × 2 | Real browser journeys, each run at desktop and at mobile size, including accessibility checks |

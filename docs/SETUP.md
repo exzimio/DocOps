@@ -205,7 +205,7 @@ npm --prefix src/Web run format:check
 | `Cors__AllowedOrigins__0` | `http://localhost:5173` | Origens autorizadas a chamar a API com credenciais |
 | `Seed__ApplyMigrations` | `true` em desenvolvimento | Aplicar migrações no arranque |
 | `Seed__Enabled` | `true` em desenvolvimento | Criar os dados de demonstração |
-| `Seed__DefaultPassword` | `Demo!Pass123` | Palavra-passe atribuída às contas de demonstração |
+| `DOCOPS_SEED_PASSWORD` | `Demo!Pass123` | Palavra-passe atribuída às contas de demonstração, aqui e no `docker-compose.full.yml`. Prevalece sobre `Seed__DefaultPassword`. O ecrã de entrada sugere sempre `Demo!Pass123`; com outro valor, essa sugestão deixa de funcionar |
 | `OpenTelemetry__OtlpEndpoint` | vazio | Exportação OTLP de *traces* e métricas; vazio mantém a telemetria em processo |
 | `FileStorage__RootPath` | `storage` | Raiz do armazenamento de ficheiros (relativa ao *content root* da API) |
 | `FileStorage__MaxFileSizeBytes` | `26214400` | Dimensão máxima aceite num carregamento (25 MB) |

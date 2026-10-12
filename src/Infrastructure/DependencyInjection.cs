@@ -57,7 +57,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
     {
-        services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
+        services.Configure<SeedOptions>(options => SeedOptions.Bind(configuration, options));
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUser>();

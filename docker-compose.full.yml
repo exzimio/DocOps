@@ -96,6 +96,10 @@ services:
       Seed__ApplyMigrations: "true"
       Seed__Enabled: "true"
 
+      # A palavra-passe das contas de demonstração. Sem valor no `.env`, fica a que o ecrã de
+      # entrada sugere.
+      DOCOPS_SEED_PASSWORD: "${DOCOPS_SEED_PASSWORD:-Demo!Pass123}"
+
     # Semear cria documentos, e documentos são ficheiros. Sem o mesmo volume, os ficheiros ficavam
     # no sistema de ficheiros deste contentor e morriam com ele, deixando as linhas da base a
     # apontar para nada.
@@ -161,8 +165,10 @@ services:
       context: .
       dockerfile: src/Web/Dockerfile
     image: docops-web
+    # Só nesta máquina. As contas de demonstração têm uma palavra-passe conhecida, e publicar em
+    # todas as interfaces punha-as ao alcance de quem estivesse na mesma rede.
     ports:
-      - "${DOCOPS_PUBLIC_PORT:-8080}:8080"
+      - "127.0.0.1:${DOCOPS_PUBLIC_PORT:-8080}:8080"
     depends_on:
       api:
         condition: service_healthy
