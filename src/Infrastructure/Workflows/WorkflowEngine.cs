@@ -478,6 +478,14 @@ public sealed class WorkflowEngine(
 
     private async Task PersistAsync(WorkflowExecutionContext context, CancellationToken cancellationToken)
     {
+        // The instance's resume date is derived, never set by a node: the earliest of its timers,
+        // and nothing once the instance has finished.
+        if (context.Instance.IsFinished)
+        {
+            WorkflowVariables.ClearTimers(context.Variables);
+        }
+
+        context.Instance.ResumeAtUtc = WorkflowVariables.EarliestTimer(context.Variables);
         context.Instance.VariablesJson = WorkflowVariables.ToJson(context.Variables);
 
         await AddAssigneeNotificationsAsync(context, cancellationToken);

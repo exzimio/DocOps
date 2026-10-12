@@ -59,34 +59,84 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
     [Fact]
     public async Task A_timer_holds_the_process_until_its_moment_and_the_resume_then_moves_it_on()
     {
-        HttpClient admin = await factory.SignInAsync(Administrator);
+        AdjustableClock clock = new();
+        using WebApplicationFactory<Program> api = WithClock(clock);
+        HttpClient admin = await SignInAsync(api, Administrator);
 
         Guid definitionId = await DesignAsync(admin, "Espera de uma hora",
             [Node("inicio", WorkflowNodeType.Start), Node("espera", WorkflowNodeType.Delay, """{"delayHours":1}"""), End("fim")],
             [Edge("inicio", "espera"), Edge("espera", "fim")]);
 
-        DateTimeOffset before = DateTimeOffset.UtcNow;
+        DateTimeOffset before = clock.UtcNow;
         WorkflowInstanceDetailDto started = await StartAsync(admin, definitionId);
 
         Assert.Equal(WorkflowInstanceStatus.Waiting, started.Summary.Status);
         Assert.Equal(["espera"], started.ActiveNodeKeys);
         Assert.NotNull(started.ResumeAtUtc);
-        Assert.InRange(started.ResumeAtUtc.Value, before.AddMinutes(59), DateTimeOffset.UtcNow.AddMinutes(61));
+        Assert.InRange(started.ResumeAtUtc.Value, before.AddMinutes(59), clock.UtcNow.AddMinutes(61));
 
         // Resuming before the moment changes nothing, and does not restart the timer from zero.
-        await ResumeTimerAsync(started.Summary.Id);
+        await ResumeTimerAsync(api, started.Summary.Id);
 
         WorkflowInstanceDetailDto early = await GetInstanceAsync(admin, started.Summary.Id);
         Assert.Equal(WorkflowInstanceStatus.Waiting, early.Summary.Status);
         Assert.Equal(started.ResumeAtUtc, early.ResumeAtUtc);
 
-        await MoveTimerToThePastAsync(started.Summary.Id);
-        await ResumeTimerAsync(started.Summary.Id);
+        clock.Advance(TimeSpan.FromMinutes(61));
+        await ResumeTimerAsync(api, started.Summary.Id);
 
         WorkflowInstanceDetailDto finished = await GetInstanceAsync(admin, started.Summary.Id);
         Assert.Equal(WorkflowInstanceStatus.Completed, finished.Summary.Status);
         Assert.Null(finished.ResumeAtUtc);
         Assert.Contains(finished.Timeline, e => e.EventType == WorkflowEventTypes.TimerElapsed && e.NodeKey == "espera");
+    }
+
+    [Fact]
+    public async Task Two_timers_on_parallel_branches_each_keep_their_own_moment()
+    {
+        AdjustableClock clock = new();
+        using WebApplicationFactory<Program> api = WithClock(clock);
+        HttpClient admin = await SignInAsync(api, Administrator);
+
+        Guid definitionId = await DesignAsync(admin, "Dois temporizadores em paralelo",
+            [
+                Node("inicio", WorkflowNodeType.Start),
+                Node("divisao", WorkflowNodeType.ParallelBranch),
+                Node("curta", WorkflowNodeType.Delay, """{"delayHours":1}"""),
+                Node("longa", WorkflowNodeType.Delay, """{"delayHours":2}"""),
+                Node("juncao", WorkflowNodeType.Join),
+                End("fim")
+            ],
+            [
+                Edge("inicio", "divisao"),
+                Edge("divisao", "curta"),
+                Edge("divisao", "longa"),
+                Edge("curta", "juncao"),
+                Edge("longa", "juncao"),
+                Edge("juncao", "fim")
+            ]);
+
+        DateTimeOffset startedAt = clock.UtcNow;
+        WorkflowInstanceDetailDto instance = await StartAsync(admin, definitionId);
+
+        clock.Advance(TimeSpan.FromMinutes(61));
+        await ResumeTimerAsync(api, instance.Summary.Id);
+
+        // The short timer is over; the long one still answers to the moment it was started with,
+        // two hours after the start, and was neither ended early nor restarted from zero.
+        WorkflowInstanceDetailDto afterShort = await GetInstanceAsync(admin, instance.Summary.Id);
+        Assert.Equal(WorkflowInstanceStatus.Waiting, afterShort.Summary.Status);
+        Assert.Contains(afterShort.Timeline, e => e.EventType == WorkflowEventTypes.TimerElapsed && e.NodeKey == "curta");
+        Assert.DoesNotContain(afterShort.Timeline, e => e.EventType == WorkflowEventTypes.TimerElapsed && e.NodeKey == "longa");
+        Assert.NotNull(afterShort.ResumeAtUtc);
+        Assert.InRange(afterShort.ResumeAtUtc.Value, startedAt.AddMinutes(119), startedAt.AddMinutes(121));
+
+        clock.Advance(TimeSpan.FromMinutes(60));
+        await ResumeTimerAsync(api, instance.Summary.Id);
+
+        WorkflowInstanceDetailDto finished = await GetInstanceAsync(admin, instance.Summary.Id);
+        Assert.Equal(WorkflowInstanceStatus.Completed, finished.Summary.Status);
+        Assert.Null(finished.ResumeAtUtc);
     }
 
     // -----------------------------------------------------------------------------------------
@@ -134,8 +184,10 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
     [Fact]
     public async Task A_timer_resuming_the_process_does_not_count_as_an_arrival_at_a_waiting_join()
     {
-        HttpClient admin = await factory.SignInAsync(Administrator);
-        HttpClient manager = await factory.SignInAsync(Manager);
+        AdjustableClock clock = new();
+        using WebApplicationFactory<Program> api = WithClock(clock);
+        HttpClient admin = await SignInAsync(api, Administrator);
+        HttpClient manager = await SignInAsync(api, Manager);
 
         Guid definitionId = await DesignAsync(admin, "Junção com temporizador",
             [
@@ -160,8 +212,8 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
 
         // The timer's resume walks every active node again, the waiting join included. Counted as
         // an arrival, that walk let the join through while the manager's task was still open.
-        await MoveTimerToThePastAsync(instance.Summary.Id);
-        await ResumeTimerAsync(instance.Summary.Id);
+        clock.Advance(TimeSpan.FromMinutes(61));
+        await ResumeTimerAsync(api, instance.Summary.Id);
 
         WorkflowInstanceDetailDto afterTimer = await GetInstanceAsync(admin, instance.Summary.Id);
         Assert.Equal(WorkflowInstanceStatus.Waiting, afterTimer.Summary.Status);
@@ -334,23 +386,15 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
     }
 
+    private WebApplicationFactory<Program> WithClock(AdjustableClock clock) =>
+        factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddSingleton<IDateTimeProvider>(clock)));
+
     /// <summary>The worker's path: a system scope and the engine, with no request behind it.</summary>
-    private async Task ResumeTimerAsync(Guid instanceId)
+    private static async Task ResumeTimerAsync(WebApplicationFactory<Program> api, Guid instanceId)
     {
-        using ISystemScope scope = factory.CreateServiceScope();
+        using ISystemScope scope = api.Services.GetRequiredService<ISystemScopeFactory>().Create();
         await scope.Services.GetRequiredService<WorkflowEngine>().ResumeTimerAsync(instanceId);
-    }
-
-    private async Task MoveTimerToThePastAsync(Guid instanceId)
-    {
-        using ISystemScope scope = factory.CreateServiceScope();
-        DocOpsDbContext context = scope.Services.GetRequiredService<DocOpsDbContext>();
-
-        WorkflowInstance instance = await context.WorkflowInstances.IgnoreQueryFilters().SingleAsync(i => i.Id == instanceId);
-        Assert.NotNull(instance.ResumeAtUtc);
-
-        instance.ResumeAtUtc = DateTimeOffset.UtcNow.AddMinutes(-1);
-        await context.SaveChangesAsync();
     }
 
     private static async Task<HttpClient> SignInAsync(WebApplicationFactory<Program> api, string email)
@@ -394,5 +438,15 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
         response.EnsureSuccessStatusCode();
 
         return (await response.Content.ReadFromJsonAsync<DocumentDetailDto>(Json))!;
+    }
+
+    /// <summary>The engine's clock, moved forward by the test instead of waiting for it.</summary>
+    private sealed class AdjustableClock : IDateTimeProvider
+    {
+        private TimeSpan _offset;
+
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow + _offset;
+
+        public void Advance(TimeSpan by) => _offset += by;
     }
 }

@@ -137,6 +137,41 @@ public static class WorkflowVariables
 
     public static string ToNodeKeysJson(IEnumerable<string> keys) =>
         JsonSerializer.Serialize(keys.Distinct(StringComparer.Ordinal).ToArray(), SerializerOptions);
+
+    /// <summary>
+    /// Each timer node keeps its own moment, under <c>timer:</c> and its key. One moment per instance
+    /// was not enough: two timers on parallel branches would share it, and the first to elapse would
+    /// clear it for both.
+    /// </summary>
+    private const string TimerPrefix = "timer:";
+
+    public static DateTimeOffset? TimerFor(IReadOnlyDictionary<string, string?> variables, string nodeKey) =>
+        variables.TryGetValue(TimerPrefix + nodeKey, out string? raw)
+        && DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset at)
+            ? at
+            : null;
+
+    public static void SetTimer(IDictionary<string, string?> variables, string nodeKey, DateTimeOffset at) =>
+        variables[TimerPrefix + nodeKey] = at.ToString("O", CultureInfo.InvariantCulture);
+
+    public static void ClearTimer(IDictionary<string, string?> variables, string nodeKey) =>
+        variables.Remove(TimerPrefix + nodeKey);
+
+    public static void ClearTimers(IDictionary<string, string?> variables)
+    {
+        foreach (string key in variables.Keys.Where(key => key.StartsWith(TimerPrefix, StringComparison.Ordinal)).ToList())
+        {
+            variables.Remove(key);
+        }
+    }
+
+    /// <summary>The earliest pending timer, which is when the worker has to look at the instance again.</summary>
+    public static DateTimeOffset? EarliestTimer(IReadOnlyDictionary<string, string?> variables) =>
+        variables.Keys
+            .Where(key => key.StartsWith(TimerPrefix, StringComparison.Ordinal))
+            .Select(key => TimerFor(variables, key[TimerPrefix.Length..]))
+            .Where(at => at is not null)
+            .Min();
 }
 
 /// <summary>

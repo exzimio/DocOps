@@ -87,6 +87,10 @@ que arrancou.
   mais quando um temporizador voltava a percorrer a instância com a junção em espera. A resposta
   nova não guarda estado próprio: os nós ativos já são gravados com a instância. No fim de cada
   travessia, uma junção em espera que já não pode receber nenhum ramo é libertada.
+- **Cada temporizador guarda o seu próprio momento**, numa variável da instância com o nome do nó. A
+  data de retoma da instância, que o worker procura, é calculada na gravação como o mais próximo
+  desses momentos. Com uma só data por instância, dois temporizadores em ramos paralelos
+  partilhavam-na: o primeiro a terminar apagava-a, e o segundo recomeçava do zero.
 - **Alterar um processo em uso cria uma versão nova.** A definição antiga não é arquivada nem
   apagada: fica no seu próprio registo porque as instâncias em curso continuam a resolver os nós
   nela. O índice único é `(TenantId, Code, Version)` precisamente para que isso seja possível.
