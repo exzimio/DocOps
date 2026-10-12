@@ -6,6 +6,25 @@ namespace DocOps.UnitTests.Documents;
 
 public class DocumentLifecycleTests
 {
+    [Fact]
+    public void Signed_is_never_offered_by_hand()
+    {
+        Assert.DoesNotContain(DocumentStatus.Signed, DocumentLifecycle.ManualNextStatuses(DocumentStatus.SignatureRequired, processRunning: false));
+        Assert.Contains(DocumentStatus.Rejected, DocumentLifecycle.ManualNextStatuses(DocumentStatus.SignatureRequired, processRunning: false));
+    }
+
+    [Fact]
+    public void A_running_process_keeps_the_approval_decision_to_itself()
+    {
+        Assert.Equal(
+            [DocumentStatus.InReview],
+            DocumentLifecycle.ManualNextStatuses(DocumentStatus.PendingApproval, processRunning: true));
+
+        Assert.Equal(
+            [DocumentStatus.Approved, DocumentStatus.Rejected, DocumentStatus.InReview],
+            DocumentLifecycle.ManualNextStatuses(DocumentStatus.PendingApproval, processRunning: false));
+    }
+
     [Theory]
     [InlineData(DocumentStatus.Draft, DocumentStatus.InReview)]
     [InlineData(DocumentStatus.Draft, DocumentStatus.PendingApproval)]

@@ -37,6 +37,18 @@ public static class DocumentLifecycle
     public static IReadOnlyList<DocumentStatus> NextStatuses(DocumentStatus from) =>
         AllowedTransitions.TryGetValue(from, out DocumentStatus[]? allowed) ? allowed : [];
 
+    /// <summary>
+    /// The statuses a person may set by hand. Signed is never one of them: it records someone signing
+    /// a fixed version, and only the signature request does that. While a process runs on the
+    /// document, approving or rejecting it is that process's decision, taken on its task.
+    /// </summary>
+    public static IReadOnlyList<DocumentStatus> ManualNextStatuses(DocumentStatus from, bool processRunning) =>
+        [.. NextStatuses(from).Where(to => IsManual(to, processRunning))];
+
+    public static bool IsManual(DocumentStatus to, bool processRunning) =>
+        to != DocumentStatus.Signed
+        && !(processRunning && to is DocumentStatus.Approved or DocumentStatus.Rejected);
+
     public static void EnsureCanTransition(DocumentStatus from, DocumentStatus to)
     {
         if (!CanTransition(from, to))

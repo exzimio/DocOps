@@ -359,6 +359,19 @@ public sealed class DocumentService(
 
         DocumentLifecycle.EnsureCanTransition(document.Status, request.Status);
 
+        if (request.Status == DocumentStatus.Signed)
+        {
+            throw new DomainException(
+                "Um documento só fica assinado através de um pedido de assinatura.", "status_requires_signature");
+        }
+
+        if (!DocumentLifecycle.IsManual(request.Status, await HasRunningProcessAsync(document.Id, cancellationToken)))
+        {
+            throw new DomainException(
+                "Este documento está num processo em curso: a aprovação ou a rejeição decide-se na tarefa do processo.",
+                "status_decided_by_workflow");
+        }
+
         DocumentStatus previous = document.Status;
         document.Status = request.Status;
 
@@ -473,6 +486,13 @@ public sealed class DocumentService(
     // Helpers
     // -----------------------------------------------------------------------------------------
 
+    private Task<bool> HasRunningProcessAsync(Guid documentId, CancellationToken cancellationToken) =>
+        dbContext.WorkflowInstances.AnyAsync(
+            i => i.DocumentId == documentId
+                && (i.Status == Domain.Workflows.WorkflowInstanceStatus.Running
+                    || i.Status == Domain.Workflows.WorkflowInstanceStatus.Waiting),
+            cancellationToken);
+
     private async Task<Document> LoadAsync(Guid documentId, CancellationToken cancellationToken) =>
         await dbContext.Documents
             .Include(d => d.DocumentType)
@@ -573,7 +593,8 @@ public sealed class DocumentService(
                 ? [.. document.Permissions.Select(p => DocumentProjections.ToPermission(p, userNames))]
                 : [],
             EffectiveAccess = DocumentProjections.ToEffectiveAccess(access),
-            AllowedNextStatuses = DocumentLifecycle.NextStatuses(document.Status),
+            AllowedNextStatuses = DocumentLifecycle.ManualNextStatuses(
+                document.Status, await HasRunningProcessAsync(document.Id, cancellationToken)),
             CanChangeContent = DocumentLifecycle.AllowsContentChange(document.Status),
             CanChangeMetadata = DocumentLifecycle.AllowsMetadataChange(document.Status),
             ConcurrencyToken = Convert.ToBase64String(document.RowVersion)

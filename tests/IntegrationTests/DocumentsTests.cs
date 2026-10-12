@@ -438,6 +438,56 @@ public class DocumentsTests(DocOpsApiFactory factory)
     }
 
     [Fact]
+    public async Task A_document_is_only_signed_through_a_signature_request()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        DocumentDetailDto document = await CreateInvoiceAsync(admin, "Fatura à espera de assinatura");
+
+        await ChangeStatusAsync(admin, document.Summary.Id, DocumentStatus.PendingApproval);
+        await ChangeStatusAsync(admin, document.Summary.Id, DocumentStatus.Approved);
+        DocumentDetailDto awaiting = await ChangeStatusAsync(admin, document.Summary.Id, DocumentStatus.SignatureRequired);
+
+        Assert.DoesNotContain(DocumentStatus.Signed, awaiting.AllowedNextStatuses);
+
+        // Even for the administrator: "signed" is a record of someone signing a fixed version, and
+        // a status change records nobody.
+        HttpResponseMessage refused = await admin.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/status",
+            new ChangeDocumentStatusRequest(DocumentStatus.Signed, "Assinado à mão"));
+
+        Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
+        Assert.Equal(DocumentStatus.SignatureRequired, (await GetDetailAsync(admin, document.Summary.Id)).Summary.Status);
+    }
+
+    [Fact]
+    public async Task An_approval_inside_a_running_process_is_decided_on_its_task()
+    {
+        HttpClient buyer = await factory.SignInAsync(Employee);
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(buyer, "Fatura com aprovação em curso");
+        Guid definitionId = (await buyer.GetFromJsonAsync<IReadOnlyList<DocOps.Application.Workflows.WorkflowDefinitionSummaryDto>>(
+            "/api/workflows", Json))!.Single(d => d.Code == "invoice-approval").Id;
+
+        HttpResponseMessage started = await buyer.PostAsJsonAsync(
+            "/api/workflows/instances",
+            new DocOps.Application.Workflows.StartWorkflowRequest { DefinitionId = definitionId, DocumentId = document.Summary.Id });
+        started.EnsureSuccessStatusCode();
+
+        // The administration holds every right on the document, approve included, and could press
+        // "rejected" on it while the process went on waiting for a decision taken somewhere else.
+        HttpResponseMessage refused = await admin.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/status",
+            new ChangeDocumentStatusRequest(DocumentStatus.Rejected, "Rejeitada fora do processo"));
+
+        Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
+
+        DocumentDetailDto unchanged = await GetDetailAsync(buyer, document.Summary.Id);
+        Assert.Equal(DocumentStatus.InReview, unchanged.Summary.Status);
+        Assert.DoesNotContain(DocumentStatus.Rejected, unchanged.AllowedNextStatuses);
+    }
+
+    [Fact]
     public async Task Effective_access_explains_the_decision()
     {
         HttpClient approver = await factory.SignInAsync(FinanceApprover);
@@ -606,6 +656,9 @@ public class DocumentsTests(DocOpsApiFactory factory)
 
         return await ReadAsync(response);
     }
+
+    private static async Task<DocumentDetailDto> GetDetailAsync(HttpClient client, Guid documentId) =>
+        (await client.GetFromJsonAsync<DocumentDetailDto>($"/api/documents/{documentId}", Json))!;
 
     private static async Task<DocumentDetailDto> ReadAsync(HttpResponseMessage response)
     {
