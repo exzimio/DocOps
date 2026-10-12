@@ -90,7 +90,7 @@ from a list that other tests also fill.
 ## How I built this
 
 I wrote the specification for DocOps and built it in phases over September and October 2026, using
-AI coding assistants for some of the implementation. My part was the design and the review: deciding
+AI coding assistants for most of the implementation. My part was the design and the review: deciding
 that tenant isolation had to be enforced in SQL Server itself and not only in the application, the
 workflow engine's semantics, the test strategy, and reading, questioning and correcting what was
 generated. Several of the bugs recorded in the commit history were found by asking for independent
