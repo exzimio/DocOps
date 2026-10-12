@@ -292,7 +292,7 @@ public sealed class NotificationNodeExecutor(
 }
 
 /// <summary>Applies a document status change configured on a node, respecting the document state machine.</summary>
-public sealed class DocumentStatusEffect(DocOpsDbContext dbContext, IAuditService auditService)
+public sealed class DocumentStatusEffect(DocOpsDbContext dbContext)
 {
     public async Task ApplyAsync(
         WorkflowExecutionContext context, WorkflowNode node, CancellationToken cancellationToken)
@@ -331,17 +331,15 @@ public sealed class DocumentStatusEffect(DocOpsDbContext dbContext, IAuditServic
             $"Documento passou de '{previous}' para '{targetStatus}'",
             node.Key);
 
-        await auditService.WriteAsync(
-            new AuditEntry
-            {
-                Action = Domain.Auditing.AuditActions.DocumentStatusChanged,
-                EntityType = Domain.Auditing.AuditEntityTypes.Document,
-                EntityId = document.Id,
-                EntityDisplayName = $"{document.Reference} · {document.Title}",
-                Summary = $"Estado alterado pelo workflow {context.Instance.Reference}",
-                Before = new { Status = previous.ToString() },
-                After = new { Status = targetStatus.ToString(), Workflow = context.Instance.Reference }
-            },
-            cancellationToken);
+        context.PendingAudit.Add(new AuditEntry
+        {
+            Action = Domain.Auditing.AuditActions.DocumentStatusChanged,
+            EntityType = Domain.Auditing.AuditEntityTypes.Document,
+            EntityId = document.Id,
+            EntityDisplayName = $"{document.Reference} · {document.Title}",
+            Summary = $"Estado alterado pelo workflow {context.Instance.Reference}",
+            Before = new { Status = previous.ToString() },
+            After = new { Status = targetStatus.ToString(), Workflow = context.Instance.Reference }
+        });
     }
 }

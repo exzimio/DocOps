@@ -13,10 +13,13 @@ namespace DocOps.Infrastructure.Workflows;
 /// <summary>
 /// Walks a workflow instance from node to node.
 ///
-/// One walk is one transaction: the engine executes nodes until every active branch is either parked
-/// (a person has to act, a timer has to elapse) or finished, and only then persists. That keeps the
-/// instance, its tasks, its timeline and any document status change consistent with each other — a
-/// crash mid-walk leaves the instance exactly where it was.
+/// One walk is one transaction. The engine executes nodes in memory until every active branch is
+/// either parked (a person has to act, a timer has to elapse) or finished, and then saves everything
+/// the walk changed in a single SaveChanges, which EF Core runs in one transaction: the instance, its
+/// tasks, its timeline, any document status change and the notifications for new tasks. A failure
+/// anywhere before or during that save leaves the instance exactly where it was. The audit lines
+/// for those changes are written after the save, in the audit trail's own context, so they never
+/// describe a change that was rolled back.
 /// </summary>
 public sealed class WorkflowEngine(
     DocOpsDbContext dbContext,
@@ -443,12 +446,19 @@ public sealed class WorkflowEngine(
     {
         context.Instance.VariablesJson = WorkflowVariables.ToJson(context.Variables);
 
+        await AddAssigneeNotificationsAsync(context, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await NotifyAssigneesAsync(context, cancellationToken);
+
+        foreach (AuditEntry entry in context.PendingAudit)
+        {
+            await auditService.WriteAsync(entry, cancellationToken);
+        }
+
+        context.PendingAudit.Clear();
     }
 
     /// <summary>Tells the people a new task landed on that it is waiting for them.</summary>
-    private async Task NotifyAssigneesAsync(WorkflowExecutionContext context, CancellationToken cancellationToken)
+    private async Task AddAssigneeNotificationsAsync(WorkflowExecutionContext context, CancellationToken cancellationToken)
     {
         if (context.CreatedTasks.Count == 0)
         {
@@ -480,7 +490,6 @@ public sealed class WorkflowEngine(
         }
 
         context.CreatedTasks.Clear();
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<Guid[]> ResolveTaskRecipientsAsync(WorkflowTask task, CancellationToken cancellationToken)

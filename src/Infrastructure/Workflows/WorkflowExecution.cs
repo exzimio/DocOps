@@ -1,3 +1,4 @@
+using DocOps.Application.Abstractions;
 using DocOps.Domain.Workflows;
 
 namespace DocOps.Infrastructure.Workflows;
@@ -38,8 +39,14 @@ public sealed class WorkflowExecutionContext
     public Guid? ActorUserId { get; init; }
     public required string ActorDisplayName { get; init; }
 
-    /// <summary>Tasks created during this walk, so the engine can notify their assignees after saving.</summary>
+    /// <summary>Tasks created during this walk, so the engine can notify their assignees in the same save.</summary>
     public List<WorkflowTask> CreatedTasks { get; } = [];
+
+    /// <summary>
+    /// Audit entries for changes made during this walk. The engine writes them only after the walk
+    /// is saved, so the trail never records a change that was then rolled back.
+    /// </summary>
+    public List<AuditEntry> PendingAudit { get; } = [];
 
     public void AddEvent(string eventType, string title, string? nodeKey = null, string? detail = null)
     {
