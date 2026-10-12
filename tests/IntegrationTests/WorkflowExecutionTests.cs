@@ -38,6 +38,25 @@ file sealed class FailingNotificationSave : SaveChangesInterceptor
     }
 }
 
+/// <summary>Fails any save that changes one chosen instance, while armed.</summary>
+file sealed class FailingInstanceSave : SaveChangesInterceptor
+{
+    public Guid? FailFor { get; set; }
+
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+    {
+        if (FailFor is { } instanceId
+            && eventData.Context!.ChangeTracker.Entries<WorkflowInstance>()
+                .Any(e => e.State == EntityState.Modified && e.Entity.Id == instanceId))
+        {
+            throw new InvalidOperationException("Gravação interrompida pelo teste.");
+        }
+
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+}
+
 /// <summary>
 /// The engine against a real database, each case on a process designed for it or on the seeded
 /// invoice approval.
@@ -137,6 +156,44 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
         WorkflowInstanceDetailDto finished = await GetInstanceAsync(admin, instance.Summary.Id);
         Assert.Equal(WorkflowInstanceStatus.Completed, finished.Summary.Status);
         Assert.Null(finished.ResumeAtUtc);
+    }
+
+    [Fact]
+    public async Task A_timer_that_fails_to_resume_does_not_stop_the_next_one()
+    {
+        AdjustableClock clock = new();
+        FailingInstanceSave failingSave = new();
+
+        using WebApplicationFactory<Program> api = factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IDateTimeProvider>(clock);
+                services.ConfigureDbContext<DocOpsDbContext>(options => options.AddInterceptors(failingSave));
+            }));
+
+        HttpClient admin = await SignInAsync(api, Administrator);
+
+        Guid definitionId = await DesignAsync(admin, "Espera retomada pelo worker",
+            [Node("inicio", WorkflowNodeType.Start), Node("espera", WorkflowNodeType.Delay, """{"delayHours":1}"""), End("fim")],
+            [Edge("inicio", "espera"), Edge("espera", "fim")]);
+
+        WorkflowInstanceDetailDto broken = await StartAsync(admin, definitionId);
+        WorkflowInstanceDetailDto healthy = await StartAsync(admin, definitionId);
+
+        clock.Advance(TimeSpan.FromMinutes(61));
+        failingSave.FailFor = broken.Summary.Id;
+
+        // The sweep takes the instances in order of their resume date, so the broken one comes first.
+        // Its failed save must not travel with the next instance's save.
+        using (ISystemScope scope = api.Services.GetRequiredService<ISystemScopeFactory>().Create())
+        {
+            await scope.Services.GetRequiredService<WorkflowTimerSweep>().RunAsync(CancellationToken.None);
+        }
+
+        failingSave.FailFor = null;
+
+        Assert.Equal(WorkflowInstanceStatus.Waiting, (await GetInstanceAsync(admin, broken.Summary.Id)).Summary.Status);
+        Assert.Equal(WorkflowInstanceStatus.Completed, (await GetInstanceAsync(admin, healthy.Summary.Id)).Summary.Status);
     }
 
     // -----------------------------------------------------------------------------------------

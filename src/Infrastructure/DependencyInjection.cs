@@ -150,6 +150,7 @@ public static class DependencyInjection
         services.AddScoped<TaskAssignmentResolver>();
         services.AddScoped<DocumentStatusEffect>();
         services.AddScoped<WorkflowEngine>();
+        services.AddScoped<WorkflowTimerSweep>();
         services.AddScoped<WorkflowDesignService>();
 
         // One executor per node type. A type without an executor stops the instance with a clear
