@@ -10,6 +10,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { LoadingState } from '@/components/ui/Surface'
+import { RenderErrorBoundary } from '@/components/RenderErrorBoundary'
 
 // The designer pulls in the diagramming library; only the people who open it pay for it.
 /**
@@ -77,51 +78,53 @@ export function App() {
     // Uma fronteira só, à volta de tudo o que é encaminhado. Cada rota adiada podia ter a sua, mas
     // catorze `Suspense` iguais dizem catorze vezes a mesma coisa — e a espera é a mesma: o ecrã
     // seguinte ainda não chegou.
-    <Suspense fallback={<LoadingState label={t('common.loading')} />}>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
+    <RenderErrorBoundary>
+      <Suspense fallback={<LoadingState label={t('common.loading')} />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-        <Route element={<RequireAuth />}>
-          {/* The external portal is a separate experience on purpose, with its own shell and nothing
+          <Route element={<RequireAuth />}>
+            {/* The external portal is a separate experience on purpose, with its own shell and nothing
             of the internal navigation in it. */}
-          <Route element={<RequirePortal external />}>
-            <Route path="/portal" element={<PortalShell />}>
-              <Route index element={<PortalPage />} />
-              <Route path="submissions/:id" element={<PortalSubmissionPage />} />
+            <Route element={<RequirePortal external />}>
+              <Route path="/portal" element={<PortalShell />}>
+                <Route index element={<PortalPage />} />
+                <Route path="submissions/:id" element={<PortalSubmissionPage />} />
+              </Route>
+            </Route>
+
+            <Route element={<RequirePortal external={false} />}>
+              <Route path="/app" element={<AppShell />}>
+                <Route index element={<Navigate to="/app/dashboard" replace />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="documents" element={<DocumentsPage />} />
+                <Route path="documents/:id" element={<DocumentDetailPage />} />
+                <Route path="search" element={<SearchPage />} />
+                <Route path="inbox" element={<InboxPage />} />
+                <Route path="integrations" element={<IntegrationsPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route path="admin" element={<AdminPage />} />
+                <Route path="tasks" element={<TasksPage />} />
+                <Route path="workflows" element={<WorkflowsPage />} />
+                <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />
+                <Route path="ai" element={<AiCenterPage />} />
+                <Route path="workflows/:id" element={<WorkflowDefinitionPage />} />
+                <Route
+                  path="workflows/:id/designer"
+                  element={
+                    <Suspense fallback={<LoadingState label={t('common.loading')} />}>
+                      <WorkflowDesignerPage />
+                    </Suspense>
+                  }
+                />
+              </Route>
             </Route>
           </Route>
 
-          <Route element={<RequirePortal external={false} />}>
-            <Route path="/app" element={<AppShell />}>
-              <Route index element={<Navigate to="/app/dashboard" replace />} />
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="documents" element={<DocumentsPage />} />
-              <Route path="documents/:id" element={<DocumentDetailPage />} />
-              <Route path="search" element={<SearchPage />} />
-              <Route path="inbox" element={<InboxPage />} />
-              <Route path="integrations" element={<IntegrationsPage />} />
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="admin" element={<AdminPage />} />
-              <Route path="tasks" element={<TasksPage />} />
-              <Route path="workflows" element={<WorkflowsPage />} />
-              <Route path="workflows/instances/:id" element={<WorkflowInstancePage />} />
-              <Route path="ai" element={<AiCenterPage />} />
-              <Route path="workflows/:id" element={<WorkflowDefinitionPage />} />
-              <Route
-                path="workflows/:id/designer"
-                element={
-                  <Suspense fallback={<LoadingState label={t('common.loading')} />}>
-                    <WorkflowDesignerPage />
-                  </Suspense>
-                }
-              />
-            </Route>
-          </Route>
-        </Route>
-
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </RenderErrorBoundary>
   )
 }

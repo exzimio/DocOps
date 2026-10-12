@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LogOut, Menu, ShieldCheck, X } from 'lucide-react'
 import clsx from 'clsx'
@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/Button'
 import { LanguageSwitcher, ThemeToggle } from '@/components/PreferencesControls'
 import { NotificationBell } from '@/features/workflows/NotificationBell'
 import { LoadingState } from '@/components/ui/Surface'
+import { RenderErrorBoundary } from '@/components/RenderErrorBoundary'
 import { CommandPalette } from '@/app/CommandPalette'
 
 export function AppShell() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: user, isLoading } = useSession()
   const logout = useLogout()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -144,7 +146,9 @@ export function AppShell() {
         </nav>
 
         <main id="main-content" className="min-w-0 flex-1 px-4 py-5 sm:px-6">
-          <Outlet />
+          <RenderErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </RenderErrorBoundary>
         </main>
       </div>
     </div>

@@ -199,6 +199,10 @@ que endereço, com que identificador de correlação e, quando aplicável, o est
   para produzir uma mensagem correta. O cliente reconhece qualquer `content-type` terminado em
   `+json`, porque `application/problem+json` não contém o texto `application/json`, e um teste por
   esse texto descartaria os códigos de erro e as mensagens por campo.
+- **Erros de renderização** param numa fronteira à volta do conteúdo de cada shell (`RenderErrorBoundary`):
+  a navegação continua disponível, o ecrã explica o que aconteceu e oferece recarregar a página, que
+  é o que resolve um ecrã carregado a pedido cujo ficheiro mudou com uma publicação nova. Mudar de
+  ecrã limpa o erro. Uma última fronteira à volta da aplicação apanha o resto.
 - **Design system** em *tokens* CSS (cor, espaçamento, tipografia, raio, sombra) com tema claro e
   escuro; os componentes referenciam *tokens* semânticos (`surface`, `ink`, `border`), nunca cores
   diretas.

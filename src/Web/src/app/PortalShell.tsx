@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LogOut, ShieldCheck } from 'lucide-react'
 import clsx from 'clsx'
@@ -6,6 +6,7 @@ import { useLogout, useSession } from '@/features/auth/session'
 import { Button } from '@/components/ui/Button'
 import { LanguageSwitcher, ThemeToggle } from '@/components/PreferencesControls'
 import { LoadingState } from '@/components/ui/Surface'
+import { RenderErrorBoundary } from '@/components/RenderErrorBoundary'
 
 /**
  * The external portal's own shell.
@@ -19,6 +20,7 @@ import { LoadingState } from '@/components/ui/Surface'
 export function PortalShell() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: user, isLoading } = useSession()
   const logout = useLogout()
 
@@ -105,7 +107,9 @@ export function PortalShell() {
       </header>
 
       <main id="portal-content" className="mx-auto max-w-5xl px-4 py-6">
-        <Outlet />
+        <RenderErrorBoundary resetKey={location.pathname}>
+          <Outlet />
+        </RenderErrorBoundary>
       </main>
 
       <footer className="mx-auto max-w-5xl px-4 pb-8">

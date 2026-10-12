@@ -134,7 +134,9 @@
     "forbiddenTitle": "Acesso negado",
     "forbiddenBody": "Não tem permissões para aceder a esta área.",
     "backToDashboard": "Voltar ao painel",
-    "correlationId": "Identificador de correlação"
+    "correlationId": "Identificador de correlação",
+    "renderBody": "Este ecrã não conseguiu abrir. Recarregar a página costuma resolver, sobretudo depois de uma atualização da aplicação.",
+    "reload": "Recarregar a página"
   },
   "documents": {
     "title": "Documentos",

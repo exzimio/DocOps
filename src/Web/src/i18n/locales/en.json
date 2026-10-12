@@ -134,7 +134,9 @@
     "forbiddenTitle": "Access denied",
     "forbiddenBody": "You do not have permission to access this area.",
     "backToDashboard": "Back to dashboard",
-    "correlationId": "Correlation id"
+    "correlationId": "Correlation id",
+    "renderBody": "This screen could not open. Reloading the page usually fixes it, especially after the application has been updated.",
+    "reload": "Reload the page"
   },
   "documents": {
     "title": "Documents",
