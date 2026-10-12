@@ -190,19 +190,29 @@ public class InboxTests(DocOpsApiFactory factory)
         HttpClient employee = await factory.SignInAsync(Employee);
 
         PagedResult<DocumentListItemDto>? restricted = await admin.GetFromJsonAsync<PagedResult<DocumentListItemDto>>(
-            "/api/documents?classifications=3&pageSize=5", Json);
+            "/api/documents?classifications=3&pageSize=50", Json);
         Assert.NotNull(restricted);
 
-        if (restricted.Items.Count == 0)
+        // Other suites create restricted documents and share some with this employee, so the target
+        // is one the employee is actually refused, not merely the newest restricted one.
+        Guid? hidden = null;
+
+        foreach (DocumentListItemDto candidate in restricted.Items)
         {
-            return; // no restricted document seeded; nothing to assert against here.
+            if ((await employee.GetAsync($"/api/documents/{candidate.Id}")).StatusCode == HttpStatusCode.Forbidden)
+            {
+                hidden = candidate.Id;
+                break;
+            }
         }
+
+        Assert.NotNull(hidden);
 
         PagedResult<EmailListItemDto> inbox = await ListAsync(employee);
         EmailListItemDto message = inbox.Items.First(item => item.LinkedDocumentId is null);
 
         HttpResponseMessage response = await employee.PostAsJsonAsync(
-            $"/api/inbox/{message.Id}/link", new { documentId = restricted.Items[0].Id });
+            $"/api/inbox/{message.Id}/link", new { documentId = hidden });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }

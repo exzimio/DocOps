@@ -28,6 +28,8 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
     private const string FinanceApprover = "ricardo.lopes@asteria.example";
     private const string Manager = "sofia.martins@asteria.example";
     private const string VerticeAdmin = "admin@vertice.example";
+    private const string OtherEmployee = "joao.pereira@asteria.example";
+    private const string Administrator = "admin@asteria.example";
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -238,12 +240,15 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
     public async Task Cancelling_a_process_closes_its_open_tasks()
     {
         HttpClient buyer = await factory.SignInAsync(Procurement);
-        HttpClient manager = await factory.SignInAsync(Manager);
+
+        // Cancelling needs workflows.cancel and sight of the process. A manager outside the
+        // purchasing department cannot see this invoice, so its process is hidden from them.
+        HttpClient admin = await factory.SignInAsync(Administrator);
 
         DocumentDetailDto document = await CreateInvoiceAsync(buyer, "Fatura a cancelar", total: "1500.00");
         WorkflowInstanceDetailDto instance = await StartAsync(buyer, document.Summary.Id);
 
-        HttpResponseMessage response = await manager.PostAsJsonAsync(
+        HttpResponseMessage response = await admin.PostAsJsonAsync(
             $"/api/workflows/instances/{instance.Summary.Id}/cancel",
             new CancelWorkflowRequest("Fornecedor retirou a fatura."));
 
@@ -338,6 +343,47 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         }
     }
 
+    [Fact]
+    public async Task An_instance_is_hidden_from_whoever_cannot_see_its_document()
+    {
+        HttpClient owner = await factory.SignInAsync(FinanceApprover);
+        HttpClient colleague = await factory.SignInAsync(OtherEmployee);
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(
+            owner, "Fatura restrita em aprovação", total: "700.00", SecurityClassification.Restricted);
+        WorkflowInstanceDetailDto instance = await StartAsync(owner, document.Summary.Id);
+
+        // The colleague holds workflows.view but cannot open the document, so neither the list nor
+        // the detail may carry its reference and title.
+        Assert.DoesNotContain(
+            (await InstancesForDocumentAsync(colleague, document.Summary.Id)).Items,
+            item => item.Id == instance.Summary.Id);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            (await colleague.GetAsync($"/api/workflows/instances/{instance.Summary.Id}")).StatusCode);
+
+        Assert.Contains(
+            (await InstancesForDocumentAsync(admin, document.Summary.Id)).Items,
+            item => item.Id == instance.Summary.Id && item.DocumentTitle == document.Summary.Title);
+
+        Guid colleagueId = (await colleague.GetFromJsonAsync<CurrentUserProfile>("/api/auth/me", Json))!.Id;
+
+        HttpResponseMessage granted = await admin.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/permissions",
+            new GrantDocumentPermissionRequest
+            {
+                SubjectType = PermissionSubjectType.User,
+                SubjectId = colleagueId,
+                AccessLevels = ["view"]
+            });
+
+        Assert.Equal(HttpStatusCode.OK, granted.StatusCode);
+
+        WorkflowInstanceDetailDto seen = await GetInstanceAsync(colleague, instance.Summary.Id);
+        Assert.Equal(document.Summary.Reference, seen.Summary.DocumentReference);
+    }
+
     /// <summary>
     /// The designer offers every node type, and the validator lets any of them be activated. A type
     /// without an executor would pass both and only fail when an instance reached it, so the
@@ -359,6 +405,8 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
     // -----------------------------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------------------------
+
+    private sealed record CurrentUserProfile(Guid Id, string Email);
 
     private static class WorkflowCatalogue
     {
@@ -387,6 +435,11 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
 
         return (await response.Content.ReadFromJsonAsync<WorkflowInstanceDetailDto>(Json))!;
     }
+
+    private static async Task<PagedResult<WorkflowInstanceListItemDto>> InstancesForDocumentAsync(
+        HttpClient client, Guid documentId) =>
+        (await client.GetFromJsonAsync<PagedResult<WorkflowInstanceListItemDto>>(
+            $"/api/workflows/instances?documentId={documentId}", Json))!;
 
     private static async Task<WorkflowInstanceDetailDto> GetInstanceAsync(HttpClient client, Guid instanceId) =>
         (await client.GetFromJsonAsync<WorkflowInstanceDetailDto>($"/api/workflows/instances/{instanceId}", Json))!;
@@ -426,7 +479,8 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         return (await response.Content.ReadFromJsonAsync<TaskListItemDto>(Json))!;
     }
 
-    private static async Task<DocumentDetailDto> CreateInvoiceAsync(HttpClient client, string title, string total)
+    private static async Task<DocumentDetailDto> CreateInvoiceAsync(
+        HttpClient client, string title, string total, SecurityClassification? classification = null)
     {
         IReadOnlyList<DocumentTypeDto>? types =
             await client.GetFromJsonAsync<IReadOnlyList<DocumentTypeDto>>("/api/document-catalogue/types", Json);
@@ -444,6 +498,11 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         form.Add(new StringContent("invoiceNumber=TEST-0001"), "Metadata");
         form.Add(new StringContent("invoiceDate=2026-09-01"), "Metadata");
         form.Add(new StringContent($"totalAmount={total}"), "Metadata");
+
+        if (classification is { } value)
+        {
+            form.Add(new StringContent(((int)value).ToString()), "Classification");
+        }
 
         HttpResponseMessage response = await client.PostAsync("/api/documents", form);
         response.EnsureSuccessStatusCode();
