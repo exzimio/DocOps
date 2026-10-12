@@ -9,6 +9,7 @@ using DocOps.Domain.Auditing;
 using DocOps.Domain.Documents;
 using DocOps.Domain.Workflows;
 using DocOps.Infrastructure.Persistence;
+using DocOps.Infrastructure.Persistence.Seed;
 using DocOps.Infrastructure.Workflows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -329,10 +330,22 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
             await approver.GetFromJsonAsync<IReadOnlyList<WorkflowDefinitionSummaryDto>>("/api/workflows", Json);
 
         Assert.NotNull(definitions);
-        Assert.Equal(3, definitions.Count);
-        Assert.All(definitions, definition => Assert.True(definition.IsActive));
 
-        foreach (WorkflowDefinitionSummaryDto definition in definitions)
+        // The seeded three, by code. Other suites design and activate processes of their own, so
+        // the catalogue's total says nothing about the seed.
+        string[] seeded =
+        [
+            WorkflowCatalogueSeeder.InvoiceApprovalCode,
+            WorkflowCatalogueSeeder.ContractReviewCode,
+            WorkflowCatalogueSeeder.OnboardingCode
+        ];
+
+        List<WorkflowDefinitionSummaryDto> seededDefinitions = [.. definitions.Where(d => seeded.Contains(d.Code))];
+
+        Assert.Equal(seeded.Order(), seededDefinitions.Select(d => d.Code).Order());
+        Assert.All(seededDefinitions, definition => Assert.True(definition.IsActive));
+
+        foreach (WorkflowDefinitionSummaryDto definition in seededDefinitions)
         {
             HttpResponseMessage response = await approver.PostAsync($"/api/workflows/{definition.Id}/test", content: null);
             IReadOnlyList<WorkflowValidationIssueDto>? issues =

@@ -67,7 +67,9 @@ que arrancou.
 ## Como ficou, na prática
 
 - **Uma travessia é uma transação.** O motor percorre os nós até cada ramo ficar parado ou terminado
-  e só então grava. Instância, tarefas, cronologia e estado do documento ficam sempre coerentes.
+  e só então grava, num único `SaveChanges`: instância, tarefas, cronologia, estado do documento e
+  notificações das tarefas novas. A auditoria dessas mudanças é escrita depois de a gravação ter
+  sucesso, para nunca descrever uma mudança desfeita.
 - **Falhar em vez de saltar.** Um tipo de nó sem executor, uma ligação em falta ou uma transição de
   documento ilegal param a instância e registam o motivo na cronologia. Foi um teste de integração
   que impôs esta escolha: a primeira versão tentava arquivar um documento em rascunho e teria ficado
@@ -77,8 +79,14 @@ que arrancou.
   código a partir de dados guardados.
 - **O motor não contorna o documento.** As alterações de estado configuradas num nó passam por
   `DocumentLifecycle`, tal como as que um utilizador faz pela interface.
-- **Junções contam chegadas em variáveis da instância**, pelo que o estado de uma ramificação
-  paralela sobrevive a um reinício como o resto da instância.
+- **Uma junção espera pelos ramos que ainda a podem alcançar, e não por um número de chegadas.**
+  Quando um ramo lá chega, a junção pergunta se algum outro nó ativo da instância tem caminho até
+  ela; se nenhum tem, deixa passar um só ramo. A primeira versão contava as ligações de entrada, e
+  falhava de três maneiras: esperava para sempre quando uma condição desviava um ramo, esperava para
+  sempre quando as duas saídas de uma condição entravam na mesma junção, e contava uma chegada a
+  mais quando um temporizador voltava a percorrer a instância com a junção em espera. A resposta
+  nova não guarda estado próprio: os nós ativos já são gravados com a instância. No fim de cada
+  travessia, uma junção em espera que já não pode receber nenhum ramo é libertada.
 - **Alterar um processo em uso cria uma versão nova.** A definição antiga não é arquivada nem
   apagada: fica no seu próprio registo porque as instâncias em curso continuam a resolver os nós
   nela. O índice único é `(TenantId, Code, Version)` precisamente para que isso seja possível.

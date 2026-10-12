@@ -136,8 +136,13 @@ public sealed class ParallelBranchNodeExecutor : INodeExecutor
 }
 
 /// <summary>
-/// Waits until every incoming branch has arrived. Arrivals are counted in an instance variable, so
-/// the state survives a restart exactly like the rest of the instance.
+/// Waits until no other branch of the instance can still reach it, then lets one branch through.
+///
+/// It does not count incoming edges. A count waits forever when a condition sends a branch
+/// elsewhere, or when both exits of a condition lead into the same join, and it counts an arrival
+/// twice when a waiting join is walked again by a timer or a background step. Asking whether any
+/// other active node can still reach the join answers all three, and keeps no state of its own:
+/// the active nodes are already persisted with the instance.
 /// </summary>
 public sealed class JoinNodeExecutor : INodeExecutor
 {
@@ -146,29 +151,48 @@ public sealed class JoinNodeExecutor : INodeExecutor
     public Task<NodeResult> ExecuteAsync(
         WorkflowExecutionContext context, WorkflowNode node, CancellationToken cancellationToken)
     {
-        string key = $"join:{node.Key}";
-        int expected = context.Definition.IncomingEdges(node.Key).Count();
-
-        int arrived = context.Variables.TryGetValue(key, out string? raw) && int.TryParse(raw, out int parsed)
-            ? parsed + 1
-            : 1;
-
-        context.Variables[key] = arrived.ToString(CultureInfo.InvariantCulture);
-
-        if (arrived < expected)
+        if (AnotherBranchCanArrive(context.Definition, node.Key, context.OtherActiveNodes))
         {
             context.AddEvent(
                 WorkflowEventTypes.NodeEntered,
-                $"Junção '{node.Name}': {arrived} de {expected} ramos concluídos",
+                $"Junção '{node.Name}': à espera dos ramos que ainda podem chegar",
                 node.Key);
 
             return Task.FromResult(NodeResult.Wait());
         }
 
-        context.Variables.Remove(key);
         context.AddEvent(WorkflowEventTypes.NodeEntered, $"Junção '{node.Name}': todos os ramos concluídos", node.Key);
 
         return Task.FromResult(NodeResult.Continue());
+    }
+
+    public static bool AnotherBranchCanArrive(
+        WorkflowDefinition definition, string joinKey, IEnumerable<string> activeNodeKeys)
+    {
+        HashSet<string> visited = new(StringComparer.Ordinal);
+        Queue<string> frontier = new(activeNodeKeys.Where(key => !string.Equals(key, joinKey, StringComparison.Ordinal)));
+
+        while (frontier.Count > 0)
+        {
+            string key = frontier.Dequeue();
+
+            if (string.Equals(key, joinKey, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (!visited.Add(key))
+            {
+                continue;
+            }
+
+            foreach (WorkflowEdge edge in definition.OutgoingEdges(key))
+            {
+                frontier.Enqueue(edge.ToNodeKey);
+            }
+        }
+
+        return false;
     }
 }
 

@@ -48,6 +48,12 @@ public sealed class WorkflowExecutionContext
     /// </summary>
     public List<AuditEntry> PendingAudit { get; } = [];
 
+    /// <summary>
+    /// The other nodes holding a branch of this instance while a node executes: those still to run
+    /// in this walk and those parked. A join reads it to know whether another branch can still arrive.
+    /// </summary>
+    public IReadOnlyCollection<string> OtherActiveNodes { get; set; } = [];
+
     public void AddEvent(string eventType, string title, string? nodeKey = null, string? detail = null)
     {
         Instance.Events.Add(new WorkflowEvent

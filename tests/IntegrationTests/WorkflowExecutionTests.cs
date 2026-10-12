@@ -46,6 +46,8 @@ file sealed class FailingNotificationSave : SaveChangesInterceptor
 public class WorkflowExecutionTests(DocOpsApiFactory factory)
 {
     private const string Administrator = "admin@asteria.example";
+    private const string Manager = "sofia.martins@asteria.example";
+    private const string FinanceApprover = "ricardo.lopes@asteria.example";
     private const string Procurement = "ana.ferreira@asteria.example";
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -85,6 +87,89 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
         Assert.Equal(WorkflowInstanceStatus.Completed, finished.Summary.Status);
         Assert.Null(finished.ResumeAtUtc);
         Assert.Contains(finished.Timeline, e => e.EventType == WorkflowEventTypes.TimerElapsed && e.NodeKey == "espera");
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Join
+    // -----------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_join_does_not_wait_for_a_branch_that_a_condition_skipped()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient manager = await factory.SignInAsync(Manager);
+
+        Guid definitionId = await DesignAsync(admin, "Junção com ramo opcional", ConditionalBranchNodes(), ConditionalBranchEdges());
+        WorkflowInstanceDetailDto instance = await StartAsync(admin, definitionId, new() { ["rota"] = "curta" });
+
+        // The condition sent its branch straight to the join; only the manager's task is left.
+        Assert.Equal(WorkflowInstanceStatus.Waiting, instance.Summary.Status);
+
+        await ActAsync(manager, await OpenTaskAsync(manager, instance.Summary.Id, "gestor"), "approve");
+
+        Assert.Equal(WorkflowInstanceStatus.Completed, (await GetInstanceAsync(admin, instance.Summary.Id)).Summary.Status);
+    }
+
+    [Fact]
+    public async Task A_join_waits_for_every_branch_that_actually_runs()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient manager = await factory.SignInAsync(Manager);
+        HttpClient finance = await factory.SignInAsync(FinanceApprover);
+
+        Guid definitionId = await DesignAsync(admin, "Junção com os dois ramos", ConditionalBranchNodes(), ConditionalBranchEdges());
+        WorkflowInstanceDetailDto instance = await StartAsync(admin, definitionId, new() { ["rota"] = "completa" });
+
+        await ActAsync(manager, await OpenTaskAsync(manager, instance.Summary.Id, "gestor"), "approve");
+
+        WorkflowInstanceDetailDto halfway = await GetInstanceAsync(admin, instance.Summary.Id);
+        Assert.Equal(WorkflowInstanceStatus.Waiting, halfway.Summary.Status);
+        Assert.Contains("juncao", halfway.ActiveNodeKeys);
+
+        await ActAsync(finance, await OpenTaskAsync(finance, instance.Summary.Id, "financeiro"), "approve");
+
+        Assert.Equal(WorkflowInstanceStatus.Completed, (await GetInstanceAsync(admin, instance.Summary.Id)).Summary.Status);
+    }
+
+    [Fact]
+    public async Task A_timer_resuming_the_process_does_not_count_as_an_arrival_at_a_waiting_join()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient manager = await factory.SignInAsync(Manager);
+
+        Guid definitionId = await DesignAsync(admin, "Junção com temporizador",
+            [
+                Node("inicio", WorkflowNodeType.Start),
+                Node("divisao", WorkflowNodeType.ParallelBranch),
+                Approval("gestor", "Manager"),
+                Node("espera", WorkflowNodeType.Delay, """{"delayHours":1}"""),
+                Node("juncao", WorkflowNodeType.Join),
+                End("fim")
+            ],
+            [
+                Edge("inicio", "divisao"),
+                Edge("divisao", "juncao"),
+                Edge("divisao", "gestor"),
+                Edge("divisao", "espera"),
+                Edge("gestor", "juncao", "approved"),
+                Edge("espera", "juncao"),
+                Edge("juncao", "fim")
+            ]);
+
+        WorkflowInstanceDetailDto instance = await StartAsync(admin, definitionId);
+
+        // The timer's resume walks every active node again, the waiting join included. Counted as
+        // an arrival, that walk let the join through while the manager's task was still open.
+        await MoveTimerToThePastAsync(instance.Summary.Id);
+        await ResumeTimerAsync(instance.Summary.Id);
+
+        WorkflowInstanceDetailDto afterTimer = await GetInstanceAsync(admin, instance.Summary.Id);
+        Assert.Equal(WorkflowInstanceStatus.Waiting, afterTimer.Summary.Status);
+        Assert.Contains(afterTimer.Tasks, task => task.NodeKey == "gestor" && task.Status == WorkflowTaskStatus.Pending);
+
+        await ActAsync(manager, await OpenTaskAsync(manager, instance.Summary.Id, "gestor"), "approve");
+
+        Assert.Equal(WorkflowInstanceStatus.Completed, (await GetInstanceAsync(admin, instance.Summary.Id)).Summary.Status);
     }
 
     // -----------------------------------------------------------------------------------------
@@ -146,6 +231,33 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
     // Helpers
     // -----------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Two parallel branches into one join: a manager's approval, and a condition on «rota» that
+    /// either adds a finance approval or goes straight to the join.
+    /// </summary>
+    private static List<SaveWorkflowNodeRequest> ConditionalBranchNodes() =>
+    [
+        Node("inicio", WorkflowNodeType.Start),
+        Node("divisao", WorkflowNodeType.ParallelBranch),
+        Approval("gestor", "Manager"),
+        Node("rota", WorkflowNodeType.Condition, """{"condition":{"field":"rota","operator":"Equals","value":"completa"}}"""),
+        Approval("financeiro", "FinanceApprover"),
+        Node("juncao", WorkflowNodeType.Join),
+        End("fim")
+    ];
+
+    private static List<SaveWorkflowEdgeRequest> ConditionalBranchEdges() =>
+    [
+        Edge("inicio", "divisao"),
+        Edge("divisao", "gestor"),
+        Edge("divisao", "rota"),
+        Edge("gestor", "juncao", "approved"),
+        Edge("rota", "financeiro", "true"),
+        Edge("rota", "juncao", "false"),
+        Edge("financeiro", "juncao", "approved"),
+        Edge("juncao", "fim")
+    ];
+
     private static SaveWorkflowNodeRequest Node(string key, WorkflowNodeType type, string? configJson = null) => new()
     {
         Key = key,
@@ -155,6 +267,11 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
         PositionX = 0,
         PositionY = 0
     };
+
+    private static SaveWorkflowNodeRequest Approval(string key, string role) => Node(
+        key,
+        WorkflowNodeType.Approval,
+        JsonSerializer.Serialize(new { taskTitle = $"Aprovar {key}", assignment = new { strategy = "Role", role } }));
 
     private static SaveWorkflowNodeRequest End(string key) =>
         Node(key, WorkflowNodeType.End, """{"outcome":"Concluído"}""");
@@ -208,6 +325,13 @@ public class WorkflowExecutionTests(DocOpsApiFactory factory)
             $"/api/tasks?scope=Mine&instanceId={instanceId}&statuses=0&statuses=1", Json))!;
 
         return tasks.Items.Single(task => task.NodeKey == nodeKey);
+    }
+
+    private static async Task ActAsync(HttpClient client, TaskListItemDto task, string action)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/api/tasks/{task.Id}/{action}", new { comment = (string?)null });
+
+        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
     }
 
     /// <summary>The worker's path: a system scope and the engine, with no request behind it.</summary>

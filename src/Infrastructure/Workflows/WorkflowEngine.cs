@@ -306,7 +306,7 @@ public sealed class WorkflowEngine(
 
         int visits = 0;
 
-        while (pending.Count > 0)
+        while (pending.Count > 0 || ReleaseUnblockedJoin(context.Definition, pending, waiting))
         {
             if (++visits > MaxNodeVisitsPerWalk)
             {
@@ -330,6 +330,7 @@ public sealed class WorkflowEngine(
             }
 
             NodeResult result;
+            context.OtherActiveNodes = [.. pending, .. waiting];
 
             try
             {
@@ -349,7 +350,12 @@ public sealed class WorkflowEngine(
             switch (result.Kind)
             {
                 case NodeResultKind.Wait:
-                    waiting.Add(node.Key);
+                    // Branches waiting at the same join are one wait, not several.
+                    if (node.Type != WorkflowNodeType.Join || !waiting.Contains(node.Key))
+                    {
+                        waiting.Add(node.Key);
+                    }
+
                     break;
 
                 case NodeResultKind.Finish:
@@ -365,6 +371,13 @@ public sealed class WorkflowEngine(
                         return;
                     }
 
+                    if (node.Type == WorkflowNodeType.Join)
+                    {
+                        // The branches that reached the join leave it as one.
+                        waiting.RemoveAll(key => string.Equals(key, node.Key, StringComparison.Ordinal));
+                        pending = new Queue<string>(pending.Where(key => !string.Equals(key, node.Key, StringComparison.Ordinal)));
+                    }
+
                     foreach (string key in next)
                     {
                         pending.Enqueue(key);
@@ -377,6 +390,27 @@ public sealed class WorkflowEngine(
         context.Instance.ActiveNodeKeysJson = WorkflowVariables.ToNodeKeysJson(waiting);
         context.Instance.Status = waiting.Count > 0 ? WorkflowInstanceStatus.Waiting : WorkflowInstanceStatus.Running;
         context.Instance.VariablesJson = WorkflowVariables.ToJson(context.Variables);
+    }
+
+    /// <summary>
+    /// A join parked earlier is released once no other branch can reach it. That can happen without
+    /// any branch arriving at it: a branch it was waiting for took another exit and ended elsewhere.
+    /// </summary>
+    private static bool ReleaseUnblockedJoin(WorkflowDefinition definition, Queue<string> pending, List<string> waiting)
+    {
+        string? released = waiting.FirstOrDefault(key =>
+            definition.FindNode(key)?.Type == WorkflowNodeType.Join
+            && !JoinNodeExecutor.AnotherBranchCanArrive(definition, key, waiting));
+
+        if (released is null)
+        {
+            return false;
+        }
+
+        waiting.Remove(released);
+        pending.Enqueue(released);
+
+        return true;
     }
 
     /// <summary>
