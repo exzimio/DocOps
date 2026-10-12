@@ -215,6 +215,11 @@ public sealed class TaskService(
         TaskSubject subject = await GetSubjectAsync(cancellationToken);
         WorkflowTask task = await LoadAsync(taskId, cancellationToken);
 
+        if (!task.IsOpen)
+        {
+            throw new DomainException("Só é possível assumir tarefas em aberto.", "task_already_closed");
+        }
+
         if (task.AssignedToUserId is not null)
         {
             throw new DomainException("Esta tarefa já tem responsável.", "task_already_assigned");

@@ -465,6 +465,30 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, reassignedByAdmin.StatusCode);
     }
 
+    [Fact]
+    public async Task A_closed_group_task_cannot_be_claimed_back_open()
+    {
+        HttpClient buyer = await factory.SignInAsync(Procurement);
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(buyer, "Fatura com processo cancelado", total: "310.00");
+        WorkflowInstanceDetailDto instance = await StartAsync(buyer, document.Summary.Id);
+        Guid taskId = Assert.Single(instance.Tasks).Id;
+
+        (await admin.PostAsJsonAsync(
+            $"/api/workflows/instances/{instance.Summary.Id}/cancel", new CancelWorkflowRequest("Teste de tarefa fechada.")))
+            .EnsureSuccessStatusCode();
+
+        // The validation task was offered to the buyer's department and nobody had claimed it.
+        // Claiming it now would set it in progress again inside a process that has ended.
+        HttpResponseMessage claimed = await buyer.PostAsync($"/api/tasks/{taskId}/claim", null);
+
+        Assert.Equal(HttpStatusCode.Conflict, claimed.StatusCode);
+
+        TaskListItemDto task = (await admin.GetFromJsonAsync<TaskListItemDto>($"/api/tasks/{taskId}", Json))!;
+        Assert.Equal(WorkflowTaskStatus.Cancelled, task.Status);
+    }
+
     /// <summary>
     /// The designer offers every node type, and the validator lets any of them be activated. A type
     /// without an executor would pass both and only fail when an instance reached it, so the
