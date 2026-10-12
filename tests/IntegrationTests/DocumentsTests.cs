@@ -488,6 +488,50 @@ public class DocumentsTests(DocOpsApiFactory factory)
     }
 
     [Fact]
+    public async Task Editing_a_document_does_not_include_changing_who_may_see_it()
+    {
+        HttpClient admin = await factory.SignInAsync(Administrator);
+        HttpClient editor = await factory.SignInAsync(OtherEmployee);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(
+            admin, "Fatura restrita com editor convidado", SecurityClassification.Restricted);
+
+        Guid editorId = (await editor.GetFromJsonAsync<CurrentUserProfile>("/api/auth/me", Json))!.Id;
+
+        (await admin.PostAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}/permissions",
+            new GrantDocumentPermissionRequest
+            {
+                SubjectType = PermissionSubjectType.User,
+                SubjectId = editorId,
+                AccessLevels = ["view", "download", "edit"]
+            })).EnsureSuccessStatusCode();
+
+        DocumentDetailDto seen = await GetDetailAsync(editor, document.Summary.Id);
+
+        UpdateDocumentRequest declassify = new()
+        {
+            Title = seen.Summary.Title,
+            DepartmentId = seen.DepartmentId,
+            Classification = SecurityClassification.Public,
+            Metadata = RequiredInvoiceMetadata(),
+            ConcurrencyToken = seen.ConcurrencyToken
+        };
+
+        // Public would open the document to the whole organisation: a decision about access, which
+        // belongs to whoever may share it.
+        HttpResponseMessage refused = await editor.PutAsJsonAsync($"/api/documents/{document.Summary.Id}", declassify);
+        Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
+
+        HttpResponseMessage edited = await editor.PutAsJsonAsync(
+            $"/api/documents/{document.Summary.Id}",
+            declassify with { Title = "Fatura restrita, título corrigido", Classification = SecurityClassification.Restricted });
+
+        Assert.Equal(HttpStatusCode.OK, edited.StatusCode);
+        Assert.Equal(SecurityClassification.Restricted, (await GetDetailAsync(admin, document.Summary.Id)).Summary.Classification);
+    }
+
+    [Fact]
     public async Task Effective_access_explains_the_decision()
     {
         HttpClient approver = await factory.SignInAsync(FinanceApprover);

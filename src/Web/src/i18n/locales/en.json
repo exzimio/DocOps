@@ -284,6 +284,7 @@
     },
     "status": "Status",
     "classification": "Classification",
+    "accessFieldsLocked": "The department and the classification decide who sees this document, so changing them requires the right to share it.",
     "unclassifiedHint": "This document has no type yet. The analysis reads the content and suggests the type and metadata for you to review.",
     "openIntelligence": "Review with AI"
   },

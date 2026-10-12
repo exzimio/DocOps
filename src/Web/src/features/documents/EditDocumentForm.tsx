@@ -26,6 +26,7 @@ export function EditDocumentForm({ document, departments, onDone }: EditDocument
   const [departmentId, setDepartmentId] = useState(document.departmentId ?? '')
   const [businessEntity, setBusinessEntity] = useState(document.businessEntity ?? '')
   const [classification, setClassification] = useState<number>(document.summary.classification)
+  const canShare = document.effectiveAccess.levels.includes('share')
   const [tagsText, setTagsText] = useState(document.summary.tags.map((tag) => tag.name).join(', '))
   const [metadata, setMetadata] = useState<Record<string, string>>(
     Object.fromEntries(
@@ -98,6 +99,7 @@ export function EditDocumentForm({ document, departments, onDone }: EditDocument
               <select
                 id="edit-department"
                 value={departmentId}
+                disabled={!canShare}
                 onChange={(event) => setDepartmentId(event.target.value)}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
@@ -117,6 +119,7 @@ export function EditDocumentForm({ document, departments, onDone }: EditDocument
               <select
                 id="edit-classification"
                 value={classification}
+                disabled={!canShare}
                 onChange={(event) => setClassification(Number(event.target.value))}
                 className="h-9 rounded-md border border-strong bg-raised px-2 text-sm text-ink"
               >
@@ -134,6 +137,8 @@ export function EditDocumentForm({ document, departments, onDone }: EditDocument
               onChange={(event) => setBusinessEntity(event.target.value)}
             />
           </div>
+
+          {!canShare && <p className="text-xs text-ink-secondary">{t('documents.accessFieldsLocked')}</p>}
 
           <TextField
             label={t('documents.tags')}

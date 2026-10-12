@@ -243,8 +243,20 @@ public sealed class DocumentService(
         Guid documentId, UpdateDocumentRequest request, CancellationToken cancellationToken = default)
     {
         Document document = await LoadAsync(documentId, cancellationToken);
-        await accessResolver.EnsureAsync(document, DocumentAccessLevel.Edit, clock.UtcNow, cancellationToken);
+        EffectiveAccess editorAccess =
+            await accessResolver.EnsureAsync(document, DocumentAccessLevel.Edit, clock.UtcNow, cancellationToken);
         DocumentLifecycle.EnsureCanChangeMetadata(document.Status);
+
+        // The classification and the owning department decide who sees the document by default, so
+        // changing either is a decision about access, which belongs to whoever may share it.
+        bool changesAccess = request.Classification != document.Classification
+            || request.DepartmentId != document.DepartmentId;
+
+        if (changesAccess && !editorAccess.Allows(DocumentAccessLevel.Share))
+        {
+            throw new ForbiddenOperationException(
+                $"Mudar a classificação ou o departamento do documento '{document.Reference}' decide quem o vê, e exige poder partilhá-lo.");
+        }
 
         await EnsureDepartmentExistsAsync(request.DepartmentId, cancellationToken);
 

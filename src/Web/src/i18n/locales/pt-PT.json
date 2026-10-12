@@ -284,6 +284,7 @@
     },
     "status": "Estado",
     "classification": "Classificação",
+    "accessFieldsLocked": "O departamento e a classificação decidem quem vê este documento, e mudá-los exige poder partilhá-lo.",
     "unclassifiedHint": "Este documento ainda não tem tipo. A análise lê o conteúdo e sugere o tipo e os metadados para rever.",
     "openIntelligence": "Rever com IA"
   },
