@@ -61,6 +61,12 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .AllowCredentials()
     .WithExposedHeaders(CorrelationIdMiddleware.HeaderName)));
 
+ForwardedHeadersSettings forwardedHeaders = builder.Configuration
+    .GetSection(ForwardedHeadersSettings.SectionName)
+    .Get<ForwardedHeadersSettings>() ?? new ForwardedHeadersSettings();
+
+builder.Services.Configure<ForwardedHeadersOptions>(forwardedHeaders.ApplyTo);
+
 RateLimitingOptions rateLimiting = builder.Configuration
     .GetSection(RateLimitingOptions.SectionName)
     .Get<RateLimitingOptions>() ?? new RateLimitingOptions();
@@ -129,6 +135,8 @@ builder.Services.AddOpenTelemetry()
 
 WebApplication app = builder.Build();
 
+// First, so the limiter, the request log and the audit trail all see the client's address.
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();

@@ -66,7 +66,7 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
 
         AddPersistence(services, configuration, isDevelopment);
-        AddIdentity(services);
+        AddIdentity(services, isDevelopment);
 
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IUserSessionService, UserSessionService>();
@@ -330,7 +330,7 @@ public static class DependencyInjection
             .AddDbContextCheck<DocOpsDbContext>(name: "database", tags: ["ready"]);
     }
 
-    private static void AddIdentity(IServiceCollection services)
+    private static void AddIdentity(IServiceCollection services, bool isDevelopment)
     {
         services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
@@ -363,7 +363,9 @@ public static class DependencyInjection
             options.Cookie.Name = "docops.session";
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Lax;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            // Outside development the cookie is Secure whatever scheme reaches the API, so the flag
+            // does not depend on a proxy forwarding X-Forwarded-Proto correctly.
+            options.Cookie.SecurePolicy = isDevelopment ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = true;
 

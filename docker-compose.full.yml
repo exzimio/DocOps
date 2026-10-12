@@ -121,6 +121,11 @@ services:
       # A verificação de origem recusa pedidos de origens que não conhece. Quem fala com a API é o
       # nginx, que reencaminha o `Origin` do browser tal como veio.
       Cors__AllowedOrigins__0: "${DOCOPS_PUBLIC_ORIGIN:-http://localhost:8080}"
+
+      # O nginx é o único caminho até à API, e diz no `X-Forwarded-For` quem é o cliente. A API só
+      # acredita nesse cabeçalho vindo desta rede: sem isto, o limitador de autenticação contava
+      # todos os clientes como um só, e a auditoria registava o endereço do proxy.
+      ForwardedHeaders__KnownNetworks__0: "${DOCOPS_NETWORK_SUBNET:-10.89.0.0/24}"
     volumes:
       - storage:/data/storage
     depends_on:
@@ -162,6 +167,12 @@ services:
       api:
         condition: service_healthy
     restart: unless-stopped
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: "${DOCOPS_NETWORK_SUBNET:-10.89.0.0/24}"
 
 volumes:
   sqldata:

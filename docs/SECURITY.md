@@ -17,7 +17,7 @@ se destina a tratar dados reais.
 | Controlo | Implementação |
 | --- | --- |
 | Mecanismo | ASP.NET Core Identity com cookie de sessão |
-| Cookie | `docops.session`, `HttpOnly`, `SameSite=Lax`, `Secure` conforme o esquema do pedido |
+| Cookie | `docops.session`, `HttpOnly`, `SameSite=Lax`, `Secure` sempre fora de desenvolvimento (em desenvolvimento, conforme o esquema do pedido) |
 | Armazenamento no cliente | Nenhum. Não há *token* acessível a JavaScript (sem `localStorage`, sem `sessionStorage`) |
 | Palavra-passe | Mínimo 12 caracteres, maiúscula, minúscula, dígito e símbolo; hash PBKDF2 do Identity |
 | Bloqueio | 5 tentativas falhadas → 15 minutos de bloqueio, aplicável também a contas novas |
@@ -25,8 +25,9 @@ se destina a tratar dados reais.
 | Revalidação | *Security stamp* revalidado a cada 5 minutos: permissões revogadas deixam de funcionar sem esperar pelo fim da sessão |
 | Sessão | 8 horas com renovação deslizante |
 
-Em produção, o cookie deve ser servido apenas sobre HTTPS (`CookieSecurePolicy.Always`) e a
-aplicação deve estar atrás de HSTS.
+Fora de desenvolvimento o cookie leva `Secure` qualquer que seja o esquema com que o pedido chega à
+API, para não depender de o proxy reencaminhar bem o `X-Forwarded-Proto`. Os browsers aceitam-no em
+`http://localhost`; noutro endereço, a aplicação tem de estar atrás de HTTPS, de preferência com HSTS.
 
 ## 3. Autorização
 
@@ -235,9 +236,15 @@ conta do Identity, e não o substitui: o bloqueio é por conta e, por isso, imun
 
 Os limites são configuráveis (secção `RateLimiting`) porque num ambiente com endereço partilhado,
 como um escritório atrás de NAT, um *runner* de CI ou uma máquina local a correr toda a bateria de
-testes, um limite
-por IP penaliza utilizadores legítimos. O ambiente de desenvolvimento eleva o limite de autenticação
-para 100; produção usa as predefinições.
+testes, um limite por IP penaliza utilizadores legítimos. O ambiente de desenvolvimento eleva os dois
+limites; produção usa as predefinições.
+
+**Atrás do nginx**, todos os pedidos chegam do endereço do proxy. A API lê o cliente do
+`X-Forwarded-For` (e o esquema do `X-Forwarded-Proto`), mas só quando o pedido vem de um proxy de
+confiança, declarado em `ForwardedHeaders:KnownProxies` ou `ForwardedHeaders:KnownNetworks`. Sem
+nada configurado, só o *loopback* é de confiança. Na pilha do `docker-compose.full.yml` é a rede da
+própria pilha. Só a última entrada do cabeçalho conta, a que o nginx acrescentou: o que o cliente
+escreveu antes dela é ignorado. É este endereço que o limitador de autenticação e a auditoria usam.
 
 ## 8. Validação de entrada
 
