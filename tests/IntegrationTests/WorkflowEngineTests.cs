@@ -436,6 +436,35 @@ public class WorkflowEngineTests(DocOpsApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, (await manager.GetAsync($"/api/tasks/{taskId}")).StatusCode);
     }
 
+    [Fact]
+    public async Task A_task_whose_document_the_caller_cannot_see_cannot_be_reassigned_by_them()
+    {
+        HttpClient owner = await factory.SignInAsync(FinanceApprover);
+        HttpClient manager = await factory.SignInAsync(Manager);
+        HttpClient admin = await factory.SignInAsync(Administrator);
+
+        DocumentDetailDto document = await CreateInvoiceAsync(
+            owner, "Fatura restrita com tarefa a reatribuir", total: "640.00", SecurityClassification.Restricted);
+        WorkflowInstanceDetailDto instance = await StartAsync(owner, document.Summary.Id);
+        Guid taskId = Assert.Single(instance.Tasks).Id;
+        Guid managerId = (await manager.GetFromJsonAsync<CurrentUserProfile>("/api/auth/me", Json))!.Id;
+
+        // Reassigning to oneself would turn a task the manager may not see into one they hold, and
+        // with it the document's title, the timeline and the decision.
+        HttpResponseMessage refused = await manager.PostAsJsonAsync(
+            $"/api/tasks/{taskId}/reassign", new ReassignTaskRequest(managerId, null));
+
+        Assert.Equal(HttpStatusCode.NotFound, refused.StatusCode);
+
+        TaskListItemDto unchanged = (await admin.GetFromJsonAsync<TaskListItemDto>($"/api/tasks/{taskId}", Json))!;
+        Assert.NotEqual(managerId, unchanged.AssignedToUserId);
+
+        HttpResponseMessage reassignedByAdmin = await admin.PostAsJsonAsync(
+            $"/api/tasks/{taskId}/reassign", new ReassignTaskRequest(managerId, null));
+
+        Assert.Equal(HttpStatusCode.OK, reassignedByAdmin.StatusCode);
+    }
+
     /// <summary>
     /// The designer offers every node type, and the validator lets any of them be activated. A type
     /// without an executor would pass both and only fail when an instance reached it, so the

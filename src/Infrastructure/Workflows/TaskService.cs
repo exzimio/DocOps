@@ -144,6 +144,10 @@ public sealed class TaskService(
             throw new ForbiddenOperationException("Não tem permissão para reatribuir tarefas.");
         }
 
+        // A task that is hidden from the caller cannot be handed to anyone by them, themselves
+        // included: holding it would reveal the document the list and the detail keep from them.
+        await GetAsync(taskId, cancellationToken);
+
         WorkflowTask task = await LoadAsync(taskId, cancellationToken);
 
         if (!task.IsOpen)
